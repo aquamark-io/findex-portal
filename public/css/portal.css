@@ -124,10 +124,62 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #a86ae0; outline-
 .nav-link { color: rgba(255,255,255,0.88); font-size: 0.95rem; font-weight: 600; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav-link:hover, .nav-link:focus-visible { color: #fff; border-bottom-color: #fff; outline: none; }
 .nav-actions { gap: 26px; }
+/* Mobile menu: hamburger + dropdown panel (matches the joinfindex.com homepage) */
+.menu-toggle { display: none; }
 @media (max-width: 640px) {
-  .band-inner { flex-wrap: wrap; row-gap: 8px; padding: 18px 16px 14px; }
-  .nav-actions { width: 100%; gap: 20px; }
-  .nav-link { font-size: 0.88rem; }
+  .band { position: relative; z-index: 20; }
+  .band-inner { position: relative; padding: 16px 16px; }
+  .menu-toggle {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 44px; height: 44px; padding: 0; cursor: pointer; border-radius: 13px;
+    border: 1px solid rgba(255,255,255,0.38); background: rgba(255,255,255,0.08);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .menu-toggle:hover, .menu-toggle[aria-expanded="true"] { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.6); }
+  .menu-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .menu-bars { position: relative; width: 20px; height: 14px; }
+  .menu-bars span {
+    position: absolute; left: 0; width: 100%; height: 2px; border-radius: 2px; background: #fff;
+    transition: transform 0.35s cubic-bezier(.65,0,.35,1), opacity 0.2s ease, top 0.35s cubic-bezier(.65,0,.35,1);
+  }
+  .menu-bars span:nth-child(1) { top: 0; }
+  .menu-bars span:nth-child(2) { top: 6px; }
+  .menu-bars span:nth-child(3) { top: 12px; }
+  .menu-toggle[aria-expanded="true"] .menu-bars span:nth-child(1) { top: 6px; transform: rotate(45deg); }
+  .menu-toggle[aria-expanded="true"] .menu-bars span:nth-child(2) { opacity: 0; transform: scaleX(0.2); }
+  .menu-toggle[aria-expanded="true"] .menu-bars span:nth-child(3) { top: 6px; transform: rotate(-45deg); }
+
+  .nav-actions {
+    position: absolute; top: calc(100% - 4px); left: 16px; right: 16px; z-index: 30;
+    flex-direction: column; align-items: stretch; gap: 2px; padding: 8px;
+    border-radius: 20px; border: 1px solid rgba(255,255,255,0.16);
+    background: linear-gradient(160deg, #4e1892 0%, #2c0b4a 100%);
+    box-shadow: 0 30px 60px -24px rgba(20,0,45,0.75);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(-10px) scale(0.97); transform-origin: top right;
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(.2,.8,.2,1), visibility 0s linear 0.35s;
+  }
+  .band.menu-open .nav-actions {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(.2,.8,.2,1), visibility 0s;
+  }
+  .nav-actions form { display: block; }
+  .nav-link {
+    display: flex; width: 100%; align-items: center; justify-content: space-between; text-align: left;
+    padding: 16px; border: 0; border-radius: 13px; font-size: 1.05rem; color: #fff;
+    opacity: 0; transform: translateY(-6px);
+    transition: opacity 0.25s ease, transform 0.3s ease, background 0.2s ease;
+  }
+  .nav-link::after { content: "\2192"; opacity: 0.6; transform: translateX(-4px); transition: transform 0.2s ease, opacity 0.2s ease; }
+  .nav-link:hover, .nav-link:focus-visible { background: rgba(255,255,255,0.1); border: 0; }
+  .nav-link:hover::after, .nav-link:focus-visible::after { transform: translateX(0); opacity: 1; }
+  .band.menu-open .nav-link { opacity: 1; transform: none; }
+  .band.menu-open .nav-actions > :nth-child(1), .band.menu-open .nav-actions > :nth-child(1) .nav-link { transition-delay: 0.06s; }
+  .band.menu-open .nav-actions > :nth-child(2), .band.menu-open .nav-actions > :nth-child(2) .nav-link { transition-delay: 0.11s; }
+  .band.menu-open .nav-actions > :nth-child(3), .band.menu-open .nav-actions > :nth-child(3) .nav-link { transition-delay: 0.16s; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  .menu-bars span, .nav-actions, .nav-link, .band.menu-open .nav-link { transition: none !important; transition-delay: 0s !important; }
 }
 
 /* Two-option choice */

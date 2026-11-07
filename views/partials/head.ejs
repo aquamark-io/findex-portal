@@ -15,7 +15,13 @@
 <header class="band">
   <div class="band-inner">
     <a class="wordmark" href="<%= marketingUrl %>" aria-label="FinDex home">Fin<span>Dex</span></a>
-    <nav class="nav-actions" aria-label="Account">
+    <% const hasNav = typeof adminNav === 'undefined' || adminNav; %>
+    <% if (hasNav) { %>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="menu-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+    <% } %>
+    <nav class="nav-actions" id="site-nav" aria-label="Account">
       <% if (typeof adminNav !== 'undefined') { %>
         <% if (adminNav) { %>
           <a class="nav-link" href="/admin">Requests</a>
@@ -32,4 +38,5 @@
     </nav>
   </div>
 </header>
+<script src="/js/nav.js" defer></script>
 <main class="main<%= typeof wide !== 'undefined' && wide ? ' wide' : '' %>">
