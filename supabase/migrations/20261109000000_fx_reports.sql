@@ -60,7 +60,7 @@ create table public.fx_reports (
 
   category              text not null check (category in (
                           'data_theft',          -- backdooring and other data theft (individuals, partners)
-                          'merchant_deception',  -- individuals
+                          'merchant_deception',  -- individuals, partners
                           'fraud',               -- individuals, partners, funded businesses
                           'data_mishandling',    -- partners
                           'slow_pay',            -- funded businesses, funders only
