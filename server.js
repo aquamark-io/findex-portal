@@ -42,7 +42,11 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Changes on every deploy so browsers fetch fresh CSS/JS (Render sets RENDER_GIT_COMMIT).
+const ASSET_VERSION = (process.env.RENDER_GIT_COMMIT || String(Date.now())).slice(0, 12);
+
 app.use((req, res, next) => {
+  res.locals.assetV = ASSET_VERSION;
   res.locals.marketingUrl = process.env.MARKETING_SITE_URL || 'https://joinfindex.com/';
   res.set('Cache-Control', 'no-store');
   next();
