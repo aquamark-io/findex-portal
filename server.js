@@ -43,7 +43,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use((req, res, next) => {
-  res.locals.marketingUrl = process.env.MARKETING_SITE_URL || 'https://aquamark-io.github.io/findex/';
+  res.locals.marketingUrl = process.env.MARKETING_SITE_URL || 'https://joinfindex.com/';
   res.set('Cache-Control', 'no-store');
   next();
 });

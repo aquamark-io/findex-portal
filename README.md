@@ -57,8 +57,8 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 | Variable | Notes |
 |---|---|
 | `NODE_ENV` | `production` |
-| `PORTAL_BASE_URL` | Public URL of this service, used in email links |
-| `MARKETING_SITE_URL` | FinDex marketing site (logo link) |
+| `PORTAL_BASE_URL` | `https://app.joinfindex.com` (used in email links) |
+| `MARKETING_SITE_URL` | `https://joinfindex.com/` (logo link) |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Aquamark project, service role |
 | `POSTMARK_SERVER_TOKEN` | |
 | `ONBOARDING_FROM_EMAIL` | `FinDex <christina@aquamark.io>` |
