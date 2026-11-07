@@ -71,7 +71,7 @@
     <% if (type === 'individual') { %>
       <h2>Your work</h2>
       <div class="row">
-        <div class="field"><label for="i_company">Current or most recent company</label><input type="text" id="i_company" name="current_company" value="<%= v('current_company') %>" maxlength="200" required></div>
+        <div class="field"><label for="i_company">Most recent company</label><input type="text" id="i_company" name="current_company" value="<%= v('current_company') %>" maxlength="200" required></div>
         <div class="field"><label for="i_title">Job title</label><input type="text" id="i_title" name="job_title" value="<%= v('job_title') %>" maxlength="120" required></div>
       </div>
       <div class="field"><label for="i_worker">Employee or contractor</label>
@@ -80,7 +80,7 @@
         </select>
       </div>
       <h2>Verify your identity</h2>
-      <p class="muted">Used only to match you to your own records. Encrypted and never shared or shown in full.</p>
+      <p class="muted">Used only to match you to your own records. Encrypted and never shared.</p>
       <div class="row">
         <div class="field"><label for="i_dob">Date of birth</label><input type="date" id="i_dob" name="dob" autocomplete="bday" required></div>
         <div class="field"><label for="i_ssn">Last 4 of SSN</label><input type="text" id="i_ssn" name="ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
