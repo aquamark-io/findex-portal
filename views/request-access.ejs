@@ -7,7 +7,7 @@
   const stateOptions = k => Object.entries(STATES).map(([code, name]) => `<option value="${code}" ${sel(k, code)}>${name}</option>`).join('');
   const intro = {
     company: mode === 'member'
-      ? 'For brokers, funders, lenders, software providers and lead providers. Approved companies can search FinDex and submit reports. One account per company.'
+      ? 'Search and report. One account per company.'
       : 'View and dispute at no cost.',
     individual: 'View and dispute at no cost.',
     merchant: 'View and dispute at no cost.',
