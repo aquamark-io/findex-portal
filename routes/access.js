@@ -13,6 +13,7 @@ const supabase = require('../lib/supabase');
 const { encrypt, blindIndex } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
+const { testNotificationsOn } = require('../lib/notify-admin');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 const { INDEMNIFICATION } = require('../lib/terms');
@@ -163,7 +164,7 @@ function toRow(d) {
 // the request is already saved and visible in /admin.
 async function notify(account) {
   const jobs = [{ to: account.email, tag: 'fx-under-review', ...templates.underReview(account) }];
-  if (!account.is_test && process.env.ONBOARDING_NOTIFY_EMAIL) {
+  if ((!account.is_test || testNotificationsOn()) && process.env.ONBOARDING_NOTIFY_EMAIL) {
     jobs.push({ to: process.env.ONBOARDING_NOTIFY_EMAIL, tag: 'fx-admin-new-request', ...templates.adminNewRequest(account) });
   }
   const results = await Promise.allSettled(jobs.map(j => sendEmail(j)));

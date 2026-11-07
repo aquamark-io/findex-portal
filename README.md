@@ -36,7 +36,7 @@ emails, logs or URLs. Anti-spam: honeypot field + rate limits; Cloudflare Turnst
 `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
 
 A first name, last name or business name starting with `[TEST]` marks the request as a test: it is flagged in admin and
-the admin notification email is skipped (applicant emails still send).
+can be deleted there. Test requests still email the admin (new request + sign-in activity) unless `TEST_NOTIFICATIONS=false`.
 
 ## Sign-in
 
@@ -68,4 +68,5 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 | `ADMIN_PASSWORD` | `/admin` password |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
 | `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in activity emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off |
+| `TEST_NOTIFICATIONS` | Optional. `[TEST]` requests email the admin like real ones; set `false` to keep them silent |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |
