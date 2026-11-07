@@ -14,6 +14,7 @@ const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
+const { MEMBER_TERMS } = require('../lib/terms');
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ function renderForm(res, { type, values = {}, errors = [], status = 200 }) {
     type,
     values: safe,
     errors,
-    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES,
+    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, MEMBER_TERMS,
     turnstileSiteKey: turnstile.enabled() ? turnstile.siteKey() : '',
   });
 }
@@ -97,7 +98,7 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
       throw new Error(`Insert: ${insErr.message}`);
     }
 
-    await logEvent({ accountId: account.id, event: 'requested', actor: 'applicant', detail: { account_type: account.account_type, is_test: account.is_test }, ip: req.ip });
+    await logEvent({ accountId: account.id, event: 'requested', actor: 'applicant', detail: { account_type: account.account_type, is_test: account.is_test, terms_version: account.terms_version }, ip: req.ip });
     await notify(account);
 
     return res.redirect(303, '/request-access/received');
@@ -126,6 +127,8 @@ function toRow(d) {
     worker_type: d.worker_type || null,
     identity_method: d.identity_method || null,
     is_test: d.is_test,
+    terms_version: d.terms_version || null,
+    terms_accepted_at: d.terms_version ? new Date().toISOString() : null,
   };
   if (d.identity_method === 'dob_ssn4') {
     row.dob_enc = encrypt(d.dob);

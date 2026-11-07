@@ -67,6 +67,11 @@
       </div>
       <div class="field"><label for="c_title">Your job title</label><input type="text" id="c_title" name="job_title" value="<%= v('job_title') %>" autocomplete="organization-title" maxlength="120" required></div>
       <label class="check"><input type="checkbox" name="authorize" <%= chk('authorize', 'on') %> required><span>I am authorized to request a FinDex account on behalf of this company.</span></label>
+      <h2>Member terms</h2>
+      <div class="terms" tabindex="0" aria-label="FinDex Member Terms">
+        <% MEMBER_TERMS.forEach(t => { %><p><strong><%= t.heading %>.</strong> <%= t.text %></p><% }) %>
+      </div>
+      <label class="check"><input type="checkbox" name="member_terms" <%= chk('member_terms', 'on') %> required><span>On behalf of the company, I agree to the FinDex Member Terms, including indemnification.</span></label>
     </fieldset>
 
     <!-- Individual -->

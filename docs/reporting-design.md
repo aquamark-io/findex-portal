@@ -66,15 +66,23 @@ Items marked **Counsel** need legal review before launch. This document is not l
 
 ## Member agreement
 
-- Accepted at company sign-up; store the agreement version and acceptance time.
-- Includes the two CFPB member notices above.
-- Includes an **indemnification** clause: the member covers legal fees and damages arising from false reports,
-  false payment data, or manipulated documents it submits. **Counsel:** drafting, and whether it is one-way
-  (member indemnifies FinDex/Aquamark) or mutual.
+- **Built:** company sign-up requires accepting the Member Terms; the version and time are stored
+  (`terms_version`, `terms_accepted_at`). Text lives in `lib/terms.js`; bump the version whenever it changes.
+- **One-way indemnification:** the member defends and indemnifies FinDex and Aquamark against claims, damages,
+  and legal fees arising from false, inaccurate, or manipulated information it submits, including false payment
+  data about a funded business. **Counsel:** replace the draft wording with final text.
+- To add later: acceptance of the two CFPB member notices above.
+
+## Funded-business reports
+
+- Repayment reports (slow pay, defaults) are about the **business only**, identified by its EIN.
+- FinDex does not ask for or store information about owners or personal guarantors in these reports, even when
+  the funding included a personal guarantee.
+- **Counsel / open:** how to handle sole proprietors with no EIN.
 
 ## FCRA scope
 
 - FCRA protects individuals ("consumers"). Reports about businesses (partners, funded businesses) generally fall
   outside it. FinDex applies the same notice and dispute process to everyone anyway.
-- **Counsel:** sole proprietors, and funded-business reports that involve an owner's personal guarantee, may be
-  treated as consumer reports.
+- **Counsel:** whether sole proprietors, or funded businesses whose funding was personally guaranteed, change this.
+  Keeping repayment reports to business-only information is meant to reduce that risk.
