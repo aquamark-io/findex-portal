@@ -15,7 +15,7 @@ const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
-const { MEMBER_TERMS } = require('../lib/terms');
+const { INDEMNIFICATION } = require('../lib/terms');
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ function renderForm(res, { type, mode = 'member', values = {}, errors = [], stat
     mode,
     values: safe,
     errors,
-    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, MEMBER_TERMS,
+    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, INDEMNIFICATION,
     turnstileSiteKey: turnstile.enabled() ? turnstile.siteKey() : '',
   });
 }

@@ -66,8 +66,9 @@ Items marked **Counsel** need legal review before launch. This document is not l
 
 ## Member agreement
 
-- **Built:** company sign-up requires accepting the Member Terms; the version and time are stored
+- **Built:** Request Access requires an indemnification checkbox; the version and time are stored
   (`terms_version`, `terms_accepted_at`). Text lives in `lib/terms.js`; bump the version whenever it changes.
+  Companies that sign up through Check My Record (own record only) don't accept it.
 - **One-way indemnification:** the member defends and indemnifies FinDex and Aquamark against claims, damages,
   and legal fees arising from false, inaccurate, or manipulated information it submits, including false payment
   data about a funded business. **Counsel:** replace the draft wording with final text.
