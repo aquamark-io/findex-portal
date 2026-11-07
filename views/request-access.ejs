@@ -104,8 +104,8 @@
       <fieldset class="field">
         <legend class="sr-only">How would you like to verify?</legend>
         <div class="choice two">
-          <label><input type="radio" name="identity_method" value="ein" <%= usesEin ? 'checked' : '' %>>EIN<small>Federal Employer Identification Number</small></label>
-          <label><input type="radio" name="identity_method" value="dob_ssn4" <%= usesEin ? '' : 'checked' %>>No EIN<small>Sole proprietor: verify with the owner&rsquo;s details</small></label>
+          <label><input type="radio" name="identity_method" value="ein" <%= usesEin ? 'checked' : '' %>>EIN</label>
+          <label><input type="radio" name="identity_method" value="dob_ssn4" <%= usesEin ? '' : 'checked' %>>No EIN</label>
         </div>
       </fieldset>
       <fieldset data-identity="ein" <%= usesEin ? '' : 'hidden disabled' %>>
