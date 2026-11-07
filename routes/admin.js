@@ -18,6 +18,25 @@ const { ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/v
 const router = express.Router();
 const STATUSES = ['pending', 'approved', 'denied'];
 
+// Plain-English labels for the History list.
+const EVENT_LABELS = {
+  requested: 'Request submitted',
+  duplicate_request: 'Submitted again with the same email (no new request created)',
+  approved: 'Approved',
+  denied: 'Denied',
+  revoked: 'Access revoked',
+  code_sent: 'Sign-in code sent',
+  code_rate_limited: 'Sign-in code not sent (too many requests)',
+  login: 'Signed in',
+  login_failed: 'Wrong sign-in code entered',
+  logout: 'Signed out',
+};
+function eventLabel(e) {
+  if (e.event === 'signin_notice') return e.detail && e.detail.kind === 'pending' ? 'Sign-in attempt (still pending, told by email)' : 'Sign-in attempt (no account, told by email)';
+  return EVENT_LABELS[e.event] || e.event.replace(/_/g, ' ');
+}
+const ACTORS = { applicant: 'applicant', account: 'user', admin: 'you', system: 'system' };
+
 const fmt = d => d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) : '';
 
 // ---------- login ----------
@@ -44,7 +63,7 @@ router.post('/logout', (req, res) => {
 
 router.use(admin.requireAdmin);
 router.use((req, res, next) => {
-  Object.assign(res.locals, { fmt, fmtPhone, adminNav: true, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES });
+  Object.assign(res.locals, { fmt, fmtPhone, eventLabel, ACTORS, adminNav: true, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES });
   next();
 });
 

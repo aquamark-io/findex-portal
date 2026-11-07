@@ -78,7 +78,7 @@
     <h2>History</h2>
     <% if (!events.length) { %><p class="muted">No events yet.</p><% } else { %>
       <ul class="history">
-        <% events.forEach(e => { %><li><span class="muted nowrap"><%= fmt(e.created_at) %></span> <%= e.event.replace(/_/g, ' ') %> <span class="muted">(<%= e.actor %>)</span></li><% }) %>
+        <% events.forEach(e => { %><li><span class="muted nowrap"><%= fmt(e.created_at) %></span> <%= eventLabel(e) %> <span class="muted">(<%= ACTORS[e.actor] || e.actor %>)</span></li><% }) %>
       </ul>
     <% } %>
   </section>
