@@ -1,0 +1,137 @@
+<%- include('partials/head') %>
+<%
+  const v = k => (values && typeof values[k] === 'string') ? values[k] : '';
+  const sel = (k, val) => v(k) === val ? 'selected' : '';
+  const chk = (k, val) => v(k) === val ? 'checked' : '';
+  const off = t => type === t ? '' : 'disabled';
+  const hide = t => type === t ? '' : 'hidden';
+  const stateOptions = k => Object.entries(STATES).map(([code, name]) => `<option value="${code}" ${sel(k, code)}>${name}</option>`).join('');
+  const intro = {
+    company: 'For brokers, funders, lenders, software providers and lead providers. Approved companies can search FinDex and submit reports. One account per company.',
+    individual: 'View, dispute, or appeal any report about you, at no cost. We verify your identity before granting access.',
+    merchant: 'View, dispute, or appeal any report about your business, at no cost. We verify your business before granting access.',
+  };
+%>
+<section class="card">
+  <h1 class="title"><%= type === 'company' ? 'Request Access' : 'Check My Record' %></h1>
+  <p class="lead" id="intro"
+     data-company="<%= intro.company %>" data-individual="<%= intro.individual %>" data-merchant="<%= intro.merchant %>"><%= intro[type] %></p>
+
+  <% if (errors && errors.length) { %>
+    <div class="alert error" role="alert">
+      <strong>Please fix the following:</strong>
+      <ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form method="post" action="/request-access" id="access-form" novalidate>
+    <fieldset class="field">
+      <legend class="legend">Are you a company, an individual, or a funded business?</legend>
+      <div class="choice" role="radiogroup">
+        <label><input type="radio" name="account_type" value="company" <%= type === 'company' ? 'checked' : '' %>>Company<small>Broker, funder, lender, software or lead provider</small></label>
+        <label><input type="radio" name="account_type" value="individual" <%= type === 'individual' ? 'checked' : '' %>>Individual<small>Employee or contractor checking your own record</small></label>
+        <label><input type="radio" name="account_type" value="merchant" <%= type === 'merchant' ? 'checked' : '' %>>Funded Business<small>A business that received funding</small></label>
+      </div>
+    </fieldset>
+
+    <h2>About you</h2>
+    <div class="row">
+      <div class="field"><label for="first_name">First name</label><input type="text" id="first_name" name="first_name" value="<%= v('first_name') %>" autocomplete="given-name" maxlength="80" required></div>
+      <div class="field"><label for="last_name">Last name</label><input type="text" id="last_name" name="last_name" value="<%= v('last_name') %>" autocomplete="family-name" maxlength="80" required></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="email"><span data-show="company" <%= hide('company') %>>Business email</span><span data-show="individual merchant" <%= type === 'company' ? 'hidden' : '' %>>Email</span></label>
+        <input type="email" id="email" name="email" value="<%= v('email') %>" autocomplete="email" maxlength="254" required>
+      </div>
+      <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone" value="<%= v('phone') %>" autocomplete="tel" maxlength="30" required></div>
+    </div>
+    <p class="muted" data-show="company" <%= hide('company') %>>Your business email must be on your company website&rsquo;s domain. Free email providers (Gmail, Yahoo, Outlook, etc.) aren&rsquo;t accepted.</p>
+
+    <!-- Company -->
+    <fieldset data-section="company" <%= hide('company') %> <%= off('company') %>>
+      <h2>Your company</h2>
+      <div class="field"><label for="c_legal">Company legal name</label><input type="text" id="c_legal" name="business_legal_name" value="<%= v('business_legal_name') %>" autocomplete="organization" maxlength="200" required></div>
+      <div class="row">
+        <div class="field"><label for="c_dba">DBA <span class="hint">(optional)</span></label><input type="text" id="c_dba" name="business_dba" value="<%= v('business_dba') %>" maxlength="200"></div>
+        <div class="field"><label for="c_type">Company type</label>
+          <select id="c_type" name="company_type" required>
+            <option value="">Select…</option>
+            <% Object.entries(COMPANY_TYPES).forEach(([k, label]) => { %><option value="<%= k %>" <%= sel('company_type', k) %>><%= label %></option><% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="c_site">Company website</label><input type="text" id="c_site" name="website" value="<%= v('website') %>" placeholder="yourcompany.com" inputmode="url" autocomplete="url" maxlength="200" required></div>
+        <div class="field"><label for="c_state">State of registration</label><select id="c_state" name="state_of_registration" required><option value="">Select…</option><%- stateOptions('state_of_registration') %></select></div>
+      </div>
+      <div class="field"><label for="c_title">Your job title</label><input type="text" id="c_title" name="job_title" value="<%= v('job_title') %>" autocomplete="organization-title" maxlength="120" required></div>
+      <label class="check"><input type="checkbox" name="authorize" <%= chk('authorize', 'on') %> required><span>I am authorized to request a FinDex account on behalf of this company.</span></label>
+    </fieldset>
+
+    <!-- Individual -->
+    <fieldset data-section="individual" <%= hide('individual') %> <%= off('individual') %>>
+      <h2>Your work</h2>
+      <div class="row">
+        <div class="field"><label for="i_company">Current or most recent company <span class="hint">(optional)</span></label><input type="text" id="i_company" name="current_company" value="<%= v('current_company') %>" maxlength="200"></div>
+        <div class="field"><label for="i_title">Job title <span class="hint">(optional)</span></label><input type="text" id="i_title" name="job_title" value="<%= v('job_title') %>" maxlength="120"></div>
+      </div>
+      <div class="field"><label for="i_worker">Employee or contractor <span class="hint">(optional)</span></label>
+        <select id="i_worker" name="worker_type"><option value="">Select…</option>
+          <% Object.entries(WORKER_TYPES).forEach(([k, label]) => { %><option value="<%= k %>" <%= sel('worker_type', k) %>><%= label %></option><% }) %>
+        </select>
+      </div>
+      <h2>Verify your identity</h2>
+      <p class="muted">Used only to match you to your own records. Encrypted and never shared or shown in full.</p>
+      <div class="row">
+        <div class="field"><label for="i_dob">Date of birth</label><input type="date" id="i_dob" name="dob" autocomplete="bday" required></div>
+        <div class="field"><label for="i_ssn">Last 4 of SSN</label><input type="text" id="i_ssn" name="ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
+      </div>
+    </fieldset>
+
+    <!-- Funded business (merchant) -->
+    <fieldset data-section="merchant" <%= hide('merchant') %> <%= off('merchant') %>>
+      <h2>Your business</h2>
+      <div class="field"><label for="m_legal">Business legal name</label><input type="text" id="m_legal" name="business_legal_name" value="<%= v('business_legal_name') %>" autocomplete="organization" maxlength="200" required></div>
+      <div class="row">
+        <div class="field"><label for="m_dba">DBA <span class="hint">(optional)</span></label><input type="text" id="m_dba" name="business_dba" value="<%= v('business_dba') %>" maxlength="200"></div>
+        <div class="field"><label for="m_state">State of registration</label><select id="m_state" name="state_of_registration" required><option value="">Select…</option><%- stateOptions('state_of_registration') %></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="m_site">Business website <span class="hint">(optional)</span></label><input type="text" id="m_site" name="website" value="<%= v('website') %>" placeholder="yourbusiness.com" inputmode="url" maxlength="200"></div>
+        <div class="field"><label for="m_title">Your title</label><input type="text" id="m_title" name="job_title" value="<%= v('job_title') %>" placeholder="e.g. Owner" maxlength="120" required></div>
+      </div>
+      <h2>Verify your business</h2>
+      <p class="muted">Used only to match your business to its own records. Encrypted and never shared or shown in full.</p>
+      <fieldset class="field">
+        <div class="choice two">
+          <label><input type="radio" name="identity_method" value="ein" <%= v('identity_method') !== 'dob_ssn4' ? 'checked' : '' %>>EIN<small>Federal Employer Identification Number</small></label>
+          <label><input type="radio" name="identity_method" value="dob_ssn4" <%= chk('identity_method', 'dob_ssn4') %>>No EIN<small>Sole proprietor: verify with the owner&rsquo;s details</small></label>
+        </div>
+      </fieldset>
+      <div data-identity="ein" <%= v('identity_method') === 'dob_ssn4' ? 'hidden' : '' %>>
+        <div class="field"><label for="m_ein">EIN</label><input type="text" id="m_ein" name="ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off" required></div>
+      </div>
+      <div data-identity="dob_ssn4" <%= v('identity_method') === 'dob_ssn4' ? '' : 'hidden' %>>
+        <div class="row">
+          <div class="field"><label for="m_dob">Owner&rsquo;s date of birth</label><input type="date" id="m_dob" name="dob" required></div>
+          <div class="field"><label for="m_ssn">Owner&rsquo;s last 4 of SSN</label><input type="text" id="m_ssn" name="ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="hp" aria-hidden="true"><label for="company_fax">Leave this field empty</label><input type="text" id="company_fax" name="company_fax" tabindex="-1" autocomplete="off"></div>
+
+    <label class="check mt"><input type="checkbox" name="attest" <%= chk('attest', 'on') %> required><span>The information I&rsquo;ve provided is accurate, and I consent to FinDex verifying it.</span></label>
+
+    <% if (turnstileSiteKey) { %>
+      <div class="cf-turnstile turnstile" data-sitekey="<%= turnstileSiteKey %>"></div>
+      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <% } %>
+
+    <button class="btn block" type="submit">Submit request</button>
+    <p class="muted mt center">Every request is reviewed before access is granted. Already approved? <a href="/login">Sign in</a></p>
+  </form>
+</section>
+<script src="/js/request-access.js" defer></script>
+<%- include('partials/foot') %>

@@ -4,6 +4,12 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const path = require('path');
 
+const { checkKeys } = require('./lib/crypto');
+const turnstile = require('./lib/turnstile');
+
+// Refuse to start without valid field-encryption keys rather than fail on the first sign-up.
+checkKeys();
+
 const app = express();
 
 // Render sits behind one proxy; needed for req.ip and rate limiting.
@@ -15,7 +21,9 @@ app.use(helmet({
     useDefaults: true,
     directives: {
       'default-src': ["'self'"],
-      'script-src': ["'self'"],
+      'script-src': ["'self'", ...(turnstile.enabled() ? ['https://challenges.cloudflare.com'] : [])],
+      'frame-src': turnstile.enabled() ? ['https://challenges.cloudflare.com'] : ["'none'"],
+      'connect-src': ["'self'", ...(turnstile.enabled() ? ['https://challenges.cloudflare.com'] : [])],
       'style-src': ["'self'"],
       'font-src': ["'self'"],
       'img-src': ["'self'", 'data:'],
@@ -40,6 +48,7 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/', (req, res) => res.redirect('/login'));
+app.use('/', require('./routes/access'));
 
 // Placeholder until the login flow lands.
 app.get('/login', (req, res) => res.render('placeholder', { pageTitle: 'Sign In' }));

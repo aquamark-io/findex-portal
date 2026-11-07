@@ -119,3 +119,32 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #a86ae0; outline-
   display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: center;
 }
 .foot a { color: var(--deep); }
+
+/* Nav text links (match findex homepage) */
+.nav-link { color: rgba(255,255,255,0.88); font-size: 0.95rem; font-weight: 600; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav-link:hover, .nav-link:focus-visible { color: #fff; border-bottom-color: #fff; outline: none; }
+.nav-actions { gap: 26px; }
+@media (max-width: 640px) {
+  .band-inner { flex-wrap: wrap; row-gap: 8px; padding: 18px 16px 14px; }
+  .nav-actions { width: 100%; gap: 20px; }
+  .nav-link { font-size: 0.88rem; }
+}
+
+/* Two-option choice */
+.choice.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 560px) { .choice.two { grid-template-columns: 1fr; } }
+
+/* Check My Record chooser */
+.pick { display: grid; gap: 12px; }
+.pick-card {
+  display: block; text-decoration: none; background: #fff; border: 1px solid #d9c8f0; border-radius: 14px; padding: 18px 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.pick-card strong { display: block; color: var(--deep); font-size: 1.08rem; }
+.pick-card span { color: var(--muted); font-size: 0.92rem; }
+.pick-card:hover, .pick-card:focus-visible { border-color: var(--base); box-shadow: 0 0 0 2px rgba(90,26,154,0.18); transform: translateY(-1px); outline: none; }
+.btn:disabled { opacity: 0.7; cursor: default; }
+.mt { margin-top: 20px; }
+.center { text-align: center; }
+.turnstile { margin: 8px 0 16px; }
+input[type=radio], input[type=checkbox] { accent-color: var(--base); }

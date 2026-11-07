@@ -1,0 +1,21 @@
+<%- include('partials/head') %>
+<section class="card">
+  <h1 class="title">Check My Record</h1>
+  <p class="lead">View, dispute, or appeal any report about you or your business, at no cost. An approved account is required, and we verify every request. Who are you?</p>
+  <div class="pick">
+    <a class="pick-card" href="/request-access?type=individual">
+      <strong>An individual</strong>
+      <span>An employee or contractor in commercial finance</span>
+    </a>
+    <a class="pick-card" href="/request-access?type=company">
+      <strong>A company</strong>
+      <span>A broker, funder, lender, software or lead provider</span>
+    </a>
+    <a class="pick-card" href="/request-access?type=merchant">
+      <strong>A funded business</strong>
+      <span>A business that received funding</span>
+    </a>
+  </div>
+  <p class="muted mt">Already approved? <a href="/login">Sign in</a></p>
+</section>
+<%- include('partials/foot') %>

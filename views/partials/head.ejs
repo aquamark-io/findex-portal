@@ -19,8 +19,9 @@
       <% if (typeof account !== 'undefined' && account) { %>
         <form method="post" action="/logout"><button class="nav-btn nav-btn-ghost" type="submit">Sign Out</button></form>
       <% } else { %>
-        <a class="nav-btn nav-btn-solid" href="/request-access">Request Access</a>
-        <a class="nav-btn nav-btn-ghost" href="/login">Sign In</a>
+        <a class="nav-link" href="/check-my-record">Check My Record</a>
+        <a class="nav-link" href="/request-access">Request Access</a>
+        <a class="nav-link" href="/login">Sign In</a>
       <% } %>
     </nav>
   </div>
