@@ -58,6 +58,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.get('/', (req, res) => res.redirect('/login'));
 app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/dashboard'));
+app.use('/', require('./routes/reports'));
 app.use('/', require('./routes/access'));
 app.use('/admin', require('./routes/admin'));
 

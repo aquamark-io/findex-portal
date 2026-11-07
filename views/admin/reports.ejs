@@ -1,0 +1,26 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Reports</h1>
+<nav class="tabs" aria-label="Filter by status">
+  <% [['submitted', 'To review'], ['notice_sent', 'Notice sent'], ['published', 'Published'], ['disputed', 'Disputed'], ['rejected', 'Rejected'], ['all', 'All']].forEach(([key, label]) => { %>
+    <a class="tab <%= status === key ? 'active' : '' %>" href="/admin/reports?status=<%= key %>"><%= label %><% if (counts[key] !== undefined) { %> <span class="count"><%= counts[key] %></span><% } %></a>
+  <% }) %>
+</nav>
+<% if (!reports.length) { %>
+  <div class="card"><p class="lead flush">No reports here.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Submitted</th><th>About</th><th>Category</th><th>Reported by</th><th>Status</th></tr></thead>
+    <tbody>
+      <% reports.forEach(r => { %>
+        <tr>
+          <td class="nowrap"><%= fmt(r.created_at) %></td>
+          <td><a href="/admin/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong></a><div class="muted"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] || '' %></div><% if (r.is_test) { %><span class="pill test">TEST</span><% } %></td>
+          <td><%= R.CATEGORIES[r.category].label %><div class="muted">Incident <%= dateOnly(r.incident_date) %></div></td>
+          <td><%= r.reporter ? r.reporter.business_legal_name : '' %><div class="muted"><%= r.reporter && COMPANY_TYPES[r.reporter.company_type] || '' %></div></td>
+          <td><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+<%- include('../partials/foot') %>

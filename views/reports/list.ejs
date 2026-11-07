@@ -1,0 +1,22 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Your reports</h1>
+<p class="lead"><a class="btn" href="/reports/new">Submit a report</a></p>
+<% if (!reports.length) { %>
+  <div class="card"><p class="lead flush">You haven&rsquo;t submitted any reports yet.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Submitted</th><th>About</th><th>Category</th><th>Incident date</th><th>Status</th></tr></thead>
+    <tbody>
+      <% reports.forEach(r => { %>
+        <tr>
+          <td class="nowrap"><%= fmtDate(r.created_at) %></td>
+          <td><a href="/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong></a><div class="muted"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] || '' %></div></td>
+          <td><%= R.CATEGORIES[r.category].label %></td>
+          <td class="nowrap"><%= fmtDate(r.incident_date) %></td>
+          <td><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+<%- include('../partials/foot') %>

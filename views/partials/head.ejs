@@ -25,11 +25,13 @@
     <nav class="nav-actions" id="site-nav" aria-label="Account">
       <% if (typeof adminNav !== 'undefined') { %>
         <% if (adminNav) { %>
-          <a <%- here('/admin') %> href="/admin">Requests</a>
+          <a <%- currentPath.startsWith('/admin/reports') ? 'class="nav-link"' : here('/admin') %> href="/admin">Requests</a>
+          <a <%- here('/admin/reports') %> href="/admin/reports">Reports</a>
           <form method="post" action="/admin/logout"><button class="nav-link link-reset" type="submit">Sign Out</button></form>
         <% } %>
       <% } else if (typeof account !== 'undefined' && account) { %>
         <a <%- here('/dashboard') %> href="/dashboard">Dashboard</a>
+        <% if (account.account_type === 'company' && account.terms_version) { %><a <%- here('/reports') %> href="/reports">Reports</a><% } %>
         <form method="post" action="/logout"><button class="nav-link link-reset" type="submit">Sign Out</button></form>
       <% } else { %>
         <a <%- here('/check-my-record') %> href="/check-my-record">Check My Record</a>

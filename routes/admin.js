@@ -22,6 +22,9 @@ const STATUSES = ['pending', 'approved', 'denied'];
 const EVENT_LABELS = {
   requested: 'Request submitted',
   full_access_accepted: 'Accepted the terms (full access)',
+  report_submitted: 'Report submitted',
+  report_rejected: 'Report rejected (reporter emailed the reason)',
+  evidence_viewed: 'Evidence file opened',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',
@@ -216,6 +219,107 @@ router.post('/accounts/:id/delete', async (req, res, next) => {
     const { error } = await supabase.from('fx_accounts').delete().eq('id', account.id).eq('is_test', true);
     if (error) throw new Error(`Delete: ${error.message}`);
     res.redirect(303, `/admin?${new URLSearchParams({ status: 'all' })}`);
+  } catch (err) { next(err); }
+});
+
+// ---------- reports (phase two) ----------
+
+const R = require('../lib/reports');
+const { STATUS_LABELS } = require('./reports');
+const REPORT_STATUSES = ['submitted', 'rejected', 'notice_sent', 'notice_undeliverable', 'published', 'disputed', 'removed', 'expired'];
+const dateOnly = d => d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
+
+router.use('/reports', (req, res, next) => { Object.assign(res.locals, { R, STATUS_LABELS, dateOnly }); next(); });
+
+router.get('/reports', async (req, res, next) => {
+  try {
+    const status = REPORT_STATUSES.includes(req.query.status) || req.query.status === 'all' ? req.query.status : 'submitted';
+    let q = supabase.from('fx_reports')
+      .select('id, category, incident_date, status, is_test, created_at, subject_name_reported, fx_subjects(subject_type), reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
+      .order('created_at', { ascending: false }).limit(500);
+    if (status !== 'all') q = q.eq('status', status);
+    const { data: reports, error } = await q;
+    if (error) throw new Error(`List reports: ${error.message}`);
+    const counts = {};
+    await Promise.all(['submitted', 'notice_sent', 'published', 'disputed', 'rejected'].map(async st => {
+      const { count } = await supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('status', st);
+      counts[st] = count || 0;
+    }));
+    res.render('admin/reports', { pageTitle: 'Reports', reports: reports || [], status, counts });
+  } catch (err) { next(err); }
+});
+
+function maskedSubject(s) {
+  const out = [];
+  try {
+    if (s.dob_enc) out.push(['DOB', 'DOB on file']);
+    if (s.ssn_last4_enc) out.push(['SSN', `***-**-${decrypt(s.ssn_last4_enc)}`]);
+    if (s.ein_enc) { const e = decrypt(s.ein_enc); out.push(['EIN', `**-***${e.slice(-4)}`]); }
+  } catch (err) {
+    console.error(`Subject decrypt failed for ${s.id}`);
+    out.push(['Identity', 'On file (could not decrypt)']);
+  }
+  return out;
+}
+
+async function loadReport(id) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { data, error } = await supabase.from('fx_reports').select('*, fx_subjects(*), reporter:fx_accounts!fx_reports_reporter_account_id_fkey(*)').eq('id', id).maybeSingle();
+  if (error) throw new Error(`Load report: ${error.message}`);
+  return data;
+}
+
+router.get('/reports/:id', async (req, res, next) => {
+  try {
+    const report = await loadReport(req.params.id);
+    if (!report) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That report does not exist.' });
+    const [{ data: files }, { data: events }, { data: emails }, { count: otherReports }] = await Promise.all([
+      supabase.from('fx_report_evidence').select('*').eq('report_id', report.id).order('created_at'),
+      supabase.from('fx_events').select('event, actor, detail, created_at').eq('report_id', report.id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('fx_subject_emails').select('email').eq('subject_id', report.subject_id),
+      supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('subject_id', report.subject_id).neq('id', report.id),
+    ]);
+    res.render('admin/report', {
+      pageTitle: report.subject_name_reported, report, subject: report.fx_subjects, reporter: report.reporter,
+      identity: maskedSubject(report.fx_subjects), files: files || [], events: events || [],
+      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0,
+      msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
+    });
+  } catch (err) { next(err); }
+});
+
+// Evidence files open through a short-lived signed link; every open is logged.
+router.get('/reports/:id/files/:fileId', async (req, res, next) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.fileId)) return res.redirect(`/admin/reports/${req.params.id}`);
+    const { data: f } = await supabase.from('fx_report_evidence').select('*').eq('id', req.params.fileId).eq('report_id', req.params.id).maybeSingle();
+    if (!f) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That file does not exist.' });
+    const { data, error } = await supabase.storage.from('fx-evidence').createSignedUrl(f.storage_path, 120);
+    if (error) throw new Error(`Signed URL: ${error.message}`);
+    await logEvent({ reportId: f.report_id, event: 'evidence_viewed', actor: 'admin', detail: { file: f.file_name }, ip: req.ip });
+    res.redirect(data.signedUrl);
+  } catch (err) { next(err); }
+});
+
+const backReport = (id, msg, err) => `/admin/reports/${id}?${new URLSearchParams(err ? { err: msg } : { msg })}`;
+
+router.post('/reports/:id/reject', async (req, res, next) => {
+  try {
+    const report = await loadReport(req.params.id);
+    if (!report) return res.redirect(303, '/admin/reports');
+    const reason = typeof req.body.reason === 'string' ? req.body.reason.trim().slice(0, 2000) : '';
+    if (!reason) return res.redirect(303, backReport(report.id, 'A reason is required to reject a report. It is shared with the reporter.', true));
+    if (report.status !== 'submitted') return res.redirect(303, backReport(report.id, 'Only reports waiting for review can be rejected.', true));
+    const note = typeof req.body.note === 'string' ? req.body.note.trim().slice(0, 2000) || null : null;
+    const { data: updated, error } = await supabase.from('fx_reports')
+      .update({ status: 'rejected', rejection_reason: reason, review_note: note, reviewed_at: new Date().toISOString() })
+      .eq('id', report.id).eq('status', 'submitted').select('id').maybeSingle();
+    if (error) throw new Error(`Reject report: ${error.message}`);
+    if (!updated) return res.redirect(303, backReport(report.id, 'This report changed while you were viewing it.', true));
+    const info = { reportId: report.id, categoryLabel: R.CATEGORIES[report.category].label, subjectName: report.subject_name_reported };
+    const sent = await sendOrLog({ to: report.reporter.email, tag: 'fx-report-rejected', ...templates.reportRejected(report.reporter, info, reason) }, report.reporter.id);
+    await logEvent({ accountId: report.reporter_account_id, reportId: report.id, event: 'report_rejected', actor: 'admin', detail: { email_sent: sent }, ip: req.ip });
+    res.redirect(303, backReport(report.id, sent ? 'Rejected. The reporter was emailed the reason.' : 'Rejected, but the email to the reporter failed.', !sent));
   } catch (err) { next(err); }
 });
 

@@ -1,0 +1,83 @@
+<%- include('../partials/head') %>
+<%
+  const v = k => (values && typeof values[k] === 'string') ? values[k] : '';
+  const sel = (k, val) => v(k) === val ? 'selected' : '';
+%>
+<section class="card">
+  <p class="signing-as">Reporting: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/reports/new">Change</a></p>
+  <h1 class="title">Submit a report</h1>
+  <p class="lead">Every report is independently reviewed before the reported party is notified or anything is published.</p>
+
+  <% if (errors && errors.length) { %>
+    <div class="alert error" role="alert"><strong>Please fix the following:</strong>
+      <ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
+  <% } %>
+
+  <form method="post" action="/reports/new/<%= who %>" enctype="multipart/form-data" id="report-form">
+    <% if (subjectType === 'individual') { %>
+      <h2>Who are you reporting?</h2>
+      <div class="field"><label for="s_name">Full name</label><input type="text" id="s_name" name="subject_name" value="<%= v('subject_name') %>" maxlength="160" required></div>
+      <div class="field"><label for="s_email">Email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">The reported party is notified here before anything is published.</p></div>
+      <div class="row">
+        <div class="field"><label for="s_dob">Date of birth</label><input type="date" id="s_dob" name="subject_dob" required></div>
+        <div class="field"><label for="s_ssn">Last 4 of SSN</label><input type="text" id="s_ssn" name="subject_ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
+      </div>
+      <p class="muted">Used only to identify the right person. Encrypted and never shown in full.</p>
+    <% } else if (subjectType === 'company') { %>
+      <h2>Who are you reporting?</h2>
+      <div class="row">
+        <div class="field"><label for="s_name">Company name</label><input type="text" id="s_name" name="subject_name" value="<%= v('subject_name') %>" maxlength="200" required aria-describedby="s_name_hint"><p class="field-hint" id="s_name_hint">The name you know them by is fine.</p></div>
+        <div class="field"><label for="s_site">Company website</label><input type="text" id="s_site" name="subject_website" value="<%= v('subject_website') %>" placeholder="theircompany.com" inputmode="url" maxlength="200" required></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="s_contact">Contact person</label><input type="text" id="s_contact" name="subject_contact" value="<%= v('subject_contact') %>" maxlength="160" required></div>
+        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">They&rsquo;re notified here before anything is published.</p></div>
+      </div>
+    <% } else { %>
+      <h2>Who are you reporting?</h2>
+      <div class="row">
+        <div class="field"><label for="s_name">Business legal name</label><input type="text" id="s_name" name="subject_name" value="<%= v('subject_name') %>" maxlength="200" required></div>
+        <div class="field"><label for="s_dba">DBA <span class="hint">(optional)</span></label><input type="text" id="s_dba" name="subject_dba" value="<%= v('subject_dba') %>" maxlength="200"></div>
+      </div>
+      <div class="field"><label for="s_ein">EIN</label><input type="text" id="s_ein" name="subject_ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off" required></div>
+      <div class="row">
+        <div class="field"><label for="s_contact">Contact person</label><input type="text" id="s_contact" name="subject_contact" value="<%= v('subject_contact') %>" maxlength="160" required></div>
+        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">They&rsquo;re notified here before anything is published.</p></div>
+      </div>
+    <% } %>
+
+    <h2>What happened?</h2>
+    <div class="row">
+      <div class="field"><label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option value="">Select…</option>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-hint="<%= R.EVIDENCE_HINTS[c.key] %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+        </select>
+      </div>
+      <div class="field"><label for="incident_date">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint">Within the past 7 years.</p></div>
+    </div>
+    <div class="field"><label for="description">Description</label>
+      <textarea id="description" name="description" rows="6" minlength="20" maxlength="5000" required placeholder="What happened, when, and how the evidence supports it."><%= v('description') %></textarea>
+    </div>
+
+    <h2>Evidence</h2>
+    <p class="muted" id="evidence-hint">Choose a category to see examples of acceptable evidence.</p>
+    <div class="field"><label for="evidence">Evidence files</label>
+      <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
+      <p class="field-hint" id="files_hint">Up to <%= R.MAX_FILES %> files, 25 MB each. PDF, images, exported emails (.eml/.msg), spreadsheets, Word, or audio. Original files are preferred over screenshots; call recordings must be lawfully recorded.</p>
+    </div>
+    <div class="field" id="default-notice-field" hidden>
+      <label for="default_notice">Default notice sent to the merchant</label>
+      <input type="file" id="default_notice" name="default_notice" accept="<%= R.ACCEPT_ATTR %>" disabled>
+      <p class="field-hint">Required for default reports.</p>
+    </div>
+
+    <div class="hp" aria-hidden="true"><label for="company_fax">Leave this field empty</label><input type="text" id="company_fax" name="company_fax" tabindex="-1" autocomplete="off"></div>
+
+    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify this report is accurate and supported by the attached evidence, and that full Social Security and bank account numbers have been redacted.</span></label>
+
+    <button class="btn block" type="submit">Submit report</button>
+  </form>
+</section>
+<script src="/js/report-form.js?v=<%= assetV %>" defer></script>
+<%- include('../partials/foot') %>

@@ -8,7 +8,7 @@ async function requireAccount(req, res, next) {
   if (!session) return res.redirect('/login');
   try {
     const { data: account, error } = await supabase.from('fx_accounts')
-      .select('id, account_type, status, first_name, last_name, email, business_legal_name, company_type, terms_version')
+      .select('id, account_type, status, first_name, last_name, email, business_legal_name, company_type, terms_version, is_test')
       .eq('id', session.sub).maybeSingle();
     if (error) throw new Error(error.message);
     if (!account || account.status !== 'approved') {

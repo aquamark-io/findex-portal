@@ -53,6 +53,16 @@ account is still approved, so revoking in `/admin` ends access immediately. Expi
 (`***-**-1234`, `**-***1234`, "DOB on file"), Approve / Deny / Revoke with an internal note, and an event history.
 Approving and denying send the matching email. `[TEST]` requests can be deleted.
 
+## Reports (phase two, step 1)
+
+Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with
+evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
+are limited by subject type, and slow pay / missed payments / default are funders-only; default reports require
+the default notice. Reported parties (`fx_subjects`) are de-duplicated by DOB + SSN last 4, EIN, or website
+domain, with identifiers encrypted. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
+links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting (the
+10-day notice) is build step 2. Design decisions: `docs/reporting-design.md`.
+
 ## Environment variables (Render)
 
 | Variable | Notes |

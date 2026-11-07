@@ -1,0 +1,27 @@
+<%- include('../partials/head') %>
+<% const s = report.fx_subjects || {}; %>
+<section class="card">
+  <% if (submitted) { %><div class="alert ok" role="status">Report submitted. We&rsquo;ll email you once it has been reviewed.</div><% } %>
+  <p class="signing-as"><a href="/reports">&larr; Your reports</a></p>
+  <h1 class="title"><%= report.subject_name_reported %></h1>
+  <p class="lead"><span class="pill <%= report.status %>"><%= STATUS_LABELS[report.status] %></span></p>
+  <% if (report.status === 'rejected' && report.rejection_reason) { %>
+    <div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div>
+  <% } %>
+  <dl class="kv">
+    <dt>Reported party</dt><dd><%= R.SUBJECT_TYPES[s.subject_type] %></dd>
+    <% if (s.website) { %><dt>Website</dt><dd><%= s.website %></dd><% } %>
+    <% if (s.contact_name) { %><dt>Contact</dt><dd><%= s.contact_name %></dd><% } %>
+    <dt>Notice email</dt><dd><%= report.notice_email %></dd>
+    <dt>Category</dt><dd><%= R.CATEGORIES[report.category].label %></dd>
+    <dt>Incident date</dt><dd><%= fmtDate(report.incident_date) %></dd>
+    <dt>Submitted</dt><dd><%= fmtDate(report.created_at) %></dd>
+  </dl>
+  <h2>Description</h2>
+  <p class="prewrap"><%= report.description %></p>
+  <h2>Evidence</h2>
+  <ul class="checklist">
+    <% files.forEach(f => { %><li><%= f.file_name %> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
+  </ul>
+</section>
+<%- include('../partials/foot') %>

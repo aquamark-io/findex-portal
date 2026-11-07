@@ -1,0 +1,71 @@
+<%- include('../partials/head', { wide: true }) %>
+<%
+  const r = report, s = subject;
+  const subjRows = [
+    ['Type', R.SUBJECT_TYPES[s.subject_type]],
+    ['Name', s.name + (s.name !== r.subject_name_reported ? ` (reported as "${r.subject_name_reported}")` : '')],
+    ['DBA', s.dba], ['Website', s.website], ['Contact', s.contact_name],
+    ...identity,
+    ['Notice email', r.notice_email],
+    ['Other emails on file', subjectEmails.filter(e => e !== r.notice_email).join(', ')],
+    ['Other reports about them', otherReports ? String(otherReports) : 'None'],
+  ].filter(([, v]) => v);
+%>
+<p><a href="/admin/reports?status=<%= r.status %>">&larr; Back to reports</a></p>
+<h1 class="title"><%= r.subject_name_reported %></h1>
+<p class="lead"><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span> <% if (r.is_test) { %><span class="pill test">TEST</span><% } %></p>
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+
+<div class="detail-grid">
+  <section class="card">
+    <h2 class="flush-top">Report</h2>
+    <dl class="kv">
+      <dt>Category</dt><dd><%= R.CATEGORIES[r.category].label %></dd>
+      <dt>Incident date</dt><dd><%= dateOnly(r.incident_date) %></dd>
+      <dt>Submitted</dt><dd><%= fmt(r.created_at) %></dd>
+      <dt>Reported by</dt><dd><a href="/admin/accounts/<%= reporter.id %>"><%= reporter.business_legal_name %></a> (<%= COMPANY_TYPES[reporter.company_type] || 'Company' %>), <%= reporter.first_name %> <%= reporter.last_name %></dd>
+      <dt>Expires</dt><dd><%= dateOnly(r.expires_on || (r.incident_date && (Number(r.incident_date.slice(0, 4)) + 7) + r.incident_date.slice(4))) %></dd>
+    </dl>
+    <h2>Description</h2>
+    <p class="prewrap"><%= r.description %></p>
+    <h2>Evidence (<%= files.length %>)</h2>
+    <ul class="checklist">
+      <% files.forEach(f => { %><li><a href="/admin/reports/<%= r.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
+    </ul>
+    <h2>Who it&rsquo;s about</h2>
+    <dl class="kv"><% subjRows.forEach(([k, v]) => { %><dt><%= k %></dt><dd><%= v %></dd><% }) %></dl>
+  </section>
+
+  <section class="card">
+    <h2 class="flush-top">Review</h2>
+    <ul class="checklist">
+      <li>Evidence comes from a system of record (exported emails, PDFs, system reports), not only screenshots</li>
+      <li>More than one piece of evidence supports the incident</li>
+      <li>The source matches: sender, account, or system ties to the reported party</li>
+      <li>Full Social Security and bank account numbers are redacted</li>
+      <li>Incident is within 7 years<% if (r.category === 'default') { %>, and the default notice is attached<% } %></li>
+      <li>Recordings, if any, are supporting only and lawfully recorded</li>
+    </ul>
+    <% if (r.status === 'submitted') { %>
+      <form method="post" class="decision mt">
+        <div class="field"><label for="reason">Reason for rejecting <span class="hint">(shared with the reporter)</span></label><textarea id="reason" name="reason" rows="3" maxlength="2000"></textarea></div>
+        <div class="field"><label for="note">Internal note <span class="hint">(optional, never emailed)</span></label><textarea id="note" name="note" rows="2" maxlength="2000"></textarea></div>
+        <div class="actions">
+          <button class="btn" type="button" disabled title="Accepting sends the 10-day notice. Coming in build step 2.">Accept &amp; send notice</button>
+          <button class="btn danger" type="submit" formaction="/admin/reports/<%= r.id %>/reject" data-confirm="Reject this report and email the reason to <%= reporter.email %>?">Reject</button>
+        </div>
+        <p class="muted">Accepting (coming in build step 2) emails the reported party and starts the 10-day window.</p>
+      </form>
+    <% } else if (r.status === 'rejected') { %>
+      <p><strong>Rejected:</strong> <%= r.rejection_reason %></p>
+      <% if (r.review_note) { %><p class="muted">Internal note: <%= r.review_note %></p><% } %>
+    <% } %>
+    <h2>History</h2>
+    <% if (!events.length) { %><p class="muted">No events yet.</p><% } else { %>
+      <ul class="history"><% events.forEach(e => { %><li><span class="muted nowrap"><%= fmt(e.created_at) %></span> <%= eventLabel(e) %><% if (e.detail && e.detail.file) { %>: <%= e.detail.file %><% } %> <span class="muted">(<%= ACTORS[e.actor] || e.actor %>)</span></li><% }) %></ul>
+    <% } %>
+  </section>
+</div>
+<script src="/js/admin.js?v=<%= assetV %>" defer></script>
+<%- include('../partials/foot') %>

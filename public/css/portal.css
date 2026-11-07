@@ -240,3 +240,12 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 .field-error { margin: 6px 0 0; font-size: 0.84rem; color: var(--error); }
 input[aria-invalid="true"] { border-color: var(--error); }
 .field:has(.field-error) .field-hint { display: none; }
+.prewrap { white-space: pre-wrap; color: var(--body); }
+textarea { resize: vertical; }
+input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed #c9b3ea; border-radius: 10px; background: #fff; }
+.pill.submitted { background: #fff4e5; color: #b54708; }
+.pill.rejected, .pill.removed { background: var(--error-bg); color: var(--error); }
+.pill.notice_sent, .pill.disputed, .pill.notice_undeliverable { background: #eef2ff; color: #3538cd; }
+.pill.published { background: var(--ok-bg); color: var(--ok); }
+.pill.expired { background: #f2f4f7; color: #475467; }
+.btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
