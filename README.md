@@ -65,5 +65,5 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 | `ONBOARDING_NOTIFY_EMAIL` | Receives new-request notifications |
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
-| `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different 32-byte keys, base64. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Never change once data exists. |
+| `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |
