@@ -49,6 +49,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/', (req, res) => res.redirect('/login'));
 app.use('/', require('./routes/access'));
+app.use('/admin', require('./routes/admin'));
 
 // Placeholder until the login flow lands.
 app.get('/login', (req, res) => res.render('placeholder', { pageTitle: 'Sign In' }));

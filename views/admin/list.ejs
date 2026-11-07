@@ -1,0 +1,30 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Access requests</h1>
+<nav class="tabs" aria-label="Filter by status">
+  <% [['pending', 'Pending'], ['approved', 'Approved'], ['denied', 'Denied'], ['all', 'All']].forEach(([key, label]) => { %>
+    <a class="tab <%= status === key ? 'active' : '' %>" href="/admin?status=<%= key %>"><%= label %><% if (counts[key] !== undefined) { %> <span class="count"><%= counts[key] %></span><% } %></a>
+  <% }) %>
+</nav>
+<% if (!accounts.length) { %>
+  <div class="card"><p class="lead flush">No <%= status === 'all' ? '' : status %> requests.</p></div>
+<% } else { %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Submitted</th><th>Type</th><th>Name / Business</th><th>Email</th><th>Status</th></tr></thead>
+      <tbody>
+        <% accounts.forEach(a => { %>
+          <tr>
+            <td class="nowrap"><%= fmt(a.created_at) %></td>
+            <td><%= ACCOUNT_TYPES[a.account_type] %><% if (a.company_type) { %><div class="muted"><%= COMPANY_TYPES[a.company_type] %></div><% } %></td>
+            <td><a href="/admin/accounts/<%= a.id %>"><strong><%= displayName(a) %></strong></a>
+              <% if (a.business_legal_name) { %><div class="muted"><%= a.first_name %> <%= a.last_name %></div><% } %>
+              <% if (a.is_test) { %><span class="pill test">TEST</span><% } %></td>
+            <td><%= a.email %></td>
+            <td><span class="pill <%= a.status %>"><%= a.status %></span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+<%- include('../partials/foot') %>

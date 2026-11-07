@@ -148,3 +148,32 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #a86ae0; outline-
 .center { text-align: center; }
 .turnstile { margin: 8px 0 16px; }
 input[type=radio], input[type=checkbox] { accent-color: var(--base); }
+
+/* Admin */
+.link-reset { background: none; border: 0; border-bottom: 2px solid transparent; font-family: inherit; line-height: inherit; cursor: pointer; }
+.flush { margin: 0; }
+.flush-top { margin-top: 0; }
+.nowrap { white-space: nowrap; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+.tab { padding: 8px 14px; border-radius: 10px; border: 1px solid #d9c8f0; background: #fff; text-decoration: none; font-weight: 600; font-size: 0.92rem; color: var(--deep); }
+.tab.active { background: var(--deep); border-color: var(--deep); color: #fff; }
+.tab .count { opacity: 0.7; font-weight: 500; margin-left: 2px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--lav-border); border-radius: 16px; background: #fff; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+.table th { text-align: left; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--lav); padding: 12px 14px; }
+.table td { padding: 12px 14px; border-top: 1px solid var(--lav-border); vertical-align: top; }
+.table .muted { font-size: 0.82rem; }
+.pill { display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px; margin-right: 4px; }
+.pill.pending { background: #fff4e5; color: #b54708; }
+.pill.approved { background: var(--ok-bg); color: var(--ok); }
+.pill.denied { background: var(--error-bg); color: var(--error); }
+.pill.test { background: #eef2ff; color: #3538cd; }
+.detail-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; }
+.detail-grid .card + .card { margin-top: 0; }
+@media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; font-size: 0.95rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; word-break: break-word; }
+.checklist, .history { margin: 0; padding-left: 18px; color: var(--body); font-size: 0.92rem; }
+.checklist li, .history li { margin-bottom: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }

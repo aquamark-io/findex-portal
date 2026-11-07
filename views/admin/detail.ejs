@@ -1,0 +1,86 @@
+<%- include('../partials/head', { wide: true }) %>
+<%
+  const a = account;
+  const rows = [
+    ['Type', ACCOUNT_TYPES[a.account_type] + (a.company_type ? ` (${COMPANY_TYPES[a.company_type]})` : '')],
+    ['Contact', `${a.first_name} ${a.last_name}`],
+    ['Title', a.job_title],
+    ['Email', a.email],
+    ['Phone', fmtPhone(a.phone)],
+    [a.account_type === 'company' ? 'Company legal name' : 'Business legal name', a.business_legal_name],
+    ['DBA', a.business_dba],
+    ['Website', a.website],
+    ['Email domain', a.email_domain],
+    ['State of registration', a.state_of_registration ? STATES[a.state_of_registration] : null],
+    ['Company', a.current_company],
+    ['Role', a.worker_type ? WORKER_TYPES[a.worker_type] : null],
+    ...identity,
+    ['Submitted', fmt(a.created_at)],
+    ['Reviewed', fmt(a.reviewed_at)],
+    ['Last sign-in', fmt(a.last_login_at)],
+  ].filter(([, v]) => v);
+%>
+<p><a href="/admin?status=<%= a.status %>">&larr; Back to <%= a.status %> requests</a></p>
+<h1 class="title"><%= displayName(a) %></h1>
+<p class="lead">
+  <span class="pill <%= a.status %>"><%= a.status %></span>
+  <% if (a.is_test) { %><span class="pill test">TEST</span><% } %>
+</p>
+
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+
+<div class="detail-grid">
+  <section class="card">
+    <h2 class="flush-top">Details</h2>
+    <dl class="kv">
+      <% rows.forEach(([k, v]) => { %>
+        <dt><%= k %></dt>
+        <dd><% if (k === 'Website') { %><a href="<%= v %>" target="_blank" rel="noopener noreferrer"><%= v %></a><% } else { %><%= v %><% } %></dd>
+      <% }) %>
+    </dl>
+    <% if (a.account_type === 'company') { %>
+      <h2>Verification checklist</h2>
+      <ul class="checklist">
+        <li>Email domain matches the website (checked automatically at sign-up)</li>
+        <li>Business is registered and active in <%= STATES[a.state_of_registration] %>: search the Secretary of State business registry</li>
+        <li>The website is real and matches the company name</li>
+        <li>The contact appears to work there in the stated role</li>
+      </ul>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2 class="flush-top">Decision</h2>
+    <% if (a.review_note) { %><p class="muted">Last note: <%= a.review_note %></p><% } %>
+    <form method="post" class="decision">
+      <div class="field">
+        <label for="note">Note <span class="hint">(optional, internal only, never emailed)</span></label>
+        <textarea id="note" name="note" rows="3" maxlength="2000"></textarea>
+      </div>
+      <div class="actions">
+        <% if (a.status !== 'approved') { %>
+          <button class="btn" type="submit" formaction="/admin/accounts/<%= a.id %>/approve" data-confirm="Approve this request and email <%= a.email %>?">Approve</button>
+        <% } %>
+        <% if (a.status !== 'denied') { %>
+          <button class="btn danger" type="submit" formaction="/admin/accounts/<%= a.id %>/deny" data-confirm="<%= a.status === 'approved' ? 'Revoke access' : 'Deny this request' %> and email <%= a.email %>?"><%= a.status === 'approved' ? 'Revoke access' : 'Deny' %></button>
+        <% } %>
+      </div>
+      <p class="muted"><%= a.status !== 'approved' ? 'Approving emails a sign-in link. ' : '' %><%= a.status !== 'denied' ? (a.status === 'approved' ? 'Revoking' : 'Denying') + ' sends a polite denial email.' : '' %></p>
+    </form>
+    <% if (a.is_test) { %>
+      <form method="post" action="/admin/accounts/<%= a.id %>/delete" class="mt">
+        <button class="btn secondary" type="submit" data-confirm="Permanently delete this TEST request?">Delete test request</button>
+      </form>
+    <% } %>
+
+    <h2>History</h2>
+    <% if (!events.length) { %><p class="muted">No events yet.</p><% } else { %>
+      <ul class="history">
+        <% events.forEach(e => { %><li><span class="muted nowrap"><%= fmt(e.created_at) %></span> <%= e.event.replace(/_/g, ' ') %> <span class="muted">(<%= e.actor %>)</span></li><% }) %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+<script src="/js/admin.js" defer></script>
+<%- include('../partials/foot') %>
