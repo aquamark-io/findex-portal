@@ -13,7 +13,7 @@ const supabase = require('../lib/supabase');
 const { encrypt, blindIndex } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
-const { testNotificationsOn } = require('../lib/notify-admin');
+const { testNotificationsOn, notifyAdminActivity } = require('../lib/notify-admin');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 const { INDEMNIFICATION } = require('../lib/terms');
@@ -93,10 +93,10 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
     // Same email already pending/approved: show the normal confirmation so the form
     // can't be used to discover who has an account.
     const { data: existing, error: findErr } = await supabase.from('fx_accounts')
-      .select('id').eq('email', data.email).in('status', LIVE).limit(1);
+      .select('*').eq('email', data.email).in('status', LIVE).limit(1);
     if (findErr) throw new Error(`Duplicate check: ${findErr.message}`);
     if (existing && existing.length) {
-      await logEvent({ accountId: existing[0].id, event: 'duplicate_request', actor: 'applicant', ip: req.ip });
+      await handleDuplicate(existing[0], req.ip);
       return res.redirect(303, '/request-access/received');
     }
 
@@ -110,7 +110,11 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
     const row = toRow(data);
     const { data: account, error: insErr } = await supabase.from('fx_accounts').insert(row).select('*').single();
     if (insErr) {
-      if (insErr.code === '23505' && /email_live/.test(insErr.message)) return res.redirect(303, '/request-access/received');
+      if (insErr.code === '23505' && /email_live/.test(insErr.message)) {
+        const { data: dup } = await supabase.from('fx_accounts').select('*').eq('email', data.email).in('status', LIVE).limit(1);
+        if (dup && dup.length) await handleDuplicate(dup[0], req.ip);
+        return res.redirect(303, '/request-access/received');
+      }
       if (insErr.code === '23505' && /company_domain/.test(insErr.message)) {
         return renderForm(res, { type, mode, values: body, errors: [companyExistsMessage], status: 409 });
       }
@@ -127,6 +131,26 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
 });
 
 const companyExistsMessage = 'Your company already has a FinDex account or a pending request. One account is allowed per company, so please contact the person at your company who manages it.';
+
+// Same email already has a pending/approved account. The screen shows the normal confirmation (so the form
+// can't be used to look up accounts); the email tells the inbox owner what's going on. At most one such email
+// per account per hour.
+async function handleDuplicate(account, ip) {
+  try {
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase.from('fx_events').select('id', { count: 'exact', head: true })
+      .eq('account_id', account.id).eq('event', 'duplicate_request').gte('created_at', since);
+    const notify = (count || 0) === 0;
+    await logEvent({ accountId: account.id, event: 'duplicate_request', actor: 'applicant', detail: { emailed: notify }, ip });
+    if (!notify) return;
+    const approved = account.status === 'approved';
+    const tpl = approved ? templates.alreadyHaveAccount(account) : templates.requestAlreadyPending(account);
+    await sendEmail({ to: account.email, tag: approved ? 'fx-duplicate-approved' : 'fx-duplicate-pending', ...tpl });
+    await notifyAdminActivity(approved ? 'duplicate_approved' : 'duplicate_pending', { email: account.email, account });
+  } catch (err) {
+    console.error(`Duplicate sign-up handling for account ${account.id} failed:`, err.message);
+  }
+}
 
 function toRow(d) {
   const row = {
