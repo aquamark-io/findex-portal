@@ -235,3 +235,4 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 .signing-as { margin: 0 0 14px; font-size: 0.92rem; color: var(--muted); }
 .signing-as strong { color: var(--deep); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+.field-hint { margin: 6px 0 0; font-size: 0.84rem; color: var(--muted); }
