@@ -53,7 +53,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 6. **Disputed**: withheld while FinDex reinvestigates (FCRA: 30 days, up to 45 with new information, for individuals)
    → **Upheld** (published), **Amended**, or **Removed**
 7. **Published**: visible in member searches. A later dispute moves it back to *Disputed* and withholds it
-8. **Expired**: deleted automatically after 7 years
+8. **Expired**: deleted automatically after 7 years, **unless actively in dispute** (deletion waits until the dispute is resolved)
 
 ## Required CFPB forms (Regulation V)
 
