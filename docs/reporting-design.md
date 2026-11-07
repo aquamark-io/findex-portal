@@ -3,6 +3,25 @@
 Status: decisions for the next phase (search, report submission, notices, disputes). Not built yet.
 Items marked **Counsel** need legal review before launch. This document is not legal advice.
 
+## Phase two decisions (answers to the open questions)
+
+- **Searchers see everything** on a published report: date, category, description, reporting company's name,
+  and the evidence files.
+- **Redaction:** not automated. Reporters must redact full SSNs and bank account numbers from evidence before
+  upload; admin review rejects files that don't. Identifiers FinDex stores (DOB, SSN last 4, EIN) are encrypted
+  and masked everywhere they appear, including emails. (Homepage PII card reworded to match.)
+- **The reported party sees the evidence** too.
+- **Required details when reporting:**
+  - Individual: full name, email, **DOB and SSN last 4 (all required)**.
+  - Partner company: company name (DBA is fine; legal name often unknown), website, contact person, email.
+  - Funded business: legal name, EIN, contact person, email.
+- **Searching individuals needs two identifiers** (e.g. name + email, or name + DOB). Never name alone.
+- **Timed steps** (publish after 10 days, dispute due dates, 7-year deletion) run **once a day in the morning**.
+- **Access logs:** every search is logged (who, when, why); individuals can request the list of who accessed
+  their record (FCRA). Promised in the homepage FCRA FAQ.
+- Build order as proposed: submission + review → notices + publish + record view → search → disputes →
+  retention + CFPB notices.
+
 ## Who can do what
 
 | Account | Search | Report | View own record | Dispute / appeal |
