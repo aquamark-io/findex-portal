@@ -1,18 +1,59 @@
-// Placeholder dashboards. Search, reporting and disputes come in a later phase.
+// Dashboards (placeholders until search, reporting and disputes are built), plus the
+// "Get full access" upgrade for companies that signed up through Check My Record.
 const express = require('express');
+const supabase = require('../lib/supabase');
 const { requireAccount } = require('../middleware/auth');
 const { COMPANY_TYPES } = require('../lib/validate');
+const { MEMBER_TERMS_VERSION, INDEMNIFICATION } = require('../lib/terms');
+const { logEvent } = require('../lib/events');
+const { sendEmail, templates } = require('../lib/email');
+const { testNotificationsOn } = require('../lib/notify-admin');
 
 const router = express.Router();
+
+const canUpgrade = a => a.account_type === 'company' && !a.terms_version;
 
 router.get('/dashboard', requireAccount, (req, res) => {
   const a = req.account;
   res.render('dashboard', {
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
-    // Only funder members may report funded-business repayment issues (slow pay, defaults).
+    // Only funders with full access may report funded-business repayment issues (slow pay, defaults).
     canReportRepayment: a.account_type === 'company' && a.company_type === 'funder' && Boolean(a.terms_version),
+    msg: req.query.upgraded === '1' ? 'You now have full access.' : null,
   });
+});
+
+router.get('/dashboard/full-access', requireAccount, (req, res) => {
+  if (!canUpgrade(req.account)) return res.redirect('/dashboard');
+  res.render('full-access', { pageTitle: 'Get full access', INDEMNIFICATION, error: null });
+});
+
+router.post('/dashboard/full-access', requireAccount, async (req, res, next) => {
+  const a = req.account;
+  if (!canUpgrade(a)) return res.redirect(303, '/dashboard');
+  if (req.body.authorize !== 'on' || req.body.member_terms !== 'on') {
+    return res.status(422).render('full-access', {
+      pageTitle: 'Get full access', INDEMNIFICATION,
+      error: 'Please tick both boxes to get full access.',
+    });
+  }
+  try {
+    const { data: updated, error } = await supabase.from('fx_accounts')
+      .update({ terms_version: MEMBER_TERMS_VERSION, terms_accepted_at: new Date().toISOString() })
+      .eq('id', a.id).is('terms_version', null).select('*').maybeSingle();
+    if (error) throw new Error(`Full access: ${error.message}`);
+    if (!updated) return res.redirect(303, '/dashboard');
+
+    await logEvent({ accountId: a.id, event: 'full_access_accepted', actor: 'account', detail: { terms_version: MEMBER_TERMS_VERSION }, ip: req.ip });
+    if (process.env.ONBOARDING_NOTIFY_EMAIL && (!updated.is_test || testNotificationsOn())) {
+      sendEmail({ to: process.env.ONBOARDING_NOTIFY_EMAIL, tag: 'fx-admin-full-access', ...templates.adminFullAccess(updated) })
+        .catch(err => console.error(`Full-access email for account ${a.id} failed:`, err.message));
+    }
+    return res.redirect(303, '/dashboard?upgraded=1');
+  } catch (err) {
+    return next(err);
+  }
 });
 
 module.exports = router;

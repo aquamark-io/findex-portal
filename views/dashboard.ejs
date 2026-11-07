@@ -1,12 +1,14 @@
 <%- include('partials/head') %>
 <% const a = account; %>
 <section class="card">
+  <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <h1 class="title">Welcome<%= a.first_name ? `, ${a.first_name}` : '' %></h1>
   <% if (a.account_type === 'company') { %>
     <p class="lead"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
     <% if (!a.terms_version) { %>
     <p>Reports about your company will appear here. You&rsquo;ll be able to view and dispute any of them at no cost.</p>
-    <p class="muted">Searching and reporting require full access. To upgrade, reply to any FinDex email.</p>
+    <p class="muted">Searching and reporting require full access.</p>
+    <p><a class="btn" href="/dashboard/full-access">Get full access</a></p>
     <% } else { %>
     <h2>Your Access</h2>
     <ul class="checklist">

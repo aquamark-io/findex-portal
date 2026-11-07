@@ -76,7 +76,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 
 ## Upgrading a Check My Record company to full access
 
-- **Decided (to build next):** a company that signed up through Check My Record (own record only) gets a
+- **Built:** a company that signed up through Check My Record (own record only) gets a
   **Get full access** button on its dashboard. It shows the two Request Access company checkboxes (authorized +
   indemnification). Accepting records the terms version and time, gives full access **immediately** (the company
   was already verified at approval), emails the admin, and logs it in the account history.

@@ -21,6 +21,7 @@ const STATUSES = ['pending', 'approved', 'denied'];
 // Plain-English labels for the History list.
 const EVENT_LABELS = {
   requested: 'Request submitted',
+  full_access_accepted: 'Accepted the terms (full access)',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',

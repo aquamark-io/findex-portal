@@ -1,0 +1,13 @@
+<%- include('partials/head') %>
+<section class="card narrow">
+  <h1 class="title">Get full access</h1>
+  <p class="lead">Search and report. One account per company.</p>
+  <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="/dashboard/full-access">
+    <label class="check"><input type="checkbox" name="authorize" required><span>I am authorized to accept these terms on behalf of <%= account.business_legal_name %>.</span></label>
+    <label class="check"><input type="checkbox" name="member_terms" required><span><%= INDEMNIFICATION %></span></label>
+    <button class="btn block mt" type="submit">Get full access</button>
+  </form>
+  <p class="muted mt center"><a href="/dashboard">Back to dashboard</a></p>
+</section>
+<%- include('partials/foot') %>
