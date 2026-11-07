@@ -233,3 +233,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 .signing-as strong { color: var(--deep); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
 .field-hint { margin: 6px 0 0; font-size: 0.84rem; color: var(--muted); }
+.nav-link.active { color: #fff; border-bottom-color: rgba(255,255,255,0.7); }
+@media (max-width: 640px) {
+  .nav-link.active { background: rgba(255,255,255,0.12); border-bottom: 0; }
+}

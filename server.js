@@ -47,6 +47,7 @@ const ASSET_VERSION = (process.env.RENDER_GIT_COMMIT || String(Date.now())).slic
 
 app.use((req, res, next) => {
   res.locals.assetV = ASSET_VERSION;
+  res.locals.currentPath = req.originalUrl.split('?')[0];
   res.locals.marketingUrl = process.env.MARKETING_SITE_URL || 'https://joinfindex.com/';
   res.set('Cache-Control', 'no-store');
   next();
