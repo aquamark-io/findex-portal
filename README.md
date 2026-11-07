@@ -67,4 +67,5 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
+| `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in activity emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |
