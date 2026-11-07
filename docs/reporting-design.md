@@ -74,6 +74,14 @@ Items marked **Counsel** need legal review before launch. This document is not l
   data about a funded business. **Counsel:** replace the draft wording with final text.
 - To add later: acceptance of the two CFPB member notices above.
 
+## Upgrading a Check My Record company to full access
+
+- **Decided (to build next):** a company that signed up through Check My Record (own record only) gets a
+  **Get full access** button on its dashboard. It shows the two Request Access company checkboxes (authorized +
+  indemnification). Accepting records the terms version and time, gives full access **immediately** (the company
+  was already verified at approval), emails the admin, and logs it in the account history.
+- Individuals and funded businesses can't upgrade; their company signs up through Request Access instead.
+
 ## Funded-business reports
 
 - Repayment reports (slow pay, defaults) are about the **business only**, identified by its EIN.
