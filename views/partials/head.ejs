@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | ' : '' %>FinDex</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<header class="band">
+  <div class="band-inner">
+    <a class="wordmark" href="<%= marketingUrl %>" aria-label="FinDex home">Fin<span>Dex</span></a>
+    <nav class="nav-actions" aria-label="Account">
+      <% if (typeof account !== 'undefined' && account) { %>
+        <form method="post" action="/logout"><button class="nav-btn nav-btn-ghost" type="submit">Sign Out</button></form>
+      <% } else { %>
+        <a class="nav-btn nav-btn-solid" href="/request-access">Request Access</a>
+        <a class="nav-btn nav-btn-ghost" href="/login">Sign In</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<main class="main">
