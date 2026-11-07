@@ -33,12 +33,12 @@ Items marked **Counsel** need legal review before launch. This document is not l
 - Must be documented, verifiable, and sufficient. Attestations, unsupported statements, and hearsay aren't
   accepted on their own.
 - Per category: backdooring/data theft (redirecting messages, CRM records, system activity, access logs);
-  deceiving merchants (false/misleading communications + documents showing the facts); fraud (original files
-  showing manipulation + evidence linking it to the reported party; fraud-detection reports as support only);
+  deceiving merchants (false/misleading communications + documents showing the facts); fraud (copies of the files
+  suspected of manipulation + evidence linking it to the reported party; fraud-detection reports as support only);
   partner data mishandling (communications, access logs, system records); repayment (payment history from the
   system of record).
-- **Default reports require** the contractual default terms and a copy of the default notice sent to the merchant.
-  The report form should require these uploads for the "default" category.
+- **Default reports require** a copy of the default notice sent to the merchant. The report form should require
+  this upload for the "default" category.
 - Original files preferred over screenshots. Call recordings: supporting only, lawfully recorded only
   (**Counsel:** two-party-consent states).
 - Submission doesn't guarantee publication. Report form shows the category's examples; admin review has an
