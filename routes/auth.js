@@ -8,12 +8,16 @@
  *
  * Codes: 6 digits, 10-minute expiry, single use, stored as HMAC, max 5 attempts, a new code
  * cancels older ones, at most 3 codes per account per 15 minutes, plus per-IP rate limits.
+ *
+ * The screen never says whether an account exists. The email does, so only the inbox owner learns it:
+ * approved -> sign-in code; pending -> "still under review"; denied or none -> "no account found".
+ * Those last two are sent at most once per email address per hour.
  */
 const crypto = require('crypto');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const supabase = require('../lib/supabase');
-const { codeHash } = require('../lib/crypto');
+const { codeHash, blindIndex } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const session = require('../lib/session');
@@ -49,12 +53,36 @@ async function approvedAccount(email) {
   return data;
 }
 
+async function pendingAccount(email) {
+  const { data, error } = await supabase.from('fx_accounts').select('*').eq('email', email).eq('status', 'pending').maybeSingle();
+  if (error) throw new Error(`Account lookup: ${error.message}`);
+  return data;
+}
+
+// Pending / no-account notices: at most one per email address per hour (tracked by a keyed hash, not the address).
+const NOTICE_WINDOW_MS = 60 * 60 * 1000;
+async function sendNotice({ email, account, kind, ip }) {
+  const emailHash = blindIndex(`signin-notice:${email}`);
+  const since = new Date(Date.now() - NOTICE_WINDOW_MS).toISOString();
+  const { count, error } = await supabase.from('fx_events')
+    .select('id', { count: 'exact', head: true }).eq('event', 'signin_notice').eq('detail->>email_hash', emailHash).gte('created_at', since);
+  if (error) throw new Error(`Notice count: ${error.message}`);
+  if ((count || 0) >= 1) return;
+  const tpl = kind === 'pending' ? templates.signInPending(account) : templates.signInNoAccount();
+  await sendEmail({ to: email, tag: kind === 'pending' ? 'fx-sign-in-pending' : 'fx-sign-in-no-account', ...tpl });
+  await logEvent({ accountId: account ? account.id : null, event: 'signin_notice', actor: 'system', detail: { kind, email_hash: emailHash }, ip });
+}
+
 // Runs after the response is sent, so timing doesn't reveal whether the account exists.
 async function issueCode(email, ip) {
   try {
     cleanupCodes();
     const account = await approvedAccount(email);
-    if (!account) return;
+    if (!account) {
+      const pending = await pendingAccount(email);
+      await sendNotice({ email, account: pending, kind: pending ? 'pending' : 'none', ip });
+      return;
+    }
 
     const since = new Date(Date.now() - CODE_WINDOW_MS).toISOString();
     const { count, error: countErr } = await supabase.from('fx_login_codes')

@@ -1,8 +1,8 @@
 <%- include('partials/head') %>
 <section class="card narrow">
   <h1 class="title">Check your email</h1>
-  <p class="lead">If <strong><%= email %></strong> belongs to an approved FinDex account, we&rsquo;ve sent it a 6-digit code. It expires in 10 minutes.</p>
-  <% if (typeof resent !== 'undefined' && resent) { %><div class="alert ok" role="status">If the account is eligible, a new code is on its way. Earlier codes no longer work.</div><% } %>
+  <p class="lead">We&rsquo;ve sent a message to <strong><%= email %></strong>.</p>
+  <% if (typeof resent !== 'undefined' && resent) { %><div class="alert ok" role="status">We&rsquo;ve sent another message. Earlier codes no longer work.</div><% } %>
   <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
   <% if (email) { %>
     <form method="post" action="/login/verify">
