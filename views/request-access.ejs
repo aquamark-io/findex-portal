@@ -10,7 +10,7 @@
       ? 'For brokers, funders, lenders, software providers and lead providers. Approved companies can search FinDex and submit reports. One account per company.'
       : 'View and dispute at no cost.',
     individual: 'View and dispute at no cost.',
-    merchant: 'View, dispute, or appeal any report about your business, at no cost. We verify your business before granting access.',
+    merchant: 'View and dispute at no cost.',
   };
   const usesEin = v('identity_method') !== 'dob_ssn4';
 %>
@@ -101,7 +101,7 @@
         <div class="field"><label for="m_title">Your title</label><input type="text" id="m_title" name="job_title" value="<%= v('job_title') %>" placeholder="e.g. Owner" maxlength="120" required></div>
       </div>
       <h2>Verify your business</h2>
-      <p class="muted">Used only to match your business to its own records. Encrypted and never shared or shown in full.</p>
+      <p class="muted">Used only to match your business to its own records. Encrypted and never shared.</p>
       <fieldset class="field">
         <legend class="sr-only">How would you like to verify?</legend>
         <div class="choice two">
