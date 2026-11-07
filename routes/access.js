@@ -1,9 +1,10 @@
 /**
  * Request Access (members) and Check My Record (subjects) sign-up.
  *
- *   GET  /check-my-record            "Who are you?" chooser
- *   GET  /request-access?type=...    one form; type = company | individual | merchant
- *   POST /request-access             validate, store (identity fields encrypted), email applicant + admin
+ *   GET  /request-access                      company (member) sign-up
+ *   GET  /check-my-record                     "Who are you?" chooser
+ *   GET  /check-my-record/:who                individual | company | funded-business form
+ *   POST /request-access                      validate, store (identity fields encrypted), email applicant + admin
  *   GET  /request-access/received    confirmation
  */
 const express = require('express');
@@ -34,12 +35,14 @@ const submitLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, limit: 5, skipFailedRequests: true, standardHeaders: 'draft-7', legacyHeaders: false, handler: tooMany,
 });
 
-function renderForm(res, { type, values = {}, errors = [], status = 200 }) {
+// mode: 'member' (Request Access, company only) or 'record' (Check My Record, any type).
+function renderForm(res, { type, mode = 'member', values = {}, errors = [], status = 200 }) {
   const safe = { ...values };
   for (const k of SENSITIVE) delete safe[k];
   res.status(status).render('request-access', {
-    pageTitle: type === 'company' ? 'Request Access' : 'Check My Record',
+    pageTitle: mode === 'member' ? 'Request Access' : 'Check My Record',
     type,
+    mode,
     values: safe,
     errors,
     ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, MEMBER_TERMS,
@@ -47,11 +50,24 @@ function renderForm(res, { type, values = {}, errors = [], status = 200 }) {
   });
 }
 
+// URL slug <-> account type for Check My Record.
+const WHO = { individual: 'individual', company: 'company', 'funded-business': 'merchant' };
+const SLUG = { individual: 'individual', company: 'company', merchant: 'funded-business' };
+
 router.get('/check-my-record', (req, res) => res.render('check-my-record', { pageTitle: 'Check My Record' }));
 
+router.get('/check-my-record/:who', (req, res) => {
+  const type = WHO[req.params.who];
+  if (!type) return res.redirect('/check-my-record');
+  renderForm(res, { type, mode: 'record' });
+});
+
 router.get('/request-access', (req, res) => {
-  const type = Object.prototype.hasOwnProperty.call(ACCOUNT_TYPES, req.query.type) ? req.query.type : 'company';
-  renderForm(res, { type });
+  // Old links (?type=individual / merchant) go to the Check My Record forms.
+  if (req.query.type && req.query.type !== 'company' && SLUG[req.query.type]) {
+    return res.redirect(301, `/check-my-record/${SLUG[req.query.type]}`);
+  }
+  renderForm(res, { type: 'company', mode: 'member' });
 });
 
 router.get('/request-access/received', (req, res) => res.render('received', { pageTitle: 'Request received' }));
@@ -59,17 +75,19 @@ router.get('/request-access/received', (req, res) => res.render('received', { pa
 router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, next) => {
   const body = req.body || {};
   const type = Object.prototype.hasOwnProperty.call(ACCOUNT_TYPES, body.account_type) ? body.account_type : 'company';
+  // Individuals and funded businesses always sign up through Check My Record.
+  const mode = type === 'company' && body.mode !== 'record' ? 'member' : 'record';
 
   try {
     // Honeypot: real people never see or fill this field. Pretend it worked.
     if (body.company_fax) return res.redirect(303, '/request-access/received');
 
     if (!(await turnstile.verify(body['cf-turnstile-response'], req.ip))) {
-      return renderForm(res, { type, values: body, errors: ['Please complete the verification check and try again.'], status: 422 });
+      return renderForm(res, { type, mode, values: body, errors: ['Please complete the verification check and try again.'], status: 422 });
     }
 
     const { errors, data } = validateRequest(body);
-    if (errors.length) return renderForm(res, { type, values: body, errors, status: 422 });
+    if (errors.length) return renderForm(res, { type, mode, values: body, errors, status: 422 });
 
     // Same email already pending/approved: show the normal confirmation so the form
     // can't be used to discover who has an account.
@@ -85,7 +103,7 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
       const { data: sameDomain, error: domErr } = await supabase.from('fx_accounts')
         .select('id').eq('account_type', 'company').eq('email_domain', data.email_domain).in('status', LIVE).limit(1);
       if (domErr) throw new Error(`Domain check: ${domErr.message}`);
-      if (sameDomain && sameDomain.length) return renderForm(res, { type, values: body, errors: [companyExistsMessage], status: 409 });
+      if (sameDomain && sameDomain.length) return renderForm(res, { type, mode, values: body, errors: [companyExistsMessage], status: 409 });
     }
 
     const row = toRow(data);
@@ -93,7 +111,7 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
     if (insErr) {
       if (insErr.code === '23505' && /email_live/.test(insErr.message)) return res.redirect(303, '/request-access/received');
       if (insErr.code === '23505' && /company_domain/.test(insErr.message)) {
-        return renderForm(res, { type, values: body, errors: [companyExistsMessage], status: 409 });
+        return renderForm(res, { type, mode, values: body, errors: [companyExistsMessage], status: 409 });
       }
       throw new Error(`Insert: ${insErr.message}`);
     }

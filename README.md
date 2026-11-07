@@ -24,8 +24,9 @@ and are reachable only through the service role.
 
 | Route | Purpose |
 |---|---|
-| `/check-my-record` | "Who are you?" chooser for people and businesses checking their own record |
-| `/request-access?type=company\|individual\|merchant` | Single sign-up form (merchant is labelled "Funded Business") |
+| `/request-access` | Company (member) sign-up only |
+| `/check-my-record` | "Who are you?" chooser |
+| `/check-my-record/individual`, `/company`, `/funded-business` | Sign-up form for that type, with "Signing up as … · Change" |
 | `/request-access/received` | Confirmation |
 
 Sign-up rules: server-side validation; emails lowercased; websites stored as their origin; company emails must be on
