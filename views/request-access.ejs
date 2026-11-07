@@ -8,7 +8,7 @@
   const intro = {
     company: mode === 'member'
       ? 'For brokers, funders, lenders, software providers and lead providers. Approved companies can search FinDex and submit reports. One account per company.'
-      : 'View, dispute, or appeal any report about your company, at no cost. Your company account is also how your team searches and reports.',
+      : 'View and dispute at no cost.',
     individual: 'View and dispute at no cost.',
     merchant: 'View, dispute, or appeal any report about your business, at no cost. We verify your business before granting access.',
   };
@@ -61,11 +61,13 @@
       </div>
       <div class="field"><label for="c_title">Your job title</label><input type="text" id="c_title" name="job_title" value="<%= v('job_title') %>" autocomplete="organization-title" maxlength="120" required></div>
       <label class="check"><input type="checkbox" name="authorize" <%= chk('authorize', 'on') %> required><span>I am authorized to request a FinDex account on behalf of this company.</span></label>
+      <% if (mode === 'member') { %>
       <h2>Member terms</h2>
       <div class="terms" tabindex="0" aria-label="FinDex Member Terms">
         <% MEMBER_TERMS.forEach(t => { %><p><strong><%= t.heading %>.</strong> <%= t.text %></p><% }) %>
       </div>
       <label class="check"><input type="checkbox" name="member_terms" <%= chk('member_terms', 'on') %> required><span>On behalf of the company, I agree to the FinDex Member Terms, including indemnification.</span></label>
+      <% } %>
     <% } %>
 
     <% if (type === 'individual') { %>

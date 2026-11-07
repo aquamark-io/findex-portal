@@ -11,7 +11,7 @@ router.get('/dashboard', requireAccount, (req, res) => {
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
     // Only funder members may report funded-business repayment issues (slow pay, defaults).
-    canReportRepayment: a.account_type === 'company' && a.company_type === 'funder',
+    canReportRepayment: a.account_type === 'company' && a.company_type === 'funder' && Boolean(a.terms_version),
   });
 });
 

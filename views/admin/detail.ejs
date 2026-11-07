@@ -15,7 +15,7 @@
     ['Company', a.current_company],
     ['Role', a.worker_type ? WORKER_TYPES[a.worker_type] : null],
     ...identity,
-    ['Member terms', a.terms_version ? `Accepted ${fmt(a.terms_accepted_at)} (version ${a.terms_version})` : null],
+    ['Member terms', a.terms_version ? `Accepted ${fmt(a.terms_accepted_at)} (version ${a.terms_version})` : (a.account_type === 'company' ? 'Not accepted (signed up through Check My Record: own record only)' : null)],
     ['Submitted', fmt(a.created_at)],
     ['Reviewed', fmt(a.reviewed_at)],
     ['Last sign-in', fmt(a.last_login_at)],

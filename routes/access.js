@@ -86,7 +86,7 @@ router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, n
       return renderForm(res, { type, mode, values: body, errors: ['Please complete the verification check and try again.'], status: 422 });
     }
 
-    const { errors, data } = validateRequest(body);
+    const { errors, data } = validateRequest(body, { mode });
     if (errors.length) return renderForm(res, { type, mode, values: body, errors, status: 422 });
 
     // Same email already pending/approved: show the normal confirmation so the form
