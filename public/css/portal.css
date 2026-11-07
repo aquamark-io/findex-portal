@@ -237,3 +237,6 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 @media (max-width: 640px) {
   .nav-link.active { background: rgba(255,255,255,0.12); border-bottom: 0; }
 }
+.field-error { margin: 6px 0 0; font-size: 0.84rem; color: var(--error); }
+input[aria-invalid="true"] { border-color: var(--error); }
+.field:has(.field-error) .field-hint { display: none; }
