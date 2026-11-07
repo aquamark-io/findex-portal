@@ -9,7 +9,7 @@
     company: mode === 'member'
       ? 'For brokers, funders, lenders, software providers and lead providers. Approved companies can search FinDex and submit reports. One account per company.'
       : 'View, dispute, or appeal any report about your company, at no cost. Your company account is also how your team searches and reports.',
-    individual: 'View, dispute, or appeal any report about you, at no cost. We verify your identity before granting access.',
+    individual: 'View, dispute, or appeal any report about you.',
     merchant: 'View, dispute, or appeal any report about your business, at no cost. We verify your business before granting access.',
   };
   const usesEin = v('identity_method') !== 'dob_ssn4';
@@ -71,11 +71,11 @@
     <% if (type === 'individual') { %>
       <h2>Your work</h2>
       <div class="row">
-        <div class="field"><label for="i_company">Current or most recent company <span class="hint">(optional)</span></label><input type="text" id="i_company" name="current_company" value="<%= v('current_company') %>" maxlength="200"></div>
-        <div class="field"><label for="i_title">Job title <span class="hint">(optional)</span></label><input type="text" id="i_title" name="job_title" value="<%= v('job_title') %>" maxlength="120"></div>
+        <div class="field"><label for="i_company">Current or most recent company</label><input type="text" id="i_company" name="current_company" value="<%= v('current_company') %>" maxlength="200" required></div>
+        <div class="field"><label for="i_title">Job title</label><input type="text" id="i_title" name="job_title" value="<%= v('job_title') %>" maxlength="120" required></div>
       </div>
-      <div class="field"><label for="i_worker">Employee or contractor <span class="hint">(optional)</span></label>
-        <select id="i_worker" name="worker_type"><option value="">Select…</option>
+      <div class="field"><label for="i_worker">Employee or contractor</label>
+        <select id="i_worker" name="worker_type" required><option value="">Select…</option>
           <% Object.entries(WORKER_TYPES).forEach(([k, label]) => { %><option value="<%= k %>" <%= sel('worker_type', k) %>><%= label %></option><% }) %>
         </select>
       </div>
