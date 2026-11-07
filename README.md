@@ -37,6 +37,21 @@ emails, logs or URLs. Anti-spam: honeypot field + rate limits; Cloudflare Turnst
 A first name, last name or business name starting with `[TEST]` marks the request as a test: it is flagged in admin and
 the admin notification email is skipped (applicant emails still send).
 
+## Sign-in
+
+Passwordless: `/login` takes an email and, only if that account is approved, emails a 6-digit code. The response is
+identical either way, and the code is sent after the response so timing doesn't reveal anything. Codes expire in
+10 minutes, are single use, stored as an HMAC, allow 5 attempts, and a new code cancels older ones (max 3 per account
+per 15 minutes, plus per-IP limits). Success sets a 12-hour `fx_session` JWT cookie; every request re-checks that the
+account is still approved, so revoking in `/admin` ends access immediately. Expired codes are purged opportunistically
+(at most hourly), so no cron job is needed.
+
+## Admin
+
+`/admin` (password `ADMIN_PASSWORD`): Pending / Approved / Denied lists, details with masked identity
+(`***-**-1234`, `**-***1234`, "DOB on file"), Approve / Deny / Revoke with an internal note, and an event history.
+Approving and denying send the matching email. `[TEST]` requests can be deleted.
+
 ## Environment variables (Render)
 
 | Variable | Notes |

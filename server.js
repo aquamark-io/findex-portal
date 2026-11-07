@@ -9,6 +9,9 @@ const turnstile = require('./lib/turnstile');
 
 // Refuse to start without valid field-encryption keys rather than fail on the first sign-up.
 checkKeys();
+for (const name of ['JWT_SECRET']) {
+  if (!process.env[name] || process.env[name].length < 32) throw new Error(`${name} must be set (32+ characters)`);
+}
 
 const app = express();
 
@@ -48,11 +51,10 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get('/', (req, res) => res.redirect('/login'));
+app.use('/', require('./routes/auth'));
+app.use('/', require('./routes/dashboard'));
 app.use('/', require('./routes/access'));
 app.use('/admin', require('./routes/admin'));
-
-// Placeholder until the login flow lands.
-app.get('/login', (req, res) => res.render('placeholder', { pageTitle: 'Sign In' }));
 
 app.use((req, res) => res.status(404).render('error', { pageTitle: 'Not found', message: 'That page does not exist.' }));
 

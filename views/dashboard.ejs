@@ -1,0 +1,23 @@
+<%- include('partials/head') %>
+<% const a = account; %>
+<section class="card">
+  <h1 class="title">Welcome<%= a.first_name ? `, ${a.first_name}` : '' %></h1>
+  <% if (a.account_type === 'company') { %>
+    <p class="lead"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
+    <h2>Your membership</h2>
+    <ul class="checklist">
+      <li>Search individuals, companies and funded businesses</li>
+      <li>Submit documented incident reports for independent review</li>
+      <% if (canReportRepayment) { %><li>Report funded business repayment issues (slow pay, defaults)</li><% } %>
+      <li>View, dispute, or appeal any report about your own company</li>
+    </ul>
+  <% } else if (a.account_type === 'individual') { %>
+    <p class="lead">Your FinDex record</p>
+    <p>Reports about you will appear here. You&rsquo;ll be able to view, dispute, or appeal any of them at no cost.</p>
+  <% } else { %>
+    <p class="lead"><%= a.business_legal_name %></p>
+    <p>Reports about your business will appear here. You&rsquo;ll be able to view, dispute, or appeal any of them at no cost.</p>
+  <% } %>
+  <div class="alert ok mt" role="status">These features are coming soon.</div>
+</section>
+<%- include('partials/foot') %>
