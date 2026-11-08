@@ -24,3 +24,11 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
+
+// One-time messages (?msg= / ?err=) disappear from the address bar, so a refresh doesn't show them again.
+(function () {
+  var u = new URL(window.location.href);
+  if (!u.searchParams.has('msg') && !u.searchParams.has('err')) return;
+  u.searchParams.delete('msg'); u.searchParams.delete('err');
+  window.history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+})();

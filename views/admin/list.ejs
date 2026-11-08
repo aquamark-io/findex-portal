@@ -18,7 +18,7 @@
             <td><%= ACCOUNT_TYPES[a.account_type] %><% if (a.company_type) { %><div class="muted"><%= COMPANY_TYPES[a.company_type] %></div><% } %></td>
             <td><a href="/admin/accounts/<%= a.id %>"><strong><%= displayName(a) %></strong></a>
               <% if (a.business_legal_name) { %><div class="muted"><%= a.first_name %> <%= a.last_name %></div><% } %>
-              <% if (a.is_test) { %><span class="pill test">TEST</span><% } %></td>
+              </td>
             <td><%= a.email %></td>
             <td><span class="pill <%= a.status %>"><%= a.status %></span></td>
           </tr>

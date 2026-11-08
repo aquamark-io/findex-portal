@@ -9,7 +9,7 @@
     <tbody>
       <% disputes.forEach(d => { const rep = d.fx_reports || {}; const overdue = open && new Date(d.due_at) < new Date(); %>
         <tr>
-          <td><a href="/admin/reports/<%= rep.id %>"><strong><%= rep.subject_name_reported %></strong></a><% if (rep.is_test) { %> <span class="pill test">TEST</span><% } %></td>
+          <td><a href="/admin/reports/<%= rep.id %>"><strong><%= rep.subject_name_reported %></strong></a></td>
           <td><%= rep.category ? R.CATEGORIES[rep.category].label : '' %></td>
           <td class="nowrap<%= overdue ? ' overdue' : '' %>"><%= fmtDay(open ? d.due_at : d.resolved_at) %><%= overdue ? ' (overdue)' : '' %></td>
           <td><%= d.reporter_responded_at ? 'Yes' : 'Not yet' %></td>

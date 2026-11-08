@@ -25,7 +25,6 @@
 <h1 class="title"><%= displayName(a) %></h1>
 <p class="lead">
   <span class="pill <%= a.status %>"><%= a.status %></span>
-  <% if (a.is_test) { %><span class="pill test">TEST</span><% } %>
 </p>
 
 <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>

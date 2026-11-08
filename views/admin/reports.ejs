@@ -14,7 +14,7 @@
       <% reports.forEach(r => { %>
         <tr>
           <td class="nowrap"><%= fmt(r.created_at) %></td>
-          <td><a href="/admin/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong></a><div class="muted"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] || '' %></div><% if (r.is_test) { %><span class="pill test">TEST</span><% } %></td>
+          <td><a href="/admin/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong></a><div class="muted"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] || '' %></div></td>
           <td><%= R.CATEGORIES[r.category].label %><div class="muted">Incident <%= dateOnly(r.incident_date) %></div></td>
           <td><%= r.reporter ? r.reporter.business_legal_name : '' %><div class="muted"><%= r.reporter && COMPANY_TYPES[r.reporter.company_type] || '' %></div></td>
           <td><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span></td>

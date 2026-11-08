@@ -13,7 +13,7 @@
 %>
 <p><a href="/admin/reports?status=<%= r.status %>">&larr; Back to reports</a></p>
 <h1 class="title"><%= r.subject_name_reported %></h1>
-<p class="lead"><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span> <% if (r.is_test) { %><span class="pill test">TEST</span><% } %></p>
+<p class="lead"><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span></p>
 <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
 <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
 
