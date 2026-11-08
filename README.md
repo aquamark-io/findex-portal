@@ -68,6 +68,16 @@ Pacific publishes reports whose 10 days have passed. Reported parties are linked
 (same notice email, DOB + SSN last 4, EIN, or company domain) or by the admin, and see their reports and evidence on
 the dashboard. Design decisions: `docs/reporting-design.md`.
 
+## Search (phase two, step 3)
+
+Companies with full access search at `/search`. Individuals need a full name plus email and/or DOB (optionally with SSN
+last 4), and every identifier given must match; partners match by website domain or name; funded businesses need legal
+name and EIN (the EIN decides). Each search records a permissible purpose and a certification; employment screening
+also requires the employment certification and an uploaded signed authorization. Results show published reports only,
+with evidence (signed, logged), and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, SSN
+or EIN values; reported parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per
+hour per company.
+
 ## Environment variables (Render)
 
 | Variable | Notes |

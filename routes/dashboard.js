@@ -6,6 +6,7 @@ const { requireAccount } = require('../middleware/auth');
 const { COMPANY_TYPES } = require('../lib/validate');
 const { canReportRepayment, CATEGORIES, fmtSize } = require('../lib/reports');
 const N = require('../lib/notices');
+const { PURPOSES } = require('../lib/search');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
@@ -19,18 +20,20 @@ const canUpgrade = a => a.account_type === 'company' && !a.terms_version;
 router.get('/dashboard', requireAccount, async (req, res, next) => {
   const a = req.account;
   let aboutMe = [];
+  let viewers = [];
   let files = {};
   try {
     const { data: full } = await supabase.from('fx_accounts').select('*').eq('id', a.id).maybeSingle();
     if (full) await N.autoLink(full);
     aboutMe = await N.reportsAboutAccount(a.id);
+    viewers = await N.viewersOfAccount(a.id);
     if (aboutMe.length) {
       const { data: ev } = await supabase.from('fx_report_evidence').select('id, report_id, file_name, size_bytes').in('report_id', aboutMe.map(r => r.id)).order('created_at');
       (ev || []).forEach(f => { (files[f.report_id] = files[f.report_id] || []).push(f); });
     }
   } catch (err) { return next(err); }
   res.render('dashboard', {
-    aboutMe, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
+    aboutMe, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
     COMPANY_TYPES,

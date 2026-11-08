@@ -1,0 +1,35 @@
+<%- include('../partials/head') %>
+<% const c = search.criteria || {}; %>
+<section class="card">
+  <p class="signing-as"><a href="/search">&larr; New search</a></p>
+  <h1 class="title"><%= c.name || c.domain %></h1>
+  <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; <%= S.PURPOSES[search.purpose] %> &middot; <%= fmtDate(search.created_at) %></p>
+  <% if (search.expired) { %>
+    <div class="alert error">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
+  <% } else if (!reports.length) { %>
+    <div class="alert ok">No published reports found<%= search.matched_subject_ids.length ? '' : ' for these details' %>.</div>
+    <p class="muted">FinDex only shows reports that were independently reviewed and published. A clear result doesn&rsquo;t guarantee there were no incidents.</p>
+  <% } else { %>
+    <p><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p>
+    <% reports.forEach(r => { %>
+      <article class="record-item">
+        <div class="record-head"><strong><%= R.CATEGORIES[r.category].label %></strong><span class="muted">Incident <%= fmtDate(r.incident_date) %></span></div>
+        <dl class="kv">
+          <dt>Reported party</dt><dd><%= r.subject_name_reported %></dd>
+          <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
+          <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
+        </dl>
+        <p class="prewrap"><%= r.description %></p>
+        <% if ((files[r.id] || []).length) { %>
+          <p class="muted flush">Evidence:</p>
+          <ul class="checklist"><% files[r.id].forEach(f => { %><li><a href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= R.fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>
+        <% } %>
+      </article>
+    <% }) %>
+  <% } %>
+  <% if (search.purpose === 'employment') { %>
+    <div class="alert ok mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
+  <% } %>
+  <p class="muted mt">Results are available for <%= resultsDays %> days and may be used only for the purpose certified.</p>
+</section>
+<%- include('../partials/foot') %>

@@ -35,6 +35,8 @@ const EVENT_LABELS = {
   report_published: 'Published',
   subject_linked: 'Linked to the reported party’s account',
   subject_evidence_viewed: 'Reported party opened evidence',
+  search_evidence_viewed: 'Evidence opened from a search',
+  authorization_viewed: 'Employment authorization opened',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',
@@ -371,6 +373,30 @@ router.post('/reports/:id/link', async (req, res, next) => {
     if (error) throw new Error(`Link: ${error.message}`);
     await logEvent({ accountId: acct.id, reportId: report.id, event: 'subject_linked', actor: 'admin', ip: req.ip });
     res.redirect(303, backReport(report.id, `Linked to ${email}. They can now see reports about them.`));
+  } catch (err) { next(err); }
+});
+
+// Search log.
+router.get('/searches', async (req, res, next) => {
+  try {
+    const S = require('../lib/search');
+    const { data, error } = await supabase.from('fx_searches')
+      .select('id, subject_type, purpose, criteria, matched_subject_ids, result_report_ids, authorization_id, created_at, fx_accounts(id, business_legal_name)')
+      .order('created_at', { ascending: false }).limit(500);
+    if (error) throw new Error(`Search log: ${error.message}`);
+    res.render('admin/searches', { pageTitle: 'Search log', searches: data || [], R, PURPOSES: S.PURPOSES });
+  } catch (err) { next(err); }
+});
+
+router.get('/authorizations/:id', async (req, res, next) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.redirect('/admin/searches');
+    const { data: f } = await supabase.from('fx_authorizations').select('*').eq('id', req.params.id).maybeSingle();
+    if (!f) return res.redirect('/admin/searches');
+    const { data, error } = await supabase.storage.from('fx-evidence').createSignedUrl(f.storage_path, 120);
+    if (error) throw new Error(`Signed URL: ${error.message}`);
+    await logEvent({ accountId: f.account_id, event: 'authorization_viewed', actor: 'admin', detail: { file: f.file_name }, ip: req.ip });
+    res.redirect(data.signedUrl);
   } catch (err) { next(err); }
 });
 

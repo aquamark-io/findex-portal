@@ -1,0 +1,59 @@
+<%- include('../partials/head') %>
+<% const v = k => (values && typeof values[k] === 'string') ? values[k] : ''; const purposes = S.PURPOSES_FOR[subjectType]; %>
+<section class="card">
+  <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
+  <h1 class="title">Search</h1>
+  <p class="lead">Results show published reports only. Every search is logged.</p>
+  <% if (errors && errors.length) { %>
+    <div class="alert error" role="alert"><strong>Please fix the following:</strong><ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
+  <% } %>
+  <form method="post" action="/search/<%= who %>" enctype="multipart/form-data" id="search-form">
+    <% if (subjectType === 'individual') { %>
+      <div class="field"><label for="q_name">Full name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="160" required></div>
+      <p class="muted">Plus at least one of the following. Every identifier you enter must match.</p>
+      <div class="field"><label for="q_email">Email</label><input type="email" id="q_email" name="email" value="<%= v('email') %>" maxlength="254"></div>
+      <div class="row">
+        <div class="field"><label for="q_dob">Date of birth</label><input type="date" id="q_dob" name="dob"></div>
+        <div class="field"><label for="q_ssn">Last 4 of SSN <span class="hint">(with date of birth)</span></label><input type="text" id="q_ssn" name="ssn_last4" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+      </div>
+    <% } else if (subjectType === 'company') { %>
+      <div class="row">
+        <div class="field"><label for="q_name">Company name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="200"></div>
+        <div class="field"><label for="q_site">Website</label><input type="text" id="q_site" name="website" value="<%= v('website') %>" placeholder="theircompany.com" inputmode="url" maxlength="200"></div>
+      </div>
+      <p class="muted">Enter either one. The website gives the most accurate match.</p>
+    <% } else { %>
+      <div class="row">
+        <div class="field"><label for="q_name">Business legal name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="200" required></div>
+        <div class="field"><label for="q_ein">EIN</label><input type="text" id="q_ein" name="ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off" required></div>
+      </div>
+    <% } %>
+
+    <h2>Permissible purpose</h2>
+    <div class="field">
+      <label for="purpose">Purpose of this search</label>
+      <select id="purpose" name="purpose" required>
+        <% if (purposes.length > 1) { %><option value="">Select…</option><% } %>
+        <% purposes.forEach(p => { %><option value="<%= p %>" <%= v('purpose') === p ? 'selected' : '' %>><%= S.PURPOSES[p] %></option><% }) %>
+      </select>
+    </div>
+
+    <% if (subjectType === 'individual') { %>
+    <fieldset id="employment-fields" hidden disabled>
+      <div class="card-inset">
+        <p class="flush"><strong>Employment screening</strong></p>
+        <label class="check mt"><input type="checkbox" name="employment_certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that we gave this individual a clear and conspicuous standalone written disclosure that a report may be obtained for employment purposes, obtained their written authorization (attached), will send pre-adverse and adverse action notices with a copy of the report and the CFPB Summary of Rights before taking any adverse action, and will not use this information in violation of any equal employment opportunity law.</span></label>
+        <div class="field"><label for="authorization">Signed disclosure &amp; authorization</label>
+          <input type="file" id="authorization" name="authorization" accept=".pdf,.png,.jpg,.jpeg,.heic,.webp" required>
+          <p class="field-hint">PDF or image, up to 25 MB.</p>
+        </div>
+      </div>
+    </fieldset>
+    <% } %>
+
+    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that this search is for the purpose selected above and the results will be used only for that purpose.</span></label>
+    <button class="btn block" type="submit">Search</button>
+  </form>
+</section>
+<script src="/js/search-form.js?v=<%= assetV %>" defer></script>
+<%- include('../partials/foot') %>
