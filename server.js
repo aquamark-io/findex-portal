@@ -54,6 +54,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.use('/', require('./routes/webhooks'));
 
 app.get('/', (req, res) => res.redirect('/login'));
 app.use('/', require('./routes/auth'));
@@ -72,3 +73,6 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`FinDex portal running on port ${PORT}`));
+
+// Daily 6 AM Pacific job: publishes reports whose 10-day notice window has passed.
+if (process.env.DISABLE_DAILY_JOB !== 'true') require('./lib/notices').startDailyJob();

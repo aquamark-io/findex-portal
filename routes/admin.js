@@ -25,6 +25,16 @@ const EVENT_LABELS = {
   report_submitted: 'Report submitted',
   report_rejected: 'Report rejected (reporter emailed the reason)',
   evidence_viewed: 'Evidence file opened',
+  report_accepted: 'Report accepted',
+  notice_sent: 'Notice emailed (10 days started)',
+  notice_failed: 'Notice could not be sent',
+  notice_bounced: 'Notice bounced (reporter asked for new contact)',
+  notice_resent: 'New notice email provided by reporter',
+  letter_requested: 'Reporter gave a mailing address (letter to mail)',
+  notice_mailed: 'Letter mailed (10 days started)',
+  report_published: 'Published',
+  subject_linked: 'Linked to the reported party’s account',
+  subject_evidence_viewed: 'Reported party opened evidence',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',
@@ -226,6 +236,7 @@ router.post('/accounts/:id/delete', async (req, res, next) => {
 
 const R = require('../lib/reports');
 const { STATUS_LABELS } = require('./reports');
+const N = require('../lib/notices');
 const REPORT_STATUSES = ['submitted', 'rejected', 'notice_sent', 'notice_undeliverable', 'published', 'disputed', 'removed', 'expired'];
 const dateOnly = d => d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
 
@@ -241,7 +252,7 @@ router.get('/reports', async (req, res, next) => {
     const { data: reports, error } = await q;
     if (error) throw new Error(`List reports: ${error.message}`);
     const counts = {};
-    await Promise.all(['submitted', 'notice_sent', 'published', 'disputed', 'rejected'].map(async st => {
+    await Promise.all(['submitted', 'notice_undeliverable', 'notice_sent', 'published', 'disputed', 'rejected'].map(async st => {
       const { count } = await supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('status', st);
       counts[st] = count || 0;
     }));
@@ -273,16 +284,18 @@ router.get('/reports/:id', async (req, res, next) => {
   try {
     const report = await loadReport(req.params.id);
     if (!report) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That report does not exist.' });
-    const [{ data: files }, { data: events }, { data: emails }, { count: otherReports }] = await Promise.all([
+    const [{ data: files }, { data: events }, { data: emails }, { count: otherReports }, { data: notices }, { data: links }] = await Promise.all([
       supabase.from('fx_report_evidence').select('*').eq('report_id', report.id).order('created_at'),
       supabase.from('fx_events').select('event, actor, detail, created_at').eq('report_id', report.id).order('created_at', { ascending: false }).limit(50),
       supabase.from('fx_subject_emails').select('email').eq('subject_id', report.subject_id),
       supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('subject_id', report.subject_id).neq('id', report.id),
+      supabase.from('fx_notices').select('*').eq('report_id', report.id).order('created_at', { ascending: false }),
+      supabase.from('fx_subject_links').select('linked_by, fx_accounts(id, email, first_name, last_name, business_legal_name)').eq('subject_id', report.subject_id),
     ]);
     res.render('admin/report', {
       pageTitle: report.subject_name_reported, report, subject: report.fx_subjects, reporter: report.reporter,
       identity: maskedSubject(report.fx_subjects), files: files || [], events: events || [],
-      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0,
+      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0, notices: notices || [], links: links || [], fmtDay: N.fmtDay,
       msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
   } catch (err) { next(err); }
@@ -302,6 +315,80 @@ router.get('/reports/:id/files/:fileId', async (req, res, next) => {
 });
 
 const backReport = (id, msg, err) => `/admin/reports/${id}?${new URLSearchParams(err ? { err: msg } : { msg })}`;
+
+router.post('/reports/:id/accept', async (req, res, next) => {
+  try {
+    const report = await N.loadFull(req.params.id);
+    if (!report) return res.redirect(303, '/admin/reports');
+    if (report.status !== 'submitted') return res.redirect(303, backReport(report.id, 'Only reports waiting for review can be accepted.', true));
+    const note = typeof req.body.note === 'string' ? req.body.note.trim().slice(0, 2000) || null : null;
+    const { data: claimed } = await supabase.from('fx_reports').update({ review_note: note, reviewed_at: new Date().toISOString(), status: 'notice_sent' })
+      .eq('id', report.id).eq('status', 'submitted').select('id').maybeSingle();
+    if (!claimed) return res.redirect(303, backReport(report.id, 'This report changed while you were viewing it.', true));
+    await logEvent({ accountId: report.reporter_account_id, reportId: report.id, event: 'report_accepted', actor: 'admin', ip: req.ip });
+    const result = await N.sendEmailNotice(report, report.notice_email, { ip: req.ip });
+    if (!result.ok) return res.redirect(303, backReport(report.id, 'Accepted, but the notice email could not be sent. The reporter was asked for another email or a mailing address.', true));
+    const info = { reportId: report.id, subjectName: report.subject_name_reported, categoryLabel: R.CATEGORIES[report.category].label, publishDate: N.fmtDay(result.publishAt) };
+    await sendOrLog({ to: report.reporter.email, tag: 'fx-report-accepted', ...templates.reportAccepted(report.reporter, info) }, report.reporter.id);
+    res.redirect(303, backReport(report.id, `Accepted. Notice sent to ${report.notice_email}; publishes ${info.publishDate} unless disputed.`));
+  } catch (err) { next(err); }
+});
+
+// Printable notice letter for a mailed notice.
+router.get('/reports/:id/letter', async (req, res, next) => {
+  try {
+    const report = await N.loadFull(req.params.id);
+    if (!report) return res.redirect('/admin/reports');
+    const { data: n } = await supabase.from('fx_notices').select('*').eq('report_id', report.id).eq('channel', 'mail').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (!n) return res.redirect(`/admin/reports/${report.id}`);
+    const publishAt = new Date(Date.now() + N.NOTICE_DAYS * 24 * 3600 * 1000);
+    const info = { subjectType: report.fx_subjects.subject_type, subjectName: report.fx_subjects.subject_type === 'individual' ? report.subject_name_reported : (report.fx_subjects.contact_name || ''),
+      reporterName: report.reporter.business_legal_name, categoryLabel: R.CATEGORIES[report.category].label, incidentDate: dateOnly(report.incident_date), description: report.description, publishDate: N.fmtDay(publishAt) };
+    const t = templates.noticeToSubject(info);
+    res.type('text/plain').send(`${n.mailing_address}\n\n${new Date().toLocaleDateString('en-US', { dateStyle: 'long', timeZone: 'America/Los_Angeles' })}\n\n${t.text.replace(/reply to this email/g, `email ${process.env.ONBOARDING_NOTIFY_EMAIL || 'us'}`)}\n\n(Publish date assumes the letter is mailed today.)`);
+  } catch (err) { next(err); }
+});
+
+router.post('/reports/:id/notices/:noticeId/mailed', async (req, res, next) => {
+  try {
+    const report = await N.loadFull(req.params.id);
+    if (!report) return res.redirect(303, '/admin/reports');
+    const publishAt = await N.markMailed(report, req.params.noticeId, req.ip);
+    if (!publishAt) return res.redirect(303, backReport(report.id, 'That letter was already marked mailed.', true));
+    res.redirect(303, backReport(report.id, `Marked mailed. Publishes ${N.fmtDay(publishAt)} unless disputed.`));
+  } catch (err) { next(err); }
+});
+
+// Link the reported party to an account by email (when they signed up with a different email).
+router.post('/reports/:id/link', async (req, res, next) => {
+  try {
+    const report = await N.loadFull(req.params.id);
+    if (!report) return res.redirect(303, '/admin/reports');
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const { data: acct } = await supabase.from('fx_accounts').select('id, account_type, status').eq('email', email).eq('status', 'approved').maybeSingle();
+    if (!acct) return res.redirect(303, backReport(report.id, 'No approved account uses that email.', true));
+    const { error } = await supabase.from('fx_subject_links').upsert({ subject_id: report.subject_id, account_id: acct.id, linked_by: 'admin' }, { onConflict: 'subject_id,account_id', ignoreDuplicates: true });
+    if (error) throw new Error(`Link: ${error.message}`);
+    await logEvent({ accountId: acct.id, reportId: report.id, event: 'subject_linked', actor: 'admin', ip: req.ip });
+    res.redirect(303, backReport(report.id, `Linked to ${email}. They can now see reports about them.`));
+  } catch (err) { next(err); }
+});
+
+// Delete a [TEST] report and its files.
+router.post('/reports/:id/delete', async (req, res, next) => {
+  try {
+    const report = await N.loadFull(req.params.id);
+    if (!report) return res.redirect(303, '/admin/reports');
+    if (!report.is_test) return res.redirect(303, backReport(report.id, 'Only [TEST] reports can be deleted.', true));
+    const { data: files } = await supabase.from('fx_report_evidence').select('storage_path').eq('report_id', report.id);
+    if (files && files.length) await supabase.storage.from('fx-evidence').remove(files.map(f => f.storage_path));
+    const { error } = await supabase.from('fx_reports').delete().eq('id', report.id).eq('is_test', true);
+    if (error) throw new Error(`Delete report: ${error.message}`);
+    const { count } = await supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('subject_id', report.subject_id);
+    if (!count) await supabase.from('fx_subjects').delete().eq('id', report.subject_id);
+    res.redirect(303, '/admin/reports?status=all');
+  } catch (err) { next(err); }
+});
 
 router.post('/reports/:id/reject', async (req, res, next) => {
   try {

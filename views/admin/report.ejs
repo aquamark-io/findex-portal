@@ -52,15 +52,55 @@
         <div class="field"><label for="reason">Reason for rejecting <span class="hint">(shared with the reporter)</span></label><textarea id="reason" name="reason" rows="3" maxlength="2000"></textarea></div>
         <div class="field"><label for="note">Internal note <span class="hint">(optional, never emailed)</span></label><textarea id="note" name="note" rows="2" maxlength="2000"></textarea></div>
         <div class="actions">
-          <button class="btn" type="button" disabled title="Accepting sends the 10-day notice. Coming in build step 2.">Accept &amp; send notice</button>
+          <button class="btn" type="submit" formaction="/admin/reports/<%= r.id %>/accept" data-confirm="Accept this report and email the notice to <%= r.notice_email %>? The 10 days start now.">Accept &amp; send notice</button>
           <button class="btn danger" type="submit" formaction="/admin/reports/<%= r.id %>/reject" data-confirm="Reject this report and email the reason to <%= reporter.email %>?">Reject</button>
         </div>
-        <p class="muted">Accepting (coming in build step 2) emails the reported party and starts the 10-day window.</p>
+        <p class="muted">Accepting emails the notice to <%= r.notice_email %> and starts the 10-day window. The reason box is only used if you reject.</p>
       </form>
+    <% } else if (['notice_sent', 'published', 'notice_undeliverable'].includes(r.status)) { %>
+      <% if (r.status === 'notice_sent' && r.publish_at) { %><p><strong>Publishes <%= fmtDay(r.publish_at) %></strong> unless disputed.</p><% } %>
+      <% if (r.status === 'published') { %><p><strong>Published <%= fmtDay(r.published_at) %>.</strong></p><% } %>
+      <% if (r.status === 'notice_undeliverable') { %><p><strong>Paused:</strong> the notice couldn&rsquo;t be delivered. The reporter has been asked for another email or a mailing address.</p><% } %>
     <% } else if (r.status === 'rejected') { %>
       <p><strong>Rejected:</strong> <%= r.rejection_reason %></p>
       <% if (r.review_note) { %><p class="muted">Internal note: <%= r.review_note %></p><% } %>
     <% } %>
+    <% if (notices.length) { %>
+      <h2>Notices</h2>
+      <ul class="history">
+        <% notices.forEach(n => { %>
+          <li>
+            <%= n.channel === 'email' ? n.email : 'Letter' %>:
+            <strong><%= { sent: 'sent', bounced: 'bounced', failed: 'could not send', to_mail: 'waiting to be mailed', mailed: 'mailed' }[n.status] %></strong>
+            <span class="muted"><%= fmt(n.sent_at || n.mailed_at || n.created_at) %></span>
+            <% if (n.bounce_detail && n.status !== 'sent') { %><div class="muted"><%= n.bounce_detail %></div><% } %>
+            <% if (n.status === 'to_mail') { %>
+              <div class="prewrap muted"><%= n.mailing_address %></div>
+              <div class="actions mt">
+                <a class="btn secondary" href="/admin/reports/<%= r.id %>/letter" target="_blank" rel="noopener">Print letter</a>
+                <form method="post" action="/admin/reports/<%= r.id %>/notices/<%= n.id %>/mailed"><button class="btn" type="submit" data-confirm="Mark the letter as mailed? The 10 days start now.">Mark mailed</button></form>
+              </div>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+
+    <h2>Reported party&rsquo;s account</h2>
+    <% if (links.length) { %>
+      <ul class="history"><% links.forEach(l => { const a = l.fx_accounts || {}; %><li><a href="/admin/accounts/<%= a.id %>"><%= a.business_legal_name || (a.first_name + ' ' + a.last_name) %></a> <span class="muted">(<%= a.email %>, matched by <%= { email: 'email', identity: 'identity details', domain: 'domain', admin: 'you' }[l.linked_by] %>)</span></li><% }) %></ul>
+    <% } else { %>
+      <p class="muted">Not linked yet. They&rsquo;re linked automatically when they sign up with the notice email or matching identity details.</p>
+    <% } %>
+    <form method="post" action="/admin/reports/<%= r.id %>/link" class="inline-form">
+      <input type="email" name="email" placeholder="Link an approved account by email" required aria-label="Account email">
+      <button class="btn secondary" type="submit">Link</button>
+    </form>
+
+    <% if (r.is_test) { %>
+      <form method="post" action="/admin/reports/<%= r.id %>/delete" class="mt"><button class="btn secondary" type="submit" data-confirm="Permanently delete this TEST report and its files?">Delete test report</button></form>
+    <% } %>
+
     <h2>History</h2>
     <% if (!events.length) { %><p class="muted">No events yet.</p><% } else { %>
       <ul class="history"><% events.forEach(e => { %><li><span class="muted nowrap"><%= fmt(e.created_at) %></span> <%= eventLabel(e) %><% if (e.detail && e.detail.file) { %>: <%= e.detail.file %><% } %> <span class="muted">(<%= ACTORS[e.actor] || e.actor %>)</span></li><% }) %></ul>

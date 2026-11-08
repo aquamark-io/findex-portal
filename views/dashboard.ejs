@@ -6,7 +6,7 @@
   <% if (a.account_type === 'company') { %>
     <p class="lead"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
     <% if (!a.terms_version) { %>
-    <p>Reports about your company will appear here. You&rsquo;ll be able to view and dispute any of them at no cost.</p>
+    <p>View and dispute any report about your company at no cost, below.</p>
     <p class="muted">Searching and reporting require full access.</p>
     <p><a class="btn" href="/dashboard/full-access">Get full access</a></p>
     <% } else { %>
@@ -14,22 +14,49 @@
     <ul class="checklist">
       <li>Search individuals, companies and funded businesses</li>
       <li>Submit documented incident reports for independent review</li>
-      <% if (canReportRepayment) { %><li>Report funded business repayment issues (slow pay, defaults)</li><% } %>
+      <% if (canReportRepayment) { %><li>Report funded business repayment issues (slow pay, missed payments, defaults)</li><% } %>
       <li>View, dispute, or appeal any report about your own company</li>
     </ul>
     <p class="mt"><a class="btn" href="/reports/new">Submit a report</a> <a class="btn secondary" href="/reports">Your reports</a></p>
     <% } %>
   <% } else if (a.account_type === 'individual') { %>
     <p class="lead">Your FinDex record</p>
-    <p>Reports about you will appear here. You&rsquo;ll be able to view, dispute, or appeal any of them at no cost.</p>
+    <p>View and dispute any report about you at no cost, below.</p>
   <% } else { %>
     <p class="lead"><%= a.business_legal_name %></p>
-    <p>Reports about your business will appear here. You&rsquo;ll be able to view, dispute, or appeal any of them at no cost.</p>
+    <p>View and dispute any report about your business at no cost, below.</p>
   <% } %>
   <% if (a.account_type === 'company' && a.terms_version) { %>
     <div class="alert ok mt" role="status">Reporting is open. Search is coming soon.</div>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Reports about you' : 'Reports about ' + (a.business_legal_name || 'your business') %></h2>
+  <% if (!aboutMe.length) { %>
+    <p class="muted flush">There are no reports about <%= a.account_type === 'individual' ? 'you' : 'your ' + (a.account_type === 'company' ? 'company' : 'business') %> on FinDex.</p>
   <% } else { %>
-    <div class="alert ok mt" role="status">These features are coming soon.</div>
+    <% aboutMe.forEach(r => { %>
+      <article class="record-item">
+        <div class="record-head">
+          <strong><%= CATEGORIES[r.category].label %></strong>
+          <span class="pill <%= r.status %>"><%= r.status === 'published' ? 'Published' : r.status === 'notice_sent' ? 'Publishes ' + fmtDay(r.publish_at) : 'Pending notice' %></span>
+        </div>
+        <dl class="kv">
+          <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
+          <dt>Incident date</dt><dd><%= new Date(r.incident_date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) %></dd>
+        </dl>
+        <p class="prewrap"><%= r.description %></p>
+        <% if ((aboutFiles[r.id] || []).length) { %>
+          <p class="muted flush">Evidence:</p>
+          <ul class="checklist"><% aboutFiles[r.id].forEach(f => { %><li><a href="/my-record/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>
+        <% } %>
+      </article>
+    <% }) %>
+    <p class="muted">To dispute a report, reply to your notice email<% if (disputeEmail) { %> or email <a href="mailto:<%= disputeEmail %>"><%= disputeEmail %></a><% } %>. Disputed reports are withheld while we review the evidence.</p>
+  <% } %>
+  <% if (a.account_type === 'individual') { %>
+    <p class="muted"><a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a></p>
   <% } %>
 </section>
 <%- include('partials/foot') %>

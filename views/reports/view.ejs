@@ -5,6 +5,23 @@
   <p class="signing-as"><a href="/reports">&larr; Your reports</a></p>
   <h1 class="title"><%= report.subject_name_reported %></h1>
   <p class="lead"><span class="pill <%= report.status %>"><%= STATUS_LABELS[report.status] %></span></p>
+  <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+  <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+  <% if (report.status === 'notice_sent' && report.publish_at) { %><div class="alert ok">The reported party has been notified. Publishes <strong><%= fmtDay(report.publish_at) %></strong> unless disputed.</div><% } %>
+  <% if (report.status === 'published') { %><div class="alert ok">Published <%= fmtDay(report.published_at) %>.</div><% } %>
+  <% if (report.status === 'notice_undeliverable') { %>
+    <div class="alert error"><strong>Action needed:</strong> we couldn&rsquo;t deliver the notice to <%= report.notice_email %>. The report is paused until the reported party can be notified.</div>
+    <% if (notices.some(n => n.status === 'to_mail')) { %>
+      <p class="muted">Thanks, we&rsquo;ll mail the notice. The 10 days start when it&rsquo;s mailed.</p>
+    <% } else { %>
+      <form method="post" action="/reports/<%= report.id %>/contact" class="card-inset">
+        <div class="field"><label for="c_email">Another email address</label><input type="email" id="c_email" name="email" maxlength="254"></div>
+        <p class="muted center">or</p>
+        <div class="field"><label for="c_addr">Mailing address</label><textarea id="c_addr" name="address" rows="3" maxlength="500" placeholder="Name&#10;Street&#10;City, State ZIP"></textarea></div>
+        <button class="btn" type="submit">Send notice</button>
+      </form>
+    <% } %>
+  <% } %>
   <% if (report.status === 'rejected' && report.rejection_reason) { %>
     <div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div>
   <% } %>

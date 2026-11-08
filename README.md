@@ -60,8 +60,13 @@ evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, 
 are limited by subject type, and slow pay / missed payments / default are funders-only; default reports require
 the default notice. Reported parties (`fx_subjects`) are de-duplicated by DOB + SSN last 4, EIN, or website
 domain, with identifiers encrypted. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
-links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting (the
-10-day notice) is build step 2. Design decisions: `docs/reporting-design.md`.
+links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting emails the
+notice to the reported party (naming the reporter; individuals also get the CFPB Summary of Rights link) and starts
+10 days. Bounces come back through the Postmark webhook: the report pauses and the reporter gives another email or a
+mailing address (admin prints the letter and marks it mailed, which starts the 10 days). A daily job after 6 AM
+Pacific publishes reports whose 10 days have passed. Reported parties are linked to their own accounts automatically
+(same notice email, DOB + SSN last 4, EIN, or company domain) or by the admin, and see their reports and evidence on
+the dashboard. Design decisions: `docs/reporting-design.md`.
 
 ## Environment variables (Render)
 
@@ -77,6 +82,7 @@ links (each open is logged), and rejecting requires a reason that is emailed to 
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
+| `POSTMARK_WEBHOOK_TOKEN` | Long random value. Postmark's Bounce webhook calls `https://app.joinfindex.com/webhooks/postmark?token=<value>` |
 | `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in activity emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off |
 | `TEST_NOTIFICATIONS` | Optional. `[TEST]` requests email the admin like real ones; set `false` to keep them silent |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |

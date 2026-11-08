@@ -18,6 +18,7 @@ const { sendEmail, templates } = require('../lib/email');
 const { testNotificationsOn } = require('../lib/notify-admin');
 const R = require('../lib/reports');
 const { validateReport } = require('../lib/report-validate');
+const N = require('../lib/notices');
 
 const router = express.Router();
 const BUCKET = 'fx-evidence';
@@ -180,7 +181,42 @@ router.get('/reports/:id', async (req, res, next) => {
     if (error) throw new Error(`Load report: ${error.message}`);
     if (!report) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That report does not exist.' });
     const { data: files } = await supabase.from('fx_report_evidence').select('id, kind, file_name, size_bytes').eq('report_id', report.id).order('created_at');
-    res.render('reports/view', { pageTitle: 'Report', report, files: files || [], submitted: req.query.submitted === '1' });
+    const { data: notices } = await supabase.from('fx_notices').select('channel, email, status, created_at').eq('report_id', report.id).order('created_at', { ascending: false });
+    res.render('reports/view', {
+      pageTitle: 'Report', report, files: files || [], notices: notices || [], fmtDay: N.fmtDay,
+      submitted: req.query.submitted === '1', msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
+    });
+  } catch (err) { next(err); }
+});
+
+// Notice bounced: the reporter gives another email (sent right away) or a mailing address (admin posts it).
+router.post('/reports/:id/contact', async (req, res, next) => {
+  try {
+    const back = (m, isErr) => `/reports/${req.params.id}?${new URLSearchParams(isErr ? { err: m } : { msg: m })}`;
+    const { data: own } = await supabase.from('fx_reports').select('id').eq('id', req.params.id).eq('reporter_account_id', req.account.id).maybeSingle();
+    if (!own) return res.redirect(303, '/reports');
+    const report = await N.loadFull(own.id);
+    if (report.status !== 'notice_undeliverable') return res.redirect(303, back('This report isn\u2019t waiting for new contact details.', true));
+    const { data: pending } = await supabase.from('fx_notices').select('id').eq('report_id', report.id).eq('status', 'to_mail').limit(1);
+    if (pending && pending.length) return res.redirect(303, back('A letter is already waiting to be mailed.', true));
+
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const address = typeof req.body.address === 'string' ? req.body.address.trim().slice(0, 500) : '';
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email) || email.length > 254) return res.redirect(303, back('Enter a valid email address.', true));
+      const { data: tried } = await supabase.from('fx_notices').select('id').eq('report_id', report.id).eq('email', email).limit(1);
+      if (tried && tried.length) return res.redirect(303, back('A notice was already sent to that email. Please try a different one, or give a mailing address.', true));
+      await supabase.from('fx_reports').update({ notice_email: email }).eq('id', report.id);
+      await supabase.from('fx_subject_emails').upsert({ subject_id: report.subject_id, email }, { onConflict: 'subject_id,email', ignoreDuplicates: true });
+      await logEvent({ accountId: req.account.id, reportId: report.id, event: 'notice_resent', actor: 'account', ip: req.ip });
+      const result = await N.sendEmailNotice({ ...report, notice_email: email }, email, { ip: req.ip, actor: 'account' });
+      return res.redirect(303, result.ok ? back(`Notice sent to ${email}. The 10 days start now.`) : back('That email couldn\u2019t be sent either. Please try another, or give a mailing address.', true));
+    }
+    if (address.length >= 15) {
+      await N.queueLetter(report, address, req.ip);
+      return res.redirect(303, back('Thanks. We\u2019ll mail the notice; the 10 days start when it\u2019s mailed.'));
+    }
+    return res.redirect(303, back('Enter another email address or a full mailing address.', true));
   } catch (err) { next(err); }
 });
 
