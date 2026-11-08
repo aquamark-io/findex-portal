@@ -123,6 +123,7 @@ router.post('/reports/new/:who', (req, res, next) => {
         const { error: insErr } = await supabase.from('fx_reports').insert({
           id: reportId, reporter_account_id: account.id, subject_id: subjectRow.id,
           category: report.category, incident_date: report.incident_date, description: report.description,
+          payment_amount: report.payment_amount || null, payment_status: report.payment_status || null,
           notice_email: report.notice_email, subject_name_reported: report.subject_name_reported,
           certified_at: new Date().toISOString(), terms_version: account.terms_version, is_test: isTest,
         });

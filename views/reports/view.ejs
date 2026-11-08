@@ -45,7 +45,9 @@
     <% if (s.contact_name) { %><dt>Contact</dt><dd><%= s.contact_name %></dd><% } %>
     <dt>Notice email</dt><dd><%= report.notice_email %></dd>
     <dt>Category</dt><dd><%= R.CATEGORIES[report.category].label %></dd>
-    <dt>Incident date</dt><dd><%= fmtDate(report.incident_date) %></dd>
+    <dt><%= (R.REPAYMENT_FIELDS[report.category] || {}).dateLabel || 'Incident date' %></dt><dd><%= fmtDate(report.incident_date) %></dd>
+    <% if (report.payment_amount != null) { %><dt><%= R.REPAYMENT_FIELDS[report.category].amountLabel %></dt><dd><%= R.fmtMoney(report.payment_amount) %></dd><% } %>
+    <% if (report.payment_status) { %><dt>System status</dt><dd><%= report.payment_status %></dd><% } %>
     <dt>Submitted</dt><dd><%= fmtDate(report.created_at) %></dd>
   </dl>
   <h2>Description</h2>
