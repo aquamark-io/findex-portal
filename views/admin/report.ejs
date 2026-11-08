@@ -30,18 +30,14 @@
       <div class="alert error">AI review failed: <%= ai.error %></div>
     <% } else if (!(ai.result && ai.result.requirements)) { %>
       <p class="muted">This review used an older format. Run it again for the short version.</p>
-    <% } else { const res = ai.result; const reqs = R.REQUIREMENTS[r.category] || []; const icon = { yes: '\u2713', no: '\u2717', unclear: '?' }; %>
+    <% } else { const res = ai.result; const reqs = R.REQUIREMENTS[r.category] || []; %>
       <p class="flush"><%= res.summary %></p>
       <ul class="ai-reqs">
         <% reqs.forEach((text, i) => { const x = (res.requirements || []).find(q => q.number === i + 1) || { result: 'unclear', note: 'Not answered' }; %>
-          <li><span class="ai-icon <%= x.result %>" aria-label="<%= x.result %>"><%= icon[x.result] || '?' %></span><span><strong><%= text %></strong><span class="muted"> &mdash; <%= x.note %></span></span></li>
+          <li><span class="ai-box<%= x.result === 'yes' ? ' on' : '' %>" role="img" aria-label="<%= x.result === 'yes' ? 'Shown' : 'Not shown' %>"><%= x.result === 'yes' ? '\u2713' : '' %></span><span><strong><%= text %></strong><span class="muted"> &mdash; <%= x.note %></span></span></li>
         <% }) %>
       </ul>
-      <% if ((res.flags || []).length) { %><p class="ai-flags"><% res.flags.slice(0, 4).forEach(f => { %><span class="ai-flag"><%= f %></span><% }) %></p><% } %>
-      <details><summary class="muted">Files (<%= (res.files || []).length %>)<%= (ai.files_skipped || []).length ? ', ' + ai.files_skipped.length + ' not readable by AI' : '' %></summary>
-        <ul class="checklist mt"><% (res.files || []).forEach(f => { %><li><strong><%= f.file %></strong>: <%= f.shows %></li><% }) %>
-        <% (ai.files_skipped || []).forEach(x => { %><li><strong><%= x.file %></strong>: <span class="muted"><%= x.reason %></span></li><% }) %></ul>
-      </details>
+      <% if ((ai.files_skipped || []).length) { %><p class="muted ai-meta">AI couldn&rsquo;t read: <%= ai.files_skipped.map(x => x.file).join(', ') %></p><% } %>
       <p class="muted ai-meta">AI summary to check, not a decision &middot; <%= fmt(ai.completed_at) %></p>
     <% } %>
     <% if (aiEnabled) { %>
@@ -70,17 +66,9 @@
   </section>
 
   <section class="card">
-    <h2 class="flush-top">Review</h2>
-    <ul class="checklist">
-      <li>Evidence comes from a system of record (exported emails, PDFs, system reports), not only screenshots</li>
-      <li>More than one piece of evidence supports the incident</li>
-      <li>The source matches: sender, account, or system ties to the reported party</li>
-      <li>Full Social Security and bank account numbers are redacted</li>
-      <li>Incident is within 7 years<% if (r.category === 'default') { %>, and the default notice is attached<% } %></li>
-      <li>Recordings, if any, are supporting only and lawfully recorded</li>
-    </ul>
+    <h2 class="flush-top">Decision</h2>
     <% if (r.status === 'submitted') { %>
-      <form method="post" class="decision mt">
+      <form method="post" class="decision">
         <div class="field"><label for="reason">Reason for rejecting <span class="hint">(shared with the reporter)</span></label><textarea id="reason" name="reason" rows="3" maxlength="2000"></textarea></div>
         <div class="field"><label for="note">Internal note <span class="hint">(optional, never emailed)</span></label><textarea id="note" name="note" rows="2" maxlength="2000"></textarea></div>
         <div class="actions">
