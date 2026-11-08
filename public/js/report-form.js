@@ -21,6 +21,7 @@
     var box = document.getElementById('evidence-req'), list = document.getElementById('evidence-req-list');
     hint.hidden = !!req; box.hidden = !req; list.innerHTML = '';
     (req ? req.split('|') : []).forEach(function (t) { var li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
+    document.getElementById('evidence-guide').textContent = (opt && opt.getAttribute('data-guide')) || '';
     var needsNotice = opt && opt.getAttribute('data-default') === '1';
     dnField.hidden = !needsNotice;
     dnInput.disabled = !needsNotice;
