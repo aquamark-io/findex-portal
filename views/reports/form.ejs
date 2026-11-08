@@ -22,7 +22,6 @@
         <div class="field"><label for="s_dob">Date of birth</label><input type="date" id="s_dob" name="subject_dob" required></div>
         <div class="field"><label for="s_ssn">Last 4 of SSN</label><input type="text" id="s_ssn" name="subject_ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
       </div>
-      <p class="muted">Used only to identify the right person. Encrypted and never shown in full.</p>
     <% } else if (subjectType === 'company') { %>
       <h2>Who are you reporting?</h2>
       <div class="row">
