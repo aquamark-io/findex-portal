@@ -225,6 +225,8 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 .checklist li, .history li { margin-bottom: 6px; }
 .req-intro { font-size: 0.92rem; font-weight: 400; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; margin: 0 0 10px; }
 #evidence-guide { font-size: 0.92rem; line-height: 1.65; margin: 10px 0 20px; }
+#evidence-guide p { margin: 0 0 10px; }
+#evidence-guide p:last-child { margin-bottom: 0; }
 #evidence-req { padding: 26px 28px; margin-bottom: 28px; }
 #evidence-req .checklist li { margin-bottom: 10px; line-height: 1.6; }
 #evidence-req .checklist li:last-child { margin-bottom: 0; }

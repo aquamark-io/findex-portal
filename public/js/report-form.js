@@ -28,7 +28,9 @@
       list.appendChild(li);
     });
     var guide = document.getElementById('evidence-guide'), g = (opt && opt.getAttribute('data-guide')) || '';
-    guide.textContent = g; guide.hidden = !g;
+    guide.innerHTML = '';
+    g.split(/\n\s*\n/).forEach(function (para) { if (!para.trim()) return; var el = document.createElement('p'); el.textContent = para.trim(); guide.appendChild(el); });
+    guide.hidden = !g;
     var repay = opt && opt.getAttribute('data-amount-label');
     var rf = document.getElementById('repayment-fields');
     rf.hidden = !repay;
