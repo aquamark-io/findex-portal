@@ -294,3 +294,4 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .result-empty { background: #fff; border: 1px solid var(--lav-border); border-radius: 12px; padding: 16px 18px; color: var(--ink); margin: 0 0 14px; }
 .note { border-left: 3px solid #c9b6e4; padding: 4px 0 4px 14px; font-size: 0.92rem; color: var(--body); }
 .delinquency-form > p.flush { margin-bottom: 14px; }
+#api-note { margin: 4px 0 18px; }

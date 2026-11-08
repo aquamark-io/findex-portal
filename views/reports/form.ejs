@@ -63,6 +63,7 @@
     <div class="row" id="repayment-fields" hidden>
       <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
     </div>
+    <p class="note" id="api-note" hidden>Reporting a high volume of delinquencies? API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p>
     <div class="field"><label for="description">Incident description <span class="hint" id="description_opt" hidden>(optional)</span></label>
       <textarea id="description" name="description" rows="6" maxlength="5000" required><%= v('description') %></textarea>
     </div>

@@ -80,6 +80,7 @@ function renderForm(res, { who, subjectType, values = {}, errors = [], status = 
     pageTitle: 'Submit a report', who, subjectType, values: safe, errors,
     categories: R.categoriesFor(subjectType, res.locals.account),
     maxDate: new Date().toISOString().slice(0, 10),
+    contactEmail: process.env.CONTACT_EMAIL || process.env.ONBOARDING_NOTIFY_EMAIL || '',
   });
 }
 
