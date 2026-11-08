@@ -117,7 +117,7 @@ router.post('/my-record/reports/:id/dispute', requireAccount, (req, res, next) =
       const reason = typeof (req.body || {}).reason === 'string' ? req.body.reason.trim() : '';
       const fail = msg => res.status(422).render('dispute-form', { pageTitle: 'Dispute a report', r, CATEGORIES, error: msg, reason });
       if (upErr) return fail(upErr.code === 'LIMIT_FILE_SIZE' ? 'Each file must be 25 MB or smaller.' : `Up to ${D.MAX_DISPUTE_FILES} files.`);
-      if (reason.length < 20) return fail('Please explain why the report is inaccurate (at least 20 characters).');
+      if (!reason) return fail('Please explain why the report is inaccurate.');
       if (reason.length > 5000) return fail('Please keep your explanation under 5,000 characters.');
       const out = await D.openDispute({ account: req.account, reportId: r.id, reason, files: req.files || [], ip: req.ip });
       if (out.error) return fail(out.error);

@@ -19,7 +19,7 @@
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
         </dl>
-        <p class="prewrap"><%= r.description %></p>
+        <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
         <% if ((files[r.id] || []).length) { %>
           <p class="muted flush">Evidence:</p>
           <ul class="checklist"><% files[r.id].forEach(f => { %><li><a href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= R.fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>

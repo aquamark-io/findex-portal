@@ -50,8 +50,8 @@
     <% if (report.payment_status) { %><dt>System status</dt><dd><%= report.payment_status %></dd><% } %>
     <dt>Submitted</dt><dd><%= fmtDate(report.created_at) %></dd>
   </dl>
-  <h2>Description</h2>
-  <p class="prewrap"><%= report.description %></p>
+  <% if (report.description) { %><h2>Description</h2>
+  <p class="prewrap"><%= report.description %></p><% } %>
   <h2>Evidence</h2>
   <ul class="checklist">
     <% files.forEach(f => { %><li><%= f.file_name %> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>

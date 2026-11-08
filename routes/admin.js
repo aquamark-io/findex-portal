@@ -404,7 +404,7 @@ router.post('/reports/:id/resolve', async (req, res, next) => {
     const amended = typeof req.body.amended_description === 'string' ? req.body.amended_description.trim() : '';
     if (!outcome) return res.redirect(303, backReport(req.params.id, 'Choose an outcome.', true));
     if (!note) return res.redirect(303, backReport(req.params.id, 'Add a resolution note. It is shared with both sides.', true));
-    if (outcome === 'amended' && (amended.length < 20 || amended.length > 5000)) return res.redirect(303, backReport(req.params.id, 'Enter the corrected description (20 to 5,000 characters).', true));
+    if (outcome === 'amended' && (!amended || amended.length > 5000)) return res.redirect(303, backReport(req.params.id, 'Enter the corrected description (up to 5,000 characters).', true));
     const out = await D.resolve({ reportId: req.params.id, outcome, note, amendedDescription: amended, ip: req.ip });
     res.redirect(303, out.error ? backReport(req.params.id, out.error, true) : backReport(req.params.id, `Dispute resolved: ${outcome}. Both sides were emailed.`));
   } catch (err) { next(err); }

@@ -30,6 +30,8 @@
       document.getElementById('payment_amount_label').textContent = repay;
       document.getElementById('payment_status').placeholder = opt.getAttribute('data-status-ph') || '';
     }
+    document.getElementById('description').required = !repay;
+    document.getElementById('description_opt').hidden = !repay;
     document.getElementById('incident_date_label').textContent = (opt && opt.getAttribute('data-date-label')) || 'Incident date';
     document.getElementById('date_hint').textContent = repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
     var needsNotice = opt && opt.getAttribute('data-default') === '1';

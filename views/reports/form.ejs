@@ -60,8 +60,8 @@
       <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
       <div class="field"><label for="payment_status">Status in your system</label><input type="text" id="payment_status" name="payment_status" maxlength="120" value="<%= v('payment_status') %>" aria-describedby="status_hint" disabled><p class="field-hint" id="status_hint">The code or status your system shows for it.</p></div>
     </div>
-    <div class="field"><label for="description">Description</label>
-      <textarea id="description" name="description" rows="6" minlength="20" maxlength="5000" required placeholder="What happened, when, and how the evidence supports it."><%= v('description') %></textarea>
+    <div class="field"><label for="description">Description <span class="hint" id="description_opt" hidden>(optional)</span></label>
+      <textarea id="description" name="description" rows="6" maxlength="5000" required placeholder="What happened, when, and how the evidence supports it."><%= v('description') %></textarea>
     </div>
 
     <h2>Evidence</h2>

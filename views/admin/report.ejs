@@ -55,8 +55,8 @@
       <dt>Reported by</dt><dd><a href="/admin/accounts/<%= reporter.id %>"><%= reporter.business_legal_name %></a> (<%= COMPANY_TYPES[reporter.company_type] || 'Company' %>), <%= reporter.first_name %> <%= reporter.last_name %></dd>
       <dt>Expires</dt><dd><%= dateOnly(r.expires_on || (r.incident_date && (Number(r.incident_date.slice(0, 4)) + 7) + r.incident_date.slice(4))) %></dd>
     </dl>
-    <h2>Description</h2>
-    <p class="prewrap"><%= r.description %></p>
+    <% if (r.description) { %><h2>Description</h2>
+    <p class="prewrap"><%= r.description %></p><% } %>
     <h2>Evidence (<%= files.length %>)</h2>
     <ul class="checklist">
       <% files.forEach(f => { %><li><a href="/admin/reports/<%= r.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
