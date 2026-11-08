@@ -27,7 +27,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 | Account | Search | Report | View own record | Dispute / appeal |
 |---|---|---|---|---|
 | Company (member) | Yes, with a permissible purpose | Yes (incidents) | Yes (own company) | Yes |
-| Company: funder | As above | Also funded-business repayment issues (slow pay, defaults) | Yes | Yes |
+| Company: funder or lender | As above | Also funded-business repayment issues (slow pay, missed payments, defaults) | Yes | Yes |
 | Individual | No (own record only) | No | Yes | Yes |
 | Funded business | No (own record only) | No | Yes | Yes |
 

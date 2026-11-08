@@ -4,6 +4,7 @@ const express = require('express');
 const supabase = require('../lib/supabase');
 const { requireAccount } = require('../middleware/auth');
 const { COMPANY_TYPES } = require('../lib/validate');
+const { canReportRepayment } = require('../lib/reports');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
 const { sendEmail, templates } = require('../lib/email');
@@ -18,8 +19,8 @@ router.get('/dashboard', requireAccount, (req, res) => {
   res.render('dashboard', {
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
-    // Only funders with full access may report funded-business repayment issues (slow pay, defaults).
-    canReportRepayment: a.account_type === 'company' && a.company_type === 'funder' && Boolean(a.terms_version),
+    // Funders and lenders with full access may report funded-business repayment issues.
+    canReportRepayment: a.account_type === 'company' && canReportRepayment(a) && Boolean(a.terms_version),
     msg: req.query.upgraded === '1' ? 'You now have full access.' : null,
   });
 });

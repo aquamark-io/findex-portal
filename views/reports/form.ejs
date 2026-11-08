@@ -64,7 +64,9 @@
     <p class="muted" id="evidence-hint">Choose a category to see examples of acceptable evidence.</p>
     <div class="field"><label for="evidence">Evidence files</label>
       <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
-      <p class="field-hint" id="files_hint">Up to <%= R.MAX_FILES %> files, 25 MB each. PDF, images, exported emails (.eml/.msg), spreadsheets, Word, or audio. Original files are preferred over screenshots; call recordings must be lawfully recorded.</p>
+      <ul class="file-list" id="evidence-list" hidden></ul>
+      <p class="field-hint" id="evidence-count" aria-live="polite"></p>
+      <p class="field-hint" id="files_hint">Add files one at a time or several at once. Up to <%= R.MAX_FILES %> files, 25 MB each. PDF, images, exported emails (.eml/.msg), spreadsheets, Word, or audio. Original files are preferred over screenshots; call recordings must be lawfully recorded.</p>
     </div>
     <div class="field" id="default-notice-field" hidden>
       <label for="default_notice">Default notice sent to the merchant</label>
