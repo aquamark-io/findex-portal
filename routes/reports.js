@@ -39,7 +39,14 @@ function requireReporter(req, res, next) {
   return res.redirect('/dashboard');
 }
 
-const fmtDate = d => d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
+// Plain dates (incident date) are shown as-is; timestamps (submitted) in Pacific time, matching admin.
+const fmtDate = d => {
+  if (!d) return '';
+  const opts = { month: 'short', day: 'numeric', year: 'numeric' };
+  return String(d).length <= 10
+    ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { ...opts, timeZone: 'UTC' })
+    : new Date(d).toLocaleDateString('en-US', { ...opts, timeZone: 'America/Los_Angeles' });
+};
 
 router.use('/reports', requireAccount, requireReporter, (req, res, next) => {
   Object.assign(res.locals, { R, STATUS_LABELS, fmtDate });
