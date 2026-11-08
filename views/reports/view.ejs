@@ -8,6 +8,7 @@
   <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
   <% if (report.status === 'notice_sent' && report.publish_at) { %><div class="alert ok">The reported party has been notified. Publishes <strong><%= fmtDay(report.publish_at) %></strong> unless disputed.</div><% } %>
+  <% if (report.status === 'removed') { %><div class="alert ok">Removed <%= fmtDay(report.removed_at) %>. It is no longer part of FinDex.</div><% } %>
   <% if (report.status === 'published') { %><div class="alert ok">Published <%= fmtDay(report.published_at) %>.</div><% } %>
   <% if (report.status === 'notice_undeliverable') { %>
     <div class="alert error"><strong>Action needed:</strong> we couldn&rsquo;t deliver the notice to <%= report.notice_email %>. The report is paused until the reported party can be notified.</div>
@@ -55,5 +56,12 @@
   <ul class="checklist">
     <% files.forEach(f => { %><li><%= f.file_name %> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
   </ul>
+  <% if (removable) { %>
+    <form method="post" action="/reports/<%= report.id %>/remove" class="remove-report">
+      <button class="btn secondary" type="submit" data-confirm="Remove this report? It will no longer be part of FinDex<%= report.status === 'submitted' ? '' : ', and the reported party will be emailed that it was removed' %>. This can’t be undone.">Remove report</button>
+      <p class="muted">You can remove your report at any time.</p>
+    </form>
+  <% } %>
 </section>
+<script src="/js/admin.js?v=<%= assetV %>" defer></script>
 <%- include('../partials/foot') %>

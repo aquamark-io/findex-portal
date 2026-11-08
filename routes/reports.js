@@ -191,9 +191,19 @@ router.get('/reports/:id', async (req, res, next) => {
     let dFiles = [];
     if (dispute) { const { data } = await supabase.from('fx_dispute_files').select('id, party, file_name, size_bytes').eq('dispute_id', dispute.id).order('created_at'); dFiles = data || []; }
     res.render('reports/view', {
-      pageTitle: 'Report', report, files: files || [], notices: notices || [], fmtDay: N.fmtDay, dispute, dFiles,
+      pageTitle: 'Report', report, removable: D.REMOVABLE.includes(report.status), files: files || [], notices: notices || [], fmtDay: N.fmtDay, dispute, dFiles,
       submitted: req.query.submitted === '1', msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
+  } catch (err) { next(err); }
+});
+
+// The reporter removes its own report (any time before it's removed, rejected or expired).
+router.post('/reports/:id/remove', async (req, res, next) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.redirect(303, '/reports');
+    const out = await D.removeByReporter({ account: req.account, reportId: req.params.id, ip: req.ip });
+    const q = out.error ? { err: out.error } : { msg: 'Report removed. It is no longer part of FinDex.' };
+    res.redirect(303, `/reports/${req.params.id}?${new URLSearchParams(q)}`);
   } catch (err) { next(err); }
 });
 

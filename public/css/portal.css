@@ -286,3 +286,5 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .ai-box.on { background: var(--ok); border-color: var(--ok); }
 .ai-meta { font-size: 0.8rem; margin: 8px 0 12px; }
 .ai-card form { margin: 0; }
+.remove-report { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--lav-border); }
+.remove-report .muted { margin: 8px 0 0; font-size: 0.85rem; }
