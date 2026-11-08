@@ -276,3 +276,13 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .ai-result.unclear { background: #fff4e5; color: #b54708; }
 .ai-card { margin-bottom: 20px; }
 .checks td:first-child { width: 90px; }
+.ai-reqs { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.ai-reqs li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; }
+.ai-icon { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
+.ai-icon.yes { background: var(--ok-bg); color: var(--ok); }
+.ai-icon.no { background: var(--error-bg); color: var(--error); }
+.ai-icon.unclear { background: #fff4e5; color: #b54708; }
+.ai-flags { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.ai-flag { font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #fff4e5; color: #8a4b08; }
+.ai-meta { font-size: 0.8rem; margin: 8px 0 12px; }
+.ai-card form { margin: 0; }

@@ -17,7 +17,10 @@
 
   function sync() {
     var opt = cat.options[cat.selectedIndex];
-    hint.textContent = opt && opt.getAttribute('data-hint') ? 'Examples: ' + opt.getAttribute('data-hint') : 'Choose a category to see examples of acceptable evidence.';
+    var req = opt && opt.getAttribute('data-req');
+    var box = document.getElementById('evidence-req'), list = document.getElementById('evidence-req-list');
+    hint.hidden = !!req; box.hidden = !req; list.innerHTML = '';
+    (req ? req.split('|') : []).forEach(function (t) { var li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
     var needsNotice = opt && opt.getAttribute('data-default') === '1';
     dnField.hidden = !needsNotice;
     dnInput.disabled = !needsNotice;

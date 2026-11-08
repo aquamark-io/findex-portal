@@ -28,21 +28,21 @@
       <p class="muted">Reviewing the evidence&hellip; refresh in a minute.</p>
     <% } else if (ai.status === 'failed') { %>
       <div class="alert error">AI review failed: <%= ai.error %></div>
-    <% } else { const res = ai.result || {}; %>
-      <p class="ai-note">A summary to check, not a decision. It reads what the files show; it can&rsquo;t confirm they&rsquo;re genuine.</p>
-      <p><%= res.summary %></p>
-      <table class="checks">
-        <% (res.checks || []).forEach(c => { %>
-          <tr><td class="nowrap"><span class="ai-result <%= c.result %>"><%= c.result %></span></td><td><strong><%= checkLabels[c.check] || c.check %></strong><div class="muted"><%= c.explanation %></div></td></tr>
+    <% } else if (!(ai.result && ai.result.requirements)) { %>
+      <p class="muted">This review used an older format. Run it again for the short version.</p>
+    <% } else { const res = ai.result; const reqs = R.REQUIREMENTS[r.category] || []; const icon = { yes: '\u2713', no: '\u2717', unclear: '?' }; %>
+      <p class="flush"><%= res.summary %></p>
+      <ul class="ai-reqs">
+        <% reqs.forEach((text, i) => { const x = (res.requirements || []).find(q => q.number === i + 1) || { result: 'unclear', note: 'Not answered' }; %>
+          <li><span class="ai-icon <%= x.result %>" aria-label="<%= x.result %>"><%= icon[x.result] || '?' %></span><span><strong><%= text %></strong><span class="muted"> &mdash; <%= x.note %></span></span></li>
         <% }) %>
-      </table>
-      <% if ((res.concerns || []).length) { %><p class="flush mt"><strong>Concerns</strong></p><ul class="checklist"><% res.concerns.forEach(x => { %><li><%= x %></li><% }) %></ul><% } %>
-      <% if ((res.missing || []).length) { %><p class="flush mt"><strong>Missing</strong></p><ul class="checklist"><% res.missing.forEach(x => { %><li><%= x %></li><% }) %></ul><% } %>
-      <details class="mt"><summary>What each file shows (<%= (res.files || []).length %>)</summary>
-        <ul class="checklist mt"><% (res.files || []).forEach(f => { %><li><strong><%= f.file %></strong> <span class="muted">(<%= f.document_type %><%= f.readable ? '' : ', not readable' %>)</span><div><%= f.what_it_shows %></div><% if ((f.dates_seen || []).length) { %><div class="muted">Dates: <%= f.dates_seen.join(', ') %></div><% } %></li><% }) %></ul>
+      </ul>
+      <% if ((res.flags || []).length) { %><p class="ai-flags"><% res.flags.slice(0, 4).forEach(f => { %><span class="ai-flag"><%= f %></span><% }) %></p><% } %>
+      <details><summary class="muted">Files (<%= (res.files || []).length %>)<%= (ai.files_skipped || []).length ? ', ' + ai.files_skipped.length + ' not readable by AI' : '' %></summary>
+        <ul class="checklist mt"><% (res.files || []).forEach(f => { %><li><strong><%= f.file %></strong>: <%= f.shows %></li><% }) %>
+        <% (ai.files_skipped || []).forEach(x => { %><li><strong><%= x.file %></strong>: <span class="muted"><%= x.reason %></span></li><% }) %></ul>
       </details>
-      <% if ((ai.files_skipped || []).length) { %><p class="muted mt">Not reviewed by AI: <%= ai.files_skipped.map(x => x.file + ' (' + x.reason + ')').join('; ') %></p><% } %>
-      <p class="muted">Reviewed <%= fmt(ai.completed_at) %> &middot; <%= ai.model %> &middot; prompt <%= ai.prompt_version %></p>
+      <p class="muted ai-meta">AI summary to check, not a decision &middot; <%= fmt(ai.completed_at) %></p>
     <% } %>
     <% if (aiEnabled) { %>
       <form method="post" action="/admin/reports/<%= r.id %>/ai-review"><button class="btn secondary" type="submit"><%= ai ? 'Run AI review again' : 'Run AI review' %></button></form>

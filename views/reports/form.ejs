@@ -51,7 +51,7 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-hint="<%= R.EVIDENCE_HINTS[c.key] %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= R.REQUIREMENTS[c.key].join('|') %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <%= sel('category', c.key) %>><%= c.label %></option><% }) %>
         </select>
       </div>
       <div class="field"><label for="incident_date">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint">Within the past 7 years.</p></div>
@@ -61,7 +61,8 @@
     </div>
 
     <h2>Evidence</h2>
-    <p class="muted" id="evidence-hint">Choose a category to see examples of acceptable evidence.</p>
+    <div id="evidence-req" class="card-inset" hidden><p class="flush"><strong>What we need to see</strong></p><ul class="checklist mt" id="evidence-req-list"></ul></div>
+    <p class="muted" id="evidence-hint">Choose a category to see what the evidence needs to show.</p>
     <div class="field"><label for="evidence">Evidence files</label>
       <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
       <ul class="file-list" id="evidence-list" hidden></ul>
