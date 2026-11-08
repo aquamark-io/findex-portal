@@ -7,7 +7,7 @@
   <% if (search.expired) { %>
     <div class="alert error">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
   <% } else if (!reports.length) { %>
-    <div class="alert ok">No published reports found<%= search.matched_subject_ids.length ? '' : ' for these details' %>.</div>
+    <div class="result-empty"><strong>No published reports found<%= search.matched_subject_ids.length ? '' : ' for these details' %>.</strong></div>
     <p class="muted">FinDex only shows reports that were independently reviewed and published. A clear result doesn&rsquo;t guarantee there were no incidents.</p>
   <% } else { %>
     <p><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p>
@@ -27,8 +27,8 @@
       </article>
     <% }) %>
   <% } %>
-  <% if (search.purpose === 'employment') { %>
-    <div class="alert ok mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
+  <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
+    <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
   <% } %>
   <p class="muted mt">Results are available for <%= resultsDays %> days and may be used only for the purpose certified.</p>
 </section>
