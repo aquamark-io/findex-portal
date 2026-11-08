@@ -58,7 +58,7 @@
     <div class="row" id="delinquency-fields" hidden>
       <div class="field"><label for="payment_frequency">Payment frequency</label>
         <select id="payment_frequency" name="payment_frequency" disabled><option value="">Select…</option><% Object.entries(R.FREQUENCIES).forEach(([k, l]) => { %><option value="<%= k %>" <%= sel('payment_frequency', k) %>><%= l %></option><% }) %></select></div>
-      <div class="field"><label for="missed_count">Number of missed payments</label><input type="number" id="missed_count" name="missed_count" min="1" max="1000" step="1" inputmode="numeric" value="<%= v('missed_count') %>" disabled></div>
+      <div class="field"><label for="missed_count">Number of missed payments</label><input type="number" id="missed_count" name="missed_count" min="3" max="1000" step="1" inputmode="numeric" value="<%= v('missed_count') %>" disabled></div>
     </div>
     <div class="row" id="repayment-fields" hidden>
       <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
