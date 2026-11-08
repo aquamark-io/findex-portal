@@ -17,7 +17,7 @@
     <% if (subjectType === 'individual') { %>
       <h2>Who are you reporting?</h2>
       <div class="field"><label for="s_name">Full name</label><input type="text" id="s_name" name="subject_name" value="<%= v('subject_name') %>" maxlength="160" required></div>
-      <div class="field"><label for="s_email">Email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">The reported party is notified here before anything is published.</p></div>
+      <div class="field"><label for="s_email">Email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required></div>
       <div class="row">
         <div class="field"><label for="s_dob">Date of birth</label><input type="date" id="s_dob" name="subject_dob" required></div>
         <div class="field"><label for="s_ssn">Last 4 of SSN</label><input type="text" id="s_ssn" name="subject_ssn_last4" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" required></div>
