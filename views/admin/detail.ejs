@@ -24,7 +24,7 @@
 <p><a href="/admin?status=<%= a.status %>">&larr; Back to <%= a.status %> requests</a></p>
 <h1 class="title"><%= displayName(a) %></h1>
 <p class="lead">
-  <span class="pill <%= a.status %>"><%= a.status %></span>
+  <span class="pill <%= a.status %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span>
 </p>
 
 <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>

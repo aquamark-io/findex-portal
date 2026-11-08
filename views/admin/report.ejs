@@ -86,7 +86,7 @@
       <% if (r.review_note) { %><p class="muted">Internal note: <%= r.review_note %></p><% } %>
     <% } %>
     <% disputes.forEach(d => { const files = d.fx_dispute_files || []; %>
-      <h2>Dispute <span class="pill <%= d.status === 'open' ? 'disputed' : d.status === 'removed' ? 'removed' : 'published' %>"><%= d.status %></span></h2>
+      <h2>Dispute <span class="pill <%= d.status %>"><%= d.status.charAt(0).toUpperCase() + d.status.slice(1) %></span></h2>
       <p class="muted flush"><%= d.fx_accounts ? d.fx_accounts.first_name + ' ' + d.fx_accounts.last_name + ' (' + d.fx_accounts.email + ')' : '' %> &middot; opened <%= fmt(d.created_at) %> &middot; <strong>due <%= fmtDay(d.due_at) %></strong></p>
       <p class="prewrap"><%= d.reason %></p>
       <% if (files.length) { %><ul class="checklist"><% files.forEach(f => { %><li><a href="/admin/disputes/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= f.party === 'subject' ? 'reported party' : 'reporter' %>)</span></li><% }) %></ul><% } %>

@@ -20,7 +20,7 @@
               <% if (a.business_legal_name) { %><div class="muted"><%= a.first_name %> <%= a.last_name %></div><% } %>
               </td>
             <td><%= a.email %></td>
-            <td><span class="pill <%= a.status %>"><%= a.status %></span></td>
+            <td><span class="pill <%= a.status %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span></td>
           </tr>
         <% }) %>
       </tbody>

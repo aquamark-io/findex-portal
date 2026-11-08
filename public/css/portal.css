@@ -215,11 +215,6 @@ input[type=radio], input[type=checkbox] { accent-color: var(--base); }
 .table th { text-align: left; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--lav); padding: 12px 14px; }
 .table td { padding: 12px 14px; border-top: 1px solid var(--lav-border); vertical-align: top; }
 .table .muted { font-size: 0.82rem; }
-.pill { display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px; margin-right: 4px; }
-.pill.pending { background: #fff4e5; color: #b54708; }
-.pill.approved { background: var(--ok-bg); color: var(--ok); }
-.pill.denied { background: var(--error-bg); color: var(--error); }
-.pill.test { background: #eef2ff; color: #3538cd; }
 .detail-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; }
 .detail-grid .card + .card { margin-top: 0; }
 @media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
@@ -243,11 +238,6 @@ input[aria-invalid="true"] { border-color: var(--error); }
 .prewrap { white-space: pre-wrap; color: var(--body); }
 textarea { resize: vertical; }
 input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed #c9b3ea; border-radius: 10px; background: #fff; }
-.pill.submitted { background: #fff4e5; color: #b54708; }
-.pill.rejected, .pill.removed { background: var(--error-bg); color: var(--error); }
-.pill.notice_sent, .pill.disputed, .pill.notice_undeliverable { background: #eef2ff; color: #3538cd; }
-.pill.published { background: var(--ok-bg); color: var(--ok); }
-.pill.expired { background: #f2f4f7; color: #475467; }
 .btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 .file-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
 .file-list li { background: #fff; border: 1px solid var(--lav-border); border-radius: 10px; padding: 8px 12px; font-size: 0.92rem; word-break: break-word; }
@@ -274,6 +264,15 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .ai-result.yes { background: var(--ok-bg); color: var(--ok); }
 .ai-result.no { background: var(--error-bg); color: var(--error); }
 .ai-result.unclear { background: #fff4e5; color: #b54708; }
+/* Status tags: white outlined pill with a colored dot.
+   amber = waiting on us, purple = in progress, green = good / live, red = stopped, gray = closed */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 500; line-height: 1.4; color: var(--ink); background: #fff; border: 1px solid #e4daf2; padding: 2px 11px 2px 9px; border-radius: 999px; white-space: nowrap; vertical-align: middle; --dot: #98a2b3; }
+.pill::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+.pill.submitted, .pill.pending, .pill.notice_undeliverable, .pill.open { --dot: #f59e0b; }
+.pill.notice_sent, .pill.disputed, .pill.amended { --dot: #7c3aed; }
+.pill.published, .pill.approved, .pill.upheld { --dot: #12b76a; }
+.pill.rejected, .pill.removed, .pill.denied { --dot: #f04438; }
+.pill.expired { --dot: #98a2b3; }
 .ai-card { margin-bottom: 20px; }
 .checks td:first-child { width: 90px; }
 .ai-reqs { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }

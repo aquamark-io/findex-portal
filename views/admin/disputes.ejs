@@ -13,7 +13,7 @@
           <td><%= rep.category ? R.CATEGORIES[rep.category].label : '' %></td>
           <td class="nowrap<%= overdue ? ' overdue' : '' %>"><%= fmtDay(open ? d.due_at : d.resolved_at) %><%= overdue ? ' (overdue)' : '' %></td>
           <td><%= d.reporter_responded_at ? 'Yes' : 'Not yet' %></td>
-          <td><span class="pill <%= d.status === 'open' ? 'disputed' : d.status === 'removed' ? 'removed' : 'published' %>"><%= d.status %></span></td>
+          <td><span class="pill <%= d.status %>"><%= d.status.charAt(0).toUpperCase() + d.status.slice(1) %></span></td>
         </tr>
       <% }) %>
     </tbody>
