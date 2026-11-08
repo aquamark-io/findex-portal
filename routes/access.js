@@ -16,7 +16,7 @@ const { logEvent } = require('../lib/events');
 const { testNotificationsOn, notifyAdminActivity } = require('../lib/notify-admin');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
-const { INDEMNIFICATION } = require('../lib/terms');
+const { INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ function renderForm(res, { type, mode = 'member', values = {}, errors = [], stat
     mode,
     values: safe,
     errors,
-    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, INDEMNIFICATION,
+    ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES, INDEMNIFICATION, CFPB_USERS, CFPB_FURNISHERS,
     turnstileSiteKey: turnstile.enabled() ? turnstile.siteKey() : '',
   });
 }

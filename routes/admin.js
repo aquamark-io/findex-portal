@@ -43,6 +43,7 @@ const EVENT_LABELS = {
   dispute_upheld: 'Dispute resolved: upheld (published)',
   dispute_amended: 'Dispute resolved: amended (published with corrections)',
   dispute_removed: 'Dispute resolved: report removed',
+  report_expired_deleted: 'Deleted after 7 years',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',

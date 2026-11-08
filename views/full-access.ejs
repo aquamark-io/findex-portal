@@ -6,6 +6,7 @@
   <form method="post" action="/dashboard/full-access">
     <label class="check"><input type="checkbox" name="authorize" required><span>I am authorized to accept these terms on behalf of <%= account.business_legal_name %>.</span></label>
     <label class="check"><input type="checkbox" name="member_terms" required><span><%= INDEMNIFICATION %></span></label>
+    <label class="check"><input type="checkbox" name="cfpb_notices" <%= typeof chk === 'function' ? chk('cfpb_notices', 'on') : '' %> required><span>On behalf of the company, I have received and will comply with the CFPB <a href="<%= CFPB_USERS %>" target="_blank" rel="noopener">Notice to Users of Consumer Reports</a> and <a href="<%= CFPB_FURNISHERS %>" target="_blank" rel="noopener">Notice to Furnishers of Information</a>.</span></label>
     <button class="btn block mt" type="submit">Get full access</button>
   </form>
   <p class="muted mt center"><a href="/dashboard">Back to dashboard</a></p>

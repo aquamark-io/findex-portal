@@ -11,7 +11,7 @@ const multer = require('multer');
 const disputeUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: D.MAX_DISPUTE_FILES, fields: 10, fieldSize: 20000 } }).array('files', D.MAX_DISPUTE_FILES);
 const { PURPOSES } = require('../lib/search');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
-const { MEMBER_TERMS_VERSION, INDEMNIFICATION } = require('../lib/terms');
+const { MEMBER_TERMS_VERSION, INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
 const { sendEmail, templates } = require('../lib/email');
 const { testNotificationsOn } = require('../lib/notify-admin');
@@ -51,16 +51,16 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
 
 router.get('/dashboard/full-access', requireAccount, (req, res) => {
   if (!canUpgrade(req.account)) return res.redirect('/dashboard');
-  res.render('full-access', { pageTitle: 'Get full access', INDEMNIFICATION, error: null });
+  res.render('full-access', { pageTitle: 'Get full access', INDEMNIFICATION, CFPB_USERS, CFPB_FURNISHERS, error: null });
 });
 
 router.post('/dashboard/full-access', requireAccount, async (req, res, next) => {
   const a = req.account;
   if (!canUpgrade(a)) return res.redirect(303, '/dashboard');
-  if (req.body.authorize !== 'on' || req.body.member_terms !== 'on') {
+  if (req.body.authorize !== 'on' || req.body.member_terms !== 'on' || req.body.cfpb_notices !== 'on') {
     return res.status(422).render('full-access', {
-      pageTitle: 'Get full access', INDEMNIFICATION,
-      error: 'Please tick both boxes to get full access.',
+      pageTitle: 'Get full access', INDEMNIFICATION, CFPB_USERS, CFPB_FURNISHERS,
+      error: 'Please tick all three boxes to get full access.',
     });
   }
   try {

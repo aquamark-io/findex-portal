@@ -107,7 +107,8 @@ Items marked **Counsel** need legal review before launch. This document is not l
 - **One-way indemnification:** the member defends and indemnifies FinDex and Aquamark against claims, damages,
   and legal fees arising from false, inaccurate, or manipulated information it submits, including false payment
   data about a funded business. **Counsel:** replace the draft wording with final text.
-- To add later: acceptance of the two CFPB member notices above.
+- **Built:** acceptance of the CFPB Notice to Users and Notice to Furnishers (linked to the CFPB's Regulation V
+  appendices N and M) is a required checkbox on Request Access and Get full access, recorded with the terms version.
 
 ## Upgrading a Check My Record company to full access
 

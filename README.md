@@ -86,6 +86,18 @@ page and responds with text and files. Admin works the Disputes queue (due dates
 covers disputes due within 5 days) and resolves each one as upheld (published), amended (published with a corrected
 description) or removed. The resolution note is emailed to both sides.
 
+## Retention and member notices (phase two, step 5)
+
+The daily job also permanently deletes reports whose incident is more than 7 years old (`expires_on`), with their
+evidence, notices and dispute files; reports with an open dispute wait until it is resolved. Companies accept the
+CFPB Notice to Users and Notice to Furnishers (linked) together with the indemnification terms.
+
+## Daily job
+
+Runs once a day after 6 AM Pacific (checked every 15 minutes; logged as `daily_job` so it runs once): publishes reports
+past their 10-day notice, emails dispute reminders, and deletes expired reports. Set `DISABLE_DAILY_JOB=true` to turn it
+off (e.g. in tests).
+
 ## Environment variables (Render)
 
 | Variable | Notes |
