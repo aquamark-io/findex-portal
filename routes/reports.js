@@ -125,7 +125,7 @@ router.post('/reports/new/:who', (req, res, next) => {
           id: reportId, reporter_account_id: account.id, subject_id: subjectRow.id,
           category: report.category, incident_date: report.incident_date, description: report.description,
           payment_amount: report.payment_amount || null, payment_frequency: report.payment_frequency || null,
-          missed_count: report.missed_count || null, delinquency_status: report.delinquency_status || null,
+          missed_count: report.missed_count || null, delinquency_status: report.delinquency_status || null, delinquency_as_of: report.delinquency_as_of || null,
           notice_email: report.notice_email, subject_name_reported: report.subject_name_reported,
           certified_at: new Date().toISOString(), terms_version: account.terms_version, is_test: isTest,
         });
