@@ -31,14 +31,12 @@
     <% } else if (!(ai.result && ai.result.requirements)) { %>
       <p class="muted">This review used an older format. Run it again for the short version.</p>
     <% } else { const res = ai.result; const reqs = R.REQUIREMENTS[r.category] || []; %>
-      <p class="flush"><%= res.summary %></p>
       <ul class="ai-reqs">
         <% reqs.forEach((text, i) => { const x = (res.requirements || []).find(q => q.number === i + 1) || { result: 'unclear', note: 'Not answered' }; %>
           <li><span class="ai-box<%= x.result === 'yes' ? ' on' : '' %>" role="img" aria-label="<%= x.result === 'yes' ? 'Shown' : 'Not shown' %>"><%= x.result === 'yes' ? '\u2713' : '' %></span><span><strong><%= text %></strong><span class="muted"> &mdash; <%= x.note %></span></span></li>
         <% }) %>
       </ul>
       <% if ((ai.files_skipped || []).length) { %><p class="muted ai-meta">AI couldn&rsquo;t read: <%= ai.files_skipped.map(x => x.file).join(', ') %></p><% } %>
-      <p class="muted ai-meta">AI summary to check, not a decision &middot; <%= fmt(ai.completed_at) %></p>
     <% } %>
     <% if (aiEnabled) { %>
       <form method="post" action="/admin/reports/<%= r.id %>/ai-review"><button class="btn secondary" type="submit"><%= ai ? 'Run AI review again' : 'Run AI review' %></button></form>
