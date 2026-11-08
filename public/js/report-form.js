@@ -38,7 +38,6 @@
     if (amountLabel) document.getElementById('payment_amount_label').textContent = amountLabel;
     var delinq = !!(opt && opt.getAttribute('data-delinquency'));
     document.getElementById('delinquency-fields').hidden = !delinq;
-    document.getElementById('api-note').hidden = !delinq;
     ['payment_frequency', 'missed_count'].forEach(function (id) { var el = document.getElementById(id); el.disabled = !delinq; el.required = delinq; });
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;
