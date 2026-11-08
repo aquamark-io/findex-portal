@@ -6,7 +6,7 @@
 <section class="card">
   <p class="signing-as">Reporting: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/reports/new">Change</a></p>
   <h1 class="title">Submit a report</h1>
-  <p class="lead">Every report is independently reviewed before the reported party is notified or anything is published.</p>
+  <p class="lead">Every report is independently reviewed before publication.</p>
 
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong>
@@ -31,7 +31,7 @@
       </div>
       <div class="row">
         <div class="field"><label for="s_contact">Contact person</label><input type="text" id="s_contact" name="subject_contact" value="<%= v('subject_contact') %>" maxlength="160" required></div>
-        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">They&rsquo;re notified here before anything is published.</p></div>
+        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required></div>
       </div>
     <% } else { %>
       <h2>Who are you reporting?</h2>
@@ -42,7 +42,7 @@
       <div class="field"><label for="s_ein">EIN</label><input type="text" id="s_ein" name="subject_ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off" required></div>
       <div class="row">
         <div class="field"><label for="s_contact">Contact person</label><input type="text" id="s_contact" name="subject_contact" value="<%= v('subject_contact') %>" maxlength="160" required></div>
-        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required aria-describedby="s_email_hint"><p class="field-hint" id="s_email_hint">They&rsquo;re notified here before anything is published.</p></div>
+        <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required></div>
       </div>
     <% } %>
 
