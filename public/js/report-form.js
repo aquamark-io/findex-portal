@@ -20,8 +20,15 @@
     var req = opt && opt.getAttribute('data-req');
     var box = document.getElementById('evidence-req'), list = document.getElementById('evidence-req-list');
     hint.hidden = !!req; box.hidden = !req; list.innerHTML = '';
-    (req ? req.split('|') : []).forEach(function (t) { var li = document.createElement('li'); li.textContent = t; list.appendChild(li); });
-    document.getElementById('evidence-guide').textContent = (opt && opt.getAttribute('data-guide')) || '';
+    var items = []; try { items = req ? JSON.parse(req) : []; } catch (e) { items = []; }
+    items.forEach(function (t) {
+      var li = document.createElement('li');
+      if (Array.isArray(t)) { var b = document.createElement('strong'); b.textContent = t[0] + ':'; li.appendChild(b); li.appendChild(document.createTextNode(' ' + t[1])); }
+      else li.textContent = t;
+      list.appendChild(li);
+    });
+    var guide = document.getElementById('evidence-guide'), g = (opt && opt.getAttribute('data-guide')) || '';
+    guide.textContent = g; guide.hidden = !g;
     var repay = opt && opt.getAttribute('data-amount-label');
     var rf = document.getElementById('repayment-fields');
     rf.hidden = !repay;

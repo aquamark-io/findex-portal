@@ -51,7 +51,7 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= R.REQUIREMENTS[c.key].join('|') %>" data-guide="<%= R.GUIDANCE[c.key] || '' %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-date-label="<%= rp.dateLabel %>" data-amount-label="<%= rp.amountLabel %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.REQUIREMENTS[c.key]) %>" data-guide="<%= R.GUIDANCE[c.key] || '' %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-date-label="<%= rp.dateLabel %>" data-amount-label="<%= rp.amountLabel %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
         </select>
       </div>
       <div class="field"><label for="incident_date" id="incident_date_label">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint"></p></div>
@@ -59,12 +59,12 @@
     <div class="row" id="repayment-fields" hidden>
       <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
     </div>
-    <div class="field"><label for="description">Description <span class="hint" id="description_opt" hidden>(optional)</span></label>
-      <textarea id="description" name="description" rows="6" maxlength="5000" required placeholder="What happened, when, and how the evidence supports it."><%= v('description') %></textarea>
+    <div class="field"><label for="description">Incident description <span class="hint" id="description_opt" hidden>(optional)</span></label>
+      <textarea id="description" name="description" rows="6" maxlength="5000" required><%= v('description') %></textarea>
     </div>
 
     <h2>Evidence</h2>
-    <div id="evidence-req" class="card-inset" hidden><p class="flush"><strong>What we need to see</strong></p><ul class="checklist mt" id="evidence-req-list"></ul><p class="muted flush" id="evidence-guide"></p></div>
+    <div id="evidence-req" class="card-inset" hidden><p class="flush"><strong>What we need to see</strong></p><p class="muted" id="evidence-guide"></p><p class="flush req-intro">Your evidence must clearly establish:</p><ul class="checklist" id="evidence-req-list"></ul></div>
     <p class="muted" id="evidence-hint">Choose a category to see what the evidence needs to show.</p>
     <div class="field"><label for="evidence">Evidence files</label>
       <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
