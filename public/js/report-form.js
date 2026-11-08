@@ -25,15 +25,12 @@
     var repay = opt && opt.getAttribute('data-amount-label');
     var rf = document.getElementById('repayment-fields');
     rf.hidden = !repay;
-    ['payment_amount', 'payment_status'].forEach(function (id) { var el = document.getElementById(id); el.disabled = !repay; el.required = !!repay; });
-    if (repay) {
-      document.getElementById('payment_amount_label').textContent = repay;
-      document.getElementById('payment_status').placeholder = opt.getAttribute('data-status-ph') || '';
-    }
+    var amt = document.getElementById('payment_amount'); amt.disabled = !repay; amt.required = !!repay;
+    if (repay) document.getElementById('payment_amount_label').textContent = repay;
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;
     document.getElementById('incident_date_label').textContent = (opt && opt.getAttribute('data-date-label')) || 'Incident date';
-    document.getElementById('date_hint').textContent = repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
+    document.getElementById('date_hint').textContent = !(opt && opt.value) ? '' : repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
     var needsNotice = opt && opt.getAttribute('data-default') === '1';
     dnField.hidden = !needsNotice;
     dnInput.disabled = !needsNotice;

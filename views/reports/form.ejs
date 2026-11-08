@@ -51,14 +51,13 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= R.REQUIREMENTS[c.key].join('|') %>" data-guide="<%= R.GUIDANCE[c.key] || '' %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-date-label="<%= rp.dateLabel %>" data-amount-label="<%= rp.amountLabel %>" data-status-ph="<%= rp.statusPlaceholder %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= R.REQUIREMENTS[c.key].join('|') %>" data-guide="<%= R.GUIDANCE[c.key] || '' %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-date-label="<%= rp.dateLabel %>" data-amount-label="<%= rp.amountLabel %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
         </select>
       </div>
-      <div class="field"><label for="incident_date" id="incident_date_label">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint">Within the past 7 years.</p></div>
+      <div class="field"><label for="incident_date" id="incident_date_label">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint"></p></div>
     </div>
     <div class="row" id="repayment-fields" hidden>
       <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
-      <div class="field"><label for="payment_status">Status in your system</label><input type="text" id="payment_status" name="payment_status" maxlength="120" value="<%= v('payment_status') %>" aria-describedby="status_hint" disabled><p class="field-hint" id="status_hint">The code or status your system shows for it.</p></div>
     </div>
     <div class="field"><label for="description">Description <span class="hint" id="description_opt" hidden>(optional)</span></label>
       <textarea id="description" name="description" rows="6" maxlength="5000" required placeholder="What happened, when, and how the evidence supports it."><%= v('description') %></textarea>
