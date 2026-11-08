@@ -61,7 +61,7 @@
   </ul>
   <% if (report.delinquency_status && removable) { %>
     <form method="post" action="/reports/<%= report.id %>/delinquency" class="card-inset mt delinquency-form">
-      <p class="flush"><strong>Delinquency status</strong> <span class="muted">&middot; keep this current</span></p>
+      <p class="flush"><strong>Delinquency status</strong> <span class="muted">&middot; optional; update it if the merchant catches up</span></p>
       <div class="row">
         <div class="field"><label for="d_status">Status</label>
           <select id="d_status" name="delinquency_status"><option value="delinquent" <%= report.delinquency_status === 'delinquent' ? 'selected' : '' %>>Delinquent</option><option value="caught_up" <%= report.delinquency_status === 'caught_up' ? 'selected' : '' %>>Caught up</option></select></div>
