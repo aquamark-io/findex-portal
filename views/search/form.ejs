@@ -10,7 +10,7 @@
   <form method="post" action="/search/<%= who %>" enctype="multipart/form-data" id="search-form">
     <% if (subjectType === 'individual') { %>
       <div class="field"><label for="q_name">Full name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="160" required></div>
-      <p class="muted">Plus at least one of the following. Every identifier you enter must match.</p>
+      <p class="muted">Plus at least one of the following. Matches are made on these identifiers, so a different spelling of the name won&rsquo;t hide a result. Date of birth with last 4 of SSN is the most accurate.</p>
       <div class="field"><label for="q_email">Email</label><input type="email" id="q_email" name="email" value="<%= v('email') %>" maxlength="254"></div>
       <div class="row">
         <div class="field"><label for="q_dob">Date of birth</label><input type="date" id="q_dob" name="dob"></div>

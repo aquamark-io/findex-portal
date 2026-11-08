@@ -15,7 +15,7 @@
       <article class="record-item">
         <div class="record-head"><strong><%= R.CATEGORIES[r.category].label %></strong><span class="muted">Incident <%= fmtDate(r.incident_date) %></span></div>
         <dl class="kv">
-          <dt>Reported party</dt><dd><%= r.subject_name_reported %></dd>
+          <dt>Name on file</dt><dd><%= r.subject_name_reported %><% if (search.subject_type === 'individual' && c.name && !S.nameLooksSame(c.name, r.subject_name_reported)) { %> <span class="ai-result unclear">Name differs</span><div class="muted">Matched on the identifiers you entered. Confirm this is the same person.</div><% } %></dd>
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
         </dl>

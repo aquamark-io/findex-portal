@@ -228,14 +228,21 @@ volume and Postmark sending.
   until there is enough reviewed history to learn from.
 - **Consequences:** falsified or careless submissions lead to removal from the index and an admin incident report
   filed by FinDex about the member (same notice and dispute process). **Counsel:** add to member terms.
-- **Bulk and API are for funded-business repayment incidents only** (missed payments, default). Individual, partner,
+- **The API is for funded-business repayment incidents only** (missed payments, default). Individual, partner,
   and merchant-fraud reports stay in the portal.
-- **CSV import is for historical incidents only:** incidents dated before the member's account was approved. Current
-  and future incidents go through the portal or API. The CSV rows are claims; a system-of-record payment export
-  (one file can cover the batch, matched by deal ID) is the evidence. Each row succeeds or fails on its own.
+- **No bulk historical import (decided Nov 8, 2026).** Historical volume would mean mass notice emails to stale
+  addresses (bounces and spam complaints could get the shared Postmark server suspended, affecting the other portals),
+  thousands of reviews and 30-day disputes at once, and would dilute "every record reviewed and the party notified".
+  Historical incidents (within 7 years) can still be reported one at a time in the portal.
+- **The repayment API accepts current events only:** incidents dated on or after the member's account approval.
 - **API authentication:** per-company API keys created on the dashboard (not one shared key).
 - **Email only:** every report needs a deliverable email for the reported party. No mailed letters; a report never
   publishes without a delivered notice.
 - **Exports are accepted in good faith,** backed by certification, indemnity, the merchant's right to dispute, and
   consequences for falsification.
 - No onboarding source check.
+- **Identifier-first matching for individuals (Nov 8, 2026).** Search matches on DOB + SSN last 4 (exact), or on
+  email (plus DOB if given), or on DOB with a loose name match; name spelling never blocks a match. Results show the
+  name on file and flag "Name differs" so the searcher confirms it's the same person. Funded businesses already match
+  on the full EIN and partners on website domain. Full SSN is not collected for now (an optional hash-only full SSN
+  is a possible later step).
