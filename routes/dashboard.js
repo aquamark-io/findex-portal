@@ -39,7 +39,7 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
     }
   } catch (err) { return next(err); }
   res.render('dashboard', {
-    aboutMe, disputes, DISPUTABLE: D.DISPUTABLE, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
+    aboutMe, disputes, DISPUTABLE: D.DISPUTABLE, viewers, PURPOSES, aboutFiles: files, CATEGORIES, R_FREQ: require('../lib/reports').FREQUENCIES, R_DELQ: require('../lib/reports').delinquencyText, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
     COMPANY_TYPES,

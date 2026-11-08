@@ -18,6 +18,7 @@
           <dt>Name on file</dt><dd><%= r.subject_name_reported %><% if (search.subject_type === 'individual' && c.name && !S.nameLooksSame(c.name, r.subject_name_reported)) { %> <span class="ai-result unclear">Name differs</span><div class="muted">Matched on the identifiers you entered. Confirm this is the same person.</div><% } %></dd>
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
+          <% if (r.delinquency_status) { %><dt>Status</dt><dd><%= R.delinquencyText(r) %></dd><% } %>
         </dl>
         <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
         <% if ((files[r.id] || []).length) { %>

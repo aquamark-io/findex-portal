@@ -44,6 +44,8 @@ const EVENT_LABELS = {
   dispute_amended: 'Dispute resolved: amended (published with corrections)',
   dispute_removed: 'Dispute resolved: report removed',
   report_removed_by_reporter: 'Removed by the reporter',
+  delinquency_caught_up: 'Reporter marked the merchant caught up',
+  delinquency_delinquent: 'Reporter marked the merchant delinquent',
   report_expired_deleted: 'Deleted after 7 years',
   ai_review_requested: 'AI review requested',
   duplicate_request: 'Submitted again with the same email (no new request created)',

@@ -36,10 +36,13 @@
     document.getElementById('repayment-fields').hidden = !amountLabel;
     var amt = document.getElementById('payment_amount'); amt.disabled = !amountLabel; amt.required = !!amountLabel;
     if (amountLabel) document.getElementById('payment_amount_label').textContent = amountLabel;
+    var delinq = !!(opt && opt.getAttribute('data-delinquency'));
+    document.getElementById('delinquency-fields').hidden = !delinq;
+    ['payment_frequency', 'missed_count'].forEach(function (id) { var el = document.getElementById(id); el.disabled = !delinq; el.required = delinq; });
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;
     document.getElementById('incident_date_label').textContent = (opt && opt.getAttribute('data-date-label')) || 'Incident date';
-    document.getElementById('date_hint').textContent = !(opt && opt.value) ? '' : repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
+    document.getElementById('date_hint').textContent = !(opt && opt.value) ? '' : delinq ? 'At least 30 days ago, and within the past 120 days.' : repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
     var needsNotice = opt && opt.getAttribute('data-default') === '1';
     dnField.hidden = !needsNotice;
     dnInput.disabled = !needsNotice;

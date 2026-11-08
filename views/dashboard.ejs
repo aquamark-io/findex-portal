@@ -42,7 +42,10 @@
         <dl class="kv">
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Incident date</dt><dd><%= new Date(r.incident_date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) %></dd>
-          <% if (r.payment_amount != null) { %><dt><%= r.category === 'default' ? 'Open balance' : 'Payment amount' %></dt><dd><%= '$' + Number(r.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd><% } %>
+          <% if (r.payment_amount != null) { %><dt><%= r.category === 'missed_payments' ? 'Past-due amount' : 'Amount' %></dt><dd><%= '$' + Number(r.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd><% } %>
+      <% if (r.payment_frequency) { %><dt>Payment frequency</dt><dd><%= R_FREQ[r.payment_frequency] %></dd><% } %>
+      <% if (r.missed_count) { %><dt>Missed payments</dt><dd><%= r.missed_count %></dd><% } %>
+      <% if (r.delinquency_status) { %><dt>Status</dt><dd><%= R_DELQ(r) %></dd><% } %>
         </dl>
         <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
         <% if ((aboutFiles[r.id] || []).length) { %>

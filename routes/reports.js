@@ -123,7 +123,8 @@ router.post('/reports/new/:who', (req, res, next) => {
         const { error: insErr } = await supabase.from('fx_reports').insert({
           id: reportId, reporter_account_id: account.id, subject_id: subjectRow.id,
           category: report.category, incident_date: report.incident_date, description: report.description,
-          payment_amount: report.payment_amount || null,
+          payment_amount: report.payment_amount || null, payment_frequency: report.payment_frequency || null,
+          missed_count: report.missed_count || null, delinquency_status: report.delinquency_status || null,
           notice_email: report.notice_email, subject_name_reported: report.subject_name_reported,
           certified_at: new Date().toISOString(), terms_version: account.terms_version, is_test: isTest,
         });
@@ -194,6 +195,16 @@ router.get('/reports/:id', async (req, res, next) => {
       pageTitle: 'Report', report, removable: D.REMOVABLE.includes(report.status), files: files || [], notices: notices || [], fmtDay: N.fmtDay, dispute, dFiles,
       submitted: req.query.submitted === '1', msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
+  } catch (err) { next(err); }
+});
+
+// Payment delinquency: reporter sets the status (delinquent, or caught up on a date).
+router.post('/reports/:id/delinquency', async (req, res, next) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.redirect(303, '/reports');
+    const out = await D.setDelinquencyStatus({ account: req.account, reportId: req.params.id, status: req.body.delinquency_status, caughtUpOn: req.body.caught_up_on, ip: req.ip });
+    const q = out.error ? { err: out.error } : { msg: out.status === 'caught_up' ? 'Marked as caught up.' : 'Marked as delinquent.' };
+    res.redirect(303, `/reports/${req.params.id}?${new URLSearchParams(q)}`);
   } catch (err) { next(err); }
 });
 

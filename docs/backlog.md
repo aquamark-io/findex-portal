@@ -2,14 +2,8 @@
 
 Ideas and follow-ups to come back to. Newest first.
 
-- **Repayment API (current events only).** Let funders and lenders send missed payments and defaults straight
-  from their systems as they happen. Decided:
-  - Repayment categories only (missed payments, default), funders and lenders only.
-  - Current events only: same 90-day window as the web form. No historical backfill, no CSV or bulk upload.
-  - Per-company API keys created in the member dashboard (shown once, stored hashed, revocable), only for
-    companies with full access.
-  - Same rules as the web form: one subject email per report, evidence required (defaults need the default
-    notice), every report still goes through admin review and the 10-day notice.
-  - Rate limits and a per-request result (accepted, rejected and why).
-- **Structured repayment intake.** Missed-payment and default reports collect fields (payment amount, scheduled
-  date, missed or returned, return code) instead of only free text, so the API and web form share one shape.
+- **Repayment API: deferred.** Missed payments became "Payment delinquency" (one report per episode, once the
+  merchant is 30+ days behind, with a delinquent / caught-up status the reporter keeps current), so volume is a few
+  reports a month and the web form is enough. Defaults stay in the portal (formal notice + proof of delivery).
+  If revisited: per-company API keys, delinquency reports and status updates only, same rules and review as the form.
+- **Structured repayment intake: done.** Payment frequency, number of missed payments, past-due amount, first missed payment date.

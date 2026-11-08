@@ -48,6 +48,9 @@
     <dt>Category</dt><dd><%= R.CATEGORIES[report.category].label %></dd>
     <dt><%= (R.REPAYMENT_FIELDS[report.category] || {}).dateLabel || 'Incident date' %></dt><dd><%= fmtDate(report.incident_date) %></dd>
     <% if (report.payment_amount != null) { %><dt><%= R.REPAYMENT_FIELDS[report.category].amountLabel || 'Amount' %></dt><dd><%= R.fmtMoney(report.payment_amount) %></dd><% } %>
+      <% if (report.payment_frequency) { %><dt>Payment frequency</dt><dd><%= R.FREQUENCIES[report.payment_frequency] %></dd><% } %>
+      <% if (report.missed_count) { %><dt>Missed payments</dt><dd><%= report.missed_count %></dd><% } %>
+      <% if (report.delinquency_status) { %><dt>Status</dt><dd><%= R.delinquencyText(report) %></dd><% } %>
     <dt>Submitted</dt><dd><%= fmtDate(report.created_at) %></dd>
   </dl>
   <% if (report.description) { %><h2>Description</h2>
@@ -56,6 +59,17 @@
   <ul class="checklist">
     <% files.forEach(f => { %><li><%= f.file_name %> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
   </ul>
+  <% if (report.delinquency_status && removable) { %>
+    <form method="post" action="/reports/<%= report.id %>/delinquency" class="card-inset mt delinquency-form">
+      <p class="flush"><strong>Delinquency status</strong> <span class="muted">&middot; keep this current</span></p>
+      <div class="row">
+        <div class="field"><label for="d_status">Status</label>
+          <select id="d_status" name="delinquency_status"><option value="delinquent" <%= report.delinquency_status === 'delinquent' ? 'selected' : '' %>>Delinquent</option><option value="caught_up" <%= report.delinquency_status === 'caught_up' ? 'selected' : '' %>>Caught up</option></select></div>
+        <div class="field"><label for="d_date">Caught up on <span class="hint">(if caught up)</span></label><input type="date" id="d_date" name="caught_up_on" value="<%= report.caught_up_on || '' %>" min="<%= report.incident_date %>" max="<%= new Date().toISOString().slice(0, 10) %>"></div>
+      </div>
+      <button class="btn secondary" type="submit">Update status</button>
+    </form>
+  <% } %>
   <% if (removable) { %>
     <form method="post" action="/reports/<%= report.id %>/remove" class="remove-report">
       <button class="btn secondary" type="submit" data-confirm="Remove this report? It will no longer be part of FinDex<%= report.status === 'submitted' ? '' : ', and the reported party will be emailed that it was removed' %>. This can’t be undone.">Remove report</button>
