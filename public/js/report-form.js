@@ -42,7 +42,7 @@
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;
     document.getElementById('incident_date_label').textContent = (opt && opt.getAttribute('data-date-label')) || 'Incident date';
-    document.getElementById('date_hint').textContent = !(opt && opt.value) ? '' : delinq ? 'The date of the first missed payment, within the past 90 days.' : repay ? 'Within the past 90 days.' : 'Within the past 7 years.';
+    document.getElementById('date_hint').textContent = !(opt && opt.value) ? '' : delinq ? 'The date of the first missed payment, within the past 90 days.' :  'Within the past 7 years.';
     var needsNotice = opt && opt.getAttribute('data-default') === '1';
     dnField.hidden = !needsNotice;
     dnInput.disabled = !needsNotice;
