@@ -6,11 +6,7 @@
 <section class="card">
   <p class="signing-as">Reporting: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/reports/new">Change</a></p>
   <h1 class="title">Submit a report</h1>
-  <% if (subjectType === 'merchant' && R.canReportRepayment(account)) { %>
-    <p class="lead lead-alert">API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p>
-  <% } else { %>
-    <p class="lead">Every report is independently reviewed before publication.</p>
-  <% } %>
+  <p class="lead lead-alert">API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p>
 
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong>
