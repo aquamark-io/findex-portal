@@ -30,7 +30,7 @@
       <div class="alert error">AI review failed: <%= ai.error %></div>
     <% } else if (!(ai.result && ai.result.requirements)) { %>
       <p class="muted">This review used an older format. Run it again for the short version.</p>
-    <% } else { const res = ai.result; const reqs = R.REQUIREMENTS[r.category] || []; %>
+    <% } else { const res = ai.result; const reqs = R.requirementsFor(r.category, s.subject_type); %>
       <ul class="ai-reqs">
         <% reqs.forEach((text, i) => { const x = (res.requirements || []).find(q => q.number === i + 1) || { result: 'unclear', note: 'Not answered' }; %>
           <li><span class="ai-box<%= x.result === 'yes' ? ' on' : '' %>" role="img" aria-label="<%= x.result === 'yes' ? 'Shown' : 'Not shown' %>"><%= x.result === 'yes' ? '\u2713' : '' %></span><span><strong><%= R.reqLabel(text) %></strong><span class="muted"> &mdash; <%= x.note %></span></span></li>
