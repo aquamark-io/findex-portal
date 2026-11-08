@@ -31,11 +31,11 @@
     guide.innerHTML = '';
     g.split(/\n\s*\n/).forEach(function (para) { if (!para.trim()) return; var el = document.createElement('p'); el.textContent = para.trim(); guide.appendChild(el); });
     guide.hidden = !g;
-    var repay = opt && opt.getAttribute('data-amount-label');
-    var rf = document.getElementById('repayment-fields');
-    rf.hidden = !repay;
-    var amt = document.getElementById('payment_amount'); amt.disabled = !repay; amt.required = !!repay;
-    if (repay) document.getElementById('payment_amount_label').textContent = repay;
+    var repay = !!(opt && opt.getAttribute('data-repay'));
+    var amountLabel = opt && opt.getAttribute('data-amount-label');
+    document.getElementById('repayment-fields').hidden = !amountLabel;
+    var amt = document.getElementById('payment_amount'); amt.disabled = !amountLabel; amt.required = !!amountLabel;
+    if (amountLabel) document.getElementById('payment_amount_label').textContent = amountLabel;
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;
     document.getElementById('incident_date_label').textContent = (opt && opt.getAttribute('data-date-label')) || 'Incident date';

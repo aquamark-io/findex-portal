@@ -50,7 +50,7 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.requirementsFor(c.key, subjectType)) %>" data-guide="<%= R.guidanceFor(c.key, subjectType) %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-date-label="<%= rp.dateLabel %>" data-amount-label="<%= rp.amountLabel %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.requirementsFor(c.key, subjectType)) %>" data-guide="<%= R.guidanceFor(c.key, subjectType) %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-repay="1" data-date-label="<%= rp.dateLabel %>" <% if (rp.amountLabel) { %>data-amount-label="<%= rp.amountLabel %>" <% } %><% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
         </select>
       </div>
       <div class="field"><label for="incident_date" id="incident_date_label">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint"></p></div>

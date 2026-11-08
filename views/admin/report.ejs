@@ -49,7 +49,7 @@
     <dl class="kv">
       <dt>Category</dt><dd><%= R.CATEGORIES[r.category].label %></dd>
       <dt><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident date' %></dt><dd><%= dateOnly(r.incident_date) %></dd>
-      <% if (r.payment_amount != null) { %><dt><%= R.REPAYMENT_FIELDS[r.category].amountLabel %></dt><dd><%= R.fmtMoney(r.payment_amount) %></dd><% } %>
+      <% if (r.payment_amount != null) { %><dt><%= R.REPAYMENT_FIELDS[r.category].amountLabel || 'Amount' %></dt><dd><%= R.fmtMoney(r.payment_amount) %></dd><% } %>
       <dt>Submitted</dt><dd><%= fmt(r.created_at) %></dd>
       <dt>Reported by</dt><dd><a href="/admin/accounts/<%= reporter.id %>"><%= reporter.business_legal_name %></a> (<%= COMPANY_TYPES[reporter.company_type] || 'Company' %>), <%= reporter.first_name %> <%= reporter.last_name %></dd>
       <dt>Expires</dt><dd><%= dateOnly(r.expires_on || (r.incident_date && (Number(r.incident_date.slice(0, 4)) + 7) + r.incident_date.slice(4))) %></dd>
