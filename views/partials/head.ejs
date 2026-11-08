@@ -25,8 +25,9 @@
     <nav class="nav-actions" id="site-nav" aria-label="Account">
       <% if (typeof adminNav !== 'undefined') { %>
         <% if (adminNav) { %>
-          <a <%- (currentPath.startsWith('/admin/reports') || currentPath.startsWith('/admin/searches')) ? 'class="nav-link"' : here('/admin') %> href="/admin">Requests</a>
+          <a <%- (currentPath.startsWith('/admin/reports') || currentPath.startsWith('/admin/searches') || currentPath.startsWith('/admin/disputes')) ? 'class="nav-link"' : here('/admin') %> href="/admin">Requests</a>
           <a <%- here('/admin/reports') %> href="/admin/reports">Reports</a>
+          <a <%- here('/admin/disputes') %> href="/admin/disputes">Disputes</a>
           <a <%- here('/admin/searches') %> href="/admin/searches">Searches</a>
           <form method="post" action="/admin/logout"><button class="nav-link link-reset" type="submit">Sign Out</button></form>
         <% } %>

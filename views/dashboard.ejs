@@ -37,7 +37,7 @@
       <article class="record-item">
         <div class="record-head">
           <strong><%= CATEGORIES[r.category].label %></strong>
-          <span class="pill <%= r.status %>"><%= r.status === 'published' ? 'Published' : r.status === 'notice_sent' ? 'Publishes ' + fmtDay(r.publish_at) : 'Pending notice' %></span>
+          <span class="pill <%= r.status %>"><%= r.status === 'published' ? 'Published' : r.status === 'notice_sent' ? 'Publishes ' + fmtDay(r.publish_at) : r.status === 'disputed' ? 'Disputed' : 'Pending notice' %></span>
         </div>
         <dl class="kv">
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
@@ -48,9 +48,14 @@
           <p class="muted flush">Evidence:</p>
           <ul class="checklist"><% aboutFiles[r.id].forEach(f => { %><li><a href="/my-record/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>
         <% } %>
+        <% if (disputes[r.id]) { %>
+          <p class="muted flush mt">Your dispute is under review. The report is withheld until we decide, by <%= fmtDay(disputes[r.id].due_at) %>.</p>
+        <% } else if (DISPUTABLE.includes(r.status)) { %>
+          <p class="flush mt"><a class="btn secondary" href="/my-record/reports/<%= r.id %>/dispute">Dispute</a></p>
+        <% } %>
       </article>
     <% }) %>
-    <p class="muted">To dispute a report, reply to your notice email<% if (disputeEmail) { %> or email <a href="mailto:<%= disputeEmail %>"><%= disputeEmail %></a><% } %>. Disputed reports are withheld while we review the evidence.</p>
+    <p class="muted">Disputing is free. Disputed reports are withheld while we review the evidence.</p>
   <% } %>
   <% if (viewers.length) { %>
     <h2>Who has viewed your record</h2>

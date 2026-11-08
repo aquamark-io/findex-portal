@@ -6,6 +6,9 @@ const { requireAccount } = require('../middleware/auth');
 const { COMPANY_TYPES } = require('../lib/validate');
 const { canReportRepayment, CATEGORIES, fmtSize } = require('../lib/reports');
 const N = require('../lib/notices');
+const D = require('../lib/disputes');
+const multer = require('multer');
+const disputeUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024, files: D.MAX_DISPUTE_FILES, fields: 10, fieldSize: 20000 } }).array('files', D.MAX_DISPUTE_FILES);
 const { PURPOSES } = require('../lib/search');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION } = require('../lib/terms');
@@ -21,6 +24,7 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
   const a = req.account;
   let aboutMe = [];
   let viewers = [];
+  const disputes = {};
   let files = {};
   try {
     const { data: full } = await supabase.from('fx_accounts').select('*').eq('id', a.id).maybeSingle();
@@ -30,16 +34,18 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
     if (aboutMe.length) {
       const { data: ev } = await supabase.from('fx_report_evidence').select('id, report_id, file_name, size_bytes').in('report_id', aboutMe.map(r => r.id)).order('created_at');
       (ev || []).forEach(f => { (files[f.report_id] = files[f.report_id] || []).push(f); });
+      const { data: ds } = await supabase.from('fx_disputes').select('report_id, status, due_at').in('report_id', aboutMe.map(r => r.id)).eq('status', 'open');
+      (ds || []).forEach(d => { disputes[d.report_id] = d; });
     }
   } catch (err) { return next(err); }
   res.render('dashboard', {
-    aboutMe, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
+    aboutMe, disputes, DISPUTABLE: D.DISPUTABLE, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
     // Funders and lenders with full access may report funded-business repayment issues.
     canReportRepayment: a.account_type === 'company' && canReportRepayment(a) && Boolean(a.terms_version),
-    msg: req.query.upgraded === '1' ? 'You now have full access.' : null,
+    msg: req.query.upgraded === '1' ? 'You now have full access.' : req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null,
   });
 });
 
@@ -88,6 +94,36 @@ router.get('/my-record/files/:fileId', requireAccount, async (req, res, next) =>
     await logEvent({ accountId: req.account.id, reportId: f.report_id, event: 'subject_evidence_viewed', actor: 'account', detail: { file: f.file_name }, ip: req.ip });
     res.redirect(data.signedUrl);
   } catch (err) { next(err); }
+});
+
+async function ownReport(req) {
+  if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return null;
+  return (await N.reportsAboutAccount(req.account.id)).find(r => r.id === req.params.id) || null;
+}
+
+router.get('/my-record/reports/:id/dispute', requireAccount, async (req, res, next) => {
+  try {
+    const r = await ownReport(req);
+    if (!r || !D.DISPUTABLE.includes(r.status)) return res.redirect('/dashboard');
+    res.render('dispute-form', { pageTitle: 'Dispute a report', r, CATEGORIES, error: null, reason: '' });
+  } catch (err) { next(err); }
+});
+
+router.post('/my-record/reports/:id/dispute', requireAccount, (req, res, next) => {
+  disputeUpload(req, res, async upErr => {
+    try {
+      const r = await ownReport(req);
+      if (!r || !D.DISPUTABLE.includes(r.status)) return res.redirect(303, '/dashboard');
+      const reason = typeof (req.body || {}).reason === 'string' ? req.body.reason.trim() : '';
+      const fail = msg => res.status(422).render('dispute-form', { pageTitle: 'Dispute a report', r, CATEGORIES, error: msg, reason });
+      if (upErr) return fail(upErr.code === 'LIMIT_FILE_SIZE' ? 'Each file must be 25 MB or smaller.' : `Up to ${D.MAX_DISPUTE_FILES} files.`);
+      if (reason.length < 20) return fail('Please explain why the report is inaccurate (at least 20 characters).');
+      if (reason.length > 5000) return fail('Please keep your explanation under 5,000 characters.');
+      const out = await D.openDispute({ account: req.account, reportId: r.id, reason, files: req.files || [], ip: req.ip });
+      if (out.error) return fail(out.error);
+      res.redirect(303, '/dashboard?disputed=1');
+    } catch (err) { next(err); }
+  });
 });
 
 module.exports = router;

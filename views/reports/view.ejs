@@ -25,6 +25,25 @@
   <% if (report.status === 'rejected' && report.rejection_reason) { %>
     <div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div>
   <% } %>
+  <% if (dispute) { %>
+    <div class="card-inset">
+      <p class="flush"><strong><%= dispute.status === 'open' ? 'Disputed: please respond' : 'Dispute ' + dispute.status %></strong>
+        <span class="muted">&middot; <%= dispute.status === 'open' ? 'decision by ' + fmtDay(dispute.due_at) : fmtDay(dispute.resolved_at) %></span></p>
+      <p class="prewrap"><%= dispute.reason %></p>
+      <% const theirs = dFiles.filter(f => f.party === 'subject'); if (theirs.length) { %>
+        <ul class="checklist"><% theirs.forEach(f => { %><li><a href="/reports/<%= report.id %>/dispute-files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a></li><% }) %></ul>
+      <% } %>
+      <% if (dispute.reporter_response) { %><p class="muted flush">Your response:</p><p class="prewrap"><%= dispute.reporter_response %></p><% } %>
+      <% if (dispute.resolution_note) { %><p><strong>Outcome:</strong> <%= dispute.resolution_note %></p><% } %>
+      <% if (dispute.status === 'open') { %>
+        <form method="post" action="/reports/<%= report.id %>/respond" enctype="multipart/form-data" class="mt">
+          <div class="field"><label for="response">Your response</label><textarea id="response" name="response" rows="4" maxlength="5000" placeholder="Address the dispute and point to the supporting evidence."></textarea></div>
+          <div class="field"><label for="rfiles">Additional evidence <span class="hint">(optional, up to 5 files)</span></label><input type="file" id="rfiles" name="files" multiple></div>
+          <button class="btn" type="submit">Send response</button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
   <dl class="kv">
     <dt>Reported party</dt><dd><%= R.SUBJECT_TYPES[s.subject_type] %></dd>
     <% if (s.website) { %><dt>Website</dt><dd><%= s.website %></dd><% } %>

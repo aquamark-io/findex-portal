@@ -37,6 +37,12 @@ const EVENT_LABELS = {
   subject_evidence_viewed: 'Reported party opened evidence',
   search_evidence_viewed: 'Evidence opened from a search',
   authorization_viewed: 'Employment authorization opened',
+  dispute_opened: 'Disputed by the reported party (report withheld)',
+  dispute_response: 'Reporter responded to the dispute',
+  dispute_file_viewed: 'Dispute file opened',
+  dispute_upheld: 'Dispute resolved: upheld (published)',
+  dispute_amended: 'Dispute resolved: amended (published with corrections)',
+  dispute_removed: 'Dispute resolved: report removed',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',
@@ -239,6 +245,7 @@ router.post('/accounts/:id/delete', async (req, res, next) => {
 const R = require('../lib/reports');
 const { STATUS_LABELS } = require('./reports');
 const N = require('../lib/notices');
+const D = require('../lib/disputes');
 const REPORT_STATUSES = ['submitted', 'rejected', 'notice_sent', 'notice_undeliverable', 'published', 'disputed', 'removed', 'expired'];
 const dateOnly = d => d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
 
@@ -286,18 +293,19 @@ router.get('/reports/:id', async (req, res, next) => {
   try {
     const report = await loadReport(req.params.id);
     if (!report) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That report does not exist.' });
-    const [{ data: files }, { data: events }, { data: emails }, { count: otherReports }, { data: notices }, { data: links }] = await Promise.all([
+    const [{ data: files }, { data: events }, { data: emails }, { count: otherReports }, { data: notices }, { data: disputes }, { data: links }] = await Promise.all([
       supabase.from('fx_report_evidence').select('*').eq('report_id', report.id).order('created_at'),
       supabase.from('fx_events').select('event, actor, detail, created_at').eq('report_id', report.id).order('created_at', { ascending: false }).limit(50),
       supabase.from('fx_subject_emails').select('email').eq('subject_id', report.subject_id),
       supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('subject_id', report.subject_id).neq('id', report.id),
       supabase.from('fx_notices').select('*').eq('report_id', report.id).order('created_at', { ascending: false }),
+      supabase.from('fx_disputes').select('*, fx_dispute_files(*), fx_accounts(email, first_name, last_name)').eq('report_id', report.id).order('created_at', { ascending: false }),
       supabase.from('fx_subject_links').select('linked_by, fx_accounts(id, email, first_name, last_name, business_legal_name)').eq('subject_id', report.subject_id),
     ]);
     res.render('admin/report', {
       pageTitle: report.subject_name_reported, report, subject: report.fx_subjects, reporter: report.reporter,
       identity: maskedSubject(report.fx_subjects), files: files || [], events: events || [],
-      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0, notices: notices || [], links: links || [], fmtDay: N.fmtDay,
+      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0, notices: notices || [], disputes: disputes || [], links: links || [], fmtDay: N.fmtDay,
       msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
   } catch (err) { next(err); }
@@ -373,6 +381,41 @@ router.post('/reports/:id/link', async (req, res, next) => {
     if (error) throw new Error(`Link: ${error.message}`);
     await logEvent({ accountId: acct.id, reportId: report.id, event: 'subject_linked', actor: 'admin', ip: req.ip });
     res.redirect(303, backReport(report.id, `Linked to ${email}. They can now see reports about them.`));
+  } catch (err) { next(err); }
+});
+
+// Disputes queue.
+router.get('/disputes', async (req, res, next) => {
+  try {
+    const open = req.query.status !== 'resolved';
+    let q = supabase.from('fx_disputes').select('id, status, due_at, created_at, resolved_at, reporter_responded_at, fx_reports(id, subject_name_reported, category, is_test)')
+      .order(open ? 'due_at' : 'resolved_at', { ascending: open }).limit(500);
+    q = open ? q.eq('status', 'open') : q.neq('status', 'open');
+    const { data, error } = await q;
+    if (error) throw new Error(`Disputes: ${error.message}`);
+    res.render('admin/disputes', { pageTitle: 'Disputes', disputes: data || [], open, R, fmtDay: N.fmtDay });
+  } catch (err) { next(err); }
+});
+
+router.get('/disputes/files/:fileId', async (req, res, next) => {
+  try {
+    const out = await D.signedFile(req.params.fileId, null);
+    if (!out) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That file does not exist.' });
+    await logEvent({ event: 'dispute_file_viewed', actor: 'admin', detail: { file: out.file.file_name }, ip: req.ip });
+    res.redirect(out.url);
+  } catch (err) { next(err); }
+});
+
+router.post('/reports/:id/resolve', async (req, res, next) => {
+  try {
+    const outcome = ['upheld', 'amended', 'removed'].includes(req.body.outcome) ? req.body.outcome : null;
+    const note = typeof req.body.note === 'string' ? req.body.note.trim().slice(0, 2000) : '';
+    const amended = typeof req.body.amended_description === 'string' ? req.body.amended_description.trim() : '';
+    if (!outcome) return res.redirect(303, backReport(req.params.id, 'Choose an outcome.', true));
+    if (!note) return res.redirect(303, backReport(req.params.id, 'Add a resolution note. It is shared with both sides.', true));
+    if (outcome === 'amended' && (amended.length < 20 || amended.length > 5000)) return res.redirect(303, backReport(req.params.id, 'Enter the corrected description (20 to 5,000 characters).', true));
+    const out = await D.resolve({ reportId: req.params.id, outcome, note, amendedDescription: amended, ip: req.ip });
+    res.redirect(303, out.error ? backReport(req.params.id, out.error, true) : backReport(req.params.id, `Dispute resolved: ${outcome}. Both sides were emailed.`));
   } catch (err) { next(err); }
 });
 

@@ -78,6 +78,14 @@ with evidence (signed, logged), and stay viewable for 7 days. Every search is lo
 or EIN values; reported parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per
 hour per company.
 
+## Disputes (phase two, step 4)
+
+A reported party disputes from their dashboard (reason + optional files). The report is withheld at once (out of
+search results and the publishing job), and a 30-day due date is set. The reporter sees the dispute on their report
+page and responds with text and files. Admin works the Disputes queue (due dates, overdue flagged; a daily reminder
+covers disputes due within 5 days) and resolves each one as upheld (published), amended (published with a corrected
+description) or removed. The resolution note is emailed to both sides.
+
 ## Environment variables (Render)
 
 | Variable | Notes |

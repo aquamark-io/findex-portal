@@ -19,6 +19,8 @@ const { testNotificationsOn } = require('../lib/notify-admin');
 const R = require('../lib/reports');
 const { validateReport } = require('../lib/report-validate');
 const N = require('../lib/notices');
+const D = require('../lib/disputes');
+const respUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: R.MAX_FILE_BYTES, files: D.MAX_DISPUTE_FILES, fields: 10, fieldSize: 20000 } }).array('files', D.MAX_DISPUTE_FILES);
 
 const router = express.Router();
 const BUCKET = 'fx-evidence';
@@ -182,8 +184,11 @@ router.get('/reports/:id', async (req, res, next) => {
     if (!report) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That report does not exist.' });
     const { data: files } = await supabase.from('fx_report_evidence').select('id, kind, file_name, size_bytes').eq('report_id', report.id).order('created_at');
     const { data: notices } = await supabase.from('fx_notices').select('channel, email, status, created_at').eq('report_id', report.id).order('created_at', { ascending: false });
+    const { data: dispute } = await supabase.from('fx_disputes').select('*').eq('report_id', report.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    let dFiles = [];
+    if (dispute) { const { data } = await supabase.from('fx_dispute_files').select('id, party, file_name, size_bytes').eq('dispute_id', dispute.id).order('created_at'); dFiles = data || []; }
     res.render('reports/view', {
-      pageTitle: 'Report', report, files: files || [], notices: notices || [], fmtDay: N.fmtDay,
+      pageTitle: 'Report', report, files: files || [], notices: notices || [], fmtDay: N.fmtDay, dispute, dFiles,
       submitted: req.query.submitted === '1', msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
   } catch (err) { next(err); }
@@ -217,6 +222,32 @@ router.post('/reports/:id/contact', async (req, res, next) => {
       return res.redirect(303, back('Thanks. We\u2019ll mail the notice; the 10 days start when it\u2019s mailed.'));
     }
     return res.redirect(303, back('Enter another email address or a full mailing address.', true));
+  } catch (err) { next(err); }
+});
+
+router.post('/reports/:id/respond', (req, res, next) => {
+  respUpload(req, res, async upErr => {
+    try {
+      const back = (m, isErr) => `/reports/${req.params.id}?${new URLSearchParams(isErr ? { err: m } : { msg: m })}`;
+      if (upErr) return res.redirect(303, back(upErr.code === 'LIMIT_FILE_SIZE' ? 'Each file must be 25 MB or smaller.' : `Up to ${D.MAX_DISPUTE_FILES} files.`, true));
+      const response = typeof (req.body || {}).response === 'string' ? req.body.response.trim().slice(0, 5000) : '';
+      if (response.length < 10 && !(req.files || []).length) return res.redirect(303, back('Add a response or supporting files.', true));
+      const out = await D.respond({ account: req.account, reportId: req.params.id, response: response || '(files only)', files: req.files || [], ip: req.ip });
+      res.redirect(303, out.error ? back(out.error, true) : back('Response sent. We\u2019ll email you the outcome.'));
+    } catch (err) { next(err); }
+  });
+});
+
+// Files the reported party attached to a dispute of this reporter's report.
+router.get('/reports/:id/dispute-files/:fileId', async (req, res, next) => {
+  try {
+    const { data: own } = await supabase.from('fx_reports').select('id').eq('id', req.params.id).eq('reporter_account_id', req.account.id).maybeSingle();
+    if (!own) return res.redirect('/reports');
+    const { data: ds } = await supabase.from('fx_disputes').select('id').eq('report_id', own.id);
+    const out = await D.signedFile(req.params.fileId, (ds || []).map(d => d.id));
+    if (!out) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That file does not exist.' });
+    await logEvent({ accountId: req.account.id, reportId: own.id, event: 'dispute_file_viewed', actor: 'account', detail: { file: out.file.file_name }, ip: req.ip });
+    res.redirect(out.url);
   } catch (err) { next(err); }
 });
 

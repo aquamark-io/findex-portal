@@ -1,0 +1,22 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Disputes</h1>
+<nav class="tabs"><a class="tab <%= open ? 'active' : '' %>" href="/admin/disputes">Open</a><a class="tab <%= open ? '' : 'active' %>" href="/admin/disputes?status=resolved">Resolved</a></nav>
+<% if (!disputes.length) { %>
+  <div class="card"><p class="lead flush">No <%= open ? 'open' : 'resolved' %> disputes.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>About</th><th>Category</th><th><%= open ? 'Due' : 'Resolved' %></th><th>Reporter responded</th><th>Status</th></tr></thead>
+    <tbody>
+      <% disputes.forEach(d => { const rep = d.fx_reports || {}; const overdue = open && new Date(d.due_at) < new Date(); %>
+        <tr>
+          <td><a href="/admin/reports/<%= rep.id %>"><strong><%= rep.subject_name_reported %></strong></a><% if (rep.is_test) { %> <span class="pill test">TEST</span><% } %></td>
+          <td><%= rep.category ? R.CATEGORIES[rep.category].label : '' %></td>
+          <td class="nowrap<%= overdue ? ' overdue' : '' %>"><%= fmtDay(open ? d.due_at : d.resolved_at) %><%= overdue ? ' (overdue)' : '' %></td>
+          <td><%= d.reporter_responded_at ? 'Yes' : 'Not yet' %></td>
+          <td><span class="pill <%= d.status === 'open' ? 'disputed' : d.status === 'removed' ? 'removed' : 'published' %>"><%= d.status %></span></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+<%- include('../partials/foot') %>

@@ -57,7 +57,9 @@
         </div>
         <p class="muted">Accepting emails the notice to <%= r.notice_email %> and starts the 10-day window. The reason box is only used if you reject.</p>
       </form>
-    <% } else if (['notice_sent', 'published', 'notice_undeliverable'].includes(r.status)) { %>
+    <% } else if (['notice_sent', 'published', 'notice_undeliverable', 'disputed', 'removed'].includes(r.status)) { %>
+      <% if (r.status === 'disputed') { %><p><strong>Withheld:</strong> under dispute. See below.</p><% } %>
+      <% if (r.status === 'removed') { %><p><strong>Removed</strong> <%= fmtDay(r.removed_at) %>.</p><% } %>
       <% if (r.status === 'notice_sent' && r.publish_at) { %><p><strong>Publishes <%= fmtDay(r.publish_at) %></strong> unless disputed.</p><% } %>
       <% if (r.status === 'published') { %><p><strong>Published <%= fmtDay(r.published_at) %>.</strong></p><% } %>
       <% if (r.status === 'notice_undeliverable') { %><p><strong>Paused:</strong> the notice couldn&rsquo;t be delivered. The reporter has been asked for another email or a mailing address.</p><% } %>
@@ -65,6 +67,28 @@
       <p><strong>Rejected:</strong> <%= r.rejection_reason %></p>
       <% if (r.review_note) { %><p class="muted">Internal note: <%= r.review_note %></p><% } %>
     <% } %>
+    <% disputes.forEach(d => { const files = d.fx_dispute_files || []; %>
+      <h2>Dispute <span class="pill <%= d.status === 'open' ? 'disputed' : d.status === 'removed' ? 'removed' : 'published' %>"><%= d.status %></span></h2>
+      <p class="muted flush"><%= d.fx_accounts ? d.fx_accounts.first_name + ' ' + d.fx_accounts.last_name + ' (' + d.fx_accounts.email + ')' : '' %> &middot; opened <%= fmt(d.created_at) %> &middot; <strong>due <%= fmtDay(d.due_at) %></strong></p>
+      <p class="prewrap"><%= d.reason %></p>
+      <% if (files.length) { %><ul class="checklist"><% files.forEach(f => { %><li><a href="/admin/disputes/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= f.party === 'subject' ? 'reported party' : 'reporter' %>)</span></li><% }) %></ul><% } %>
+      <p class="muted flush">Reporter&rsquo;s response<%= d.reporter_responded_at ? ' (' + fmt(d.reporter_responded_at) + ')' : '' %>:</p>
+      <p class="prewrap"><%= d.reporter_response || 'None yet.' %></p>
+      <% if (d.resolution_note) { %><p><strong>Resolution:</strong> <%= d.resolution_note %></p><% } %>
+      <% if (d.status === 'open') { %>
+        <form method="post" action="/admin/reports/<%= r.id %>/resolve" class="card-inset">
+          <div class="choice">
+            <label><input type="radio" name="outcome" value="upheld" required>Uphold<small>Publish as is</small></label>
+            <label><input type="radio" name="outcome" value="amended">Amend<small>Publish with corrections</small></label>
+            <label><input type="radio" name="outcome" value="removed">Remove<small>Take it down</small></label>
+          </div>
+          <div class="field mt"><label for="amended_description">Corrected description <span class="hint">(amend only)</span></label><textarea id="amended_description" name="amended_description" rows="4" maxlength="5000"><%= r.description %></textarea></div>
+          <div class="field"><label for="rnote">Resolution note <span class="hint">(shared with both sides)</span></label><textarea id="rnote" name="note" rows="3" maxlength="2000" required></textarea></div>
+          <button class="btn" type="submit" data-confirm="Resolve this dispute and email both sides?">Resolve dispute</button>
+        </form>
+      <% } %>
+    <% }) %>
+
     <% if (notices.length) { %>
       <h2>Notices</h2>
       <ul class="history">

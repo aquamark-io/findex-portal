@@ -1,7 +1,7 @@
 <%- include('../partials/head', { wide: true }) %>
 <h1 class="title">Reports</h1>
 <nav class="tabs" aria-label="Filter by status">
-  <% [['submitted', 'To review'], ['notice_undeliverable', 'Undeliverable'], ['notice_sent', 'Notice sent'], ['published', 'Published'], ['disputed', 'Disputed'], ['rejected', 'Rejected'], ['all', 'All']].forEach(([key, label]) => { %>
+  <% [['submitted', 'To review'], ['notice_undeliverable', 'Undeliverable'], ['notice_sent', 'Notice sent'], ['published', 'Published'], ['disputed', 'Disputed'], ['removed', 'Removed'], ['rejected', 'Rejected'], ['all', 'All']].forEach(([key, label]) => { %>
     <a class="tab <%= status === key ? 'active' : '' %>" href="/admin/reports?status=<%= key %>"><%= label %><% if (counts[key] !== undefined) { %> <span class="count"><%= counts[key] %></span><% } %></a>
   <% }) %>
 </nav>

@@ -259,3 +259,4 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .card-inset { background: #fff; border: 1px solid var(--lav-border); border-radius: 14px; padding: 18px; margin-bottom: 20px; }
 .record-item { background: #fff; border: 1px solid var(--lav-border); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
 .record-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.overdue { color: var(--error); font-weight: 600; }
