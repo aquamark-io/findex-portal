@@ -1,5 +1,13 @@
 # Evidence Review at Scale: Proposed Workflow
 
+> **Status (Nov 8, 2026):** this is a design record. Several ideas here were later dropped or changed:
+> slow pay and "missed payments" are replaced by **Payment delinquency** (one or more missed payments, one report per
+> delinquency, at the reporter's discretion, within 90 days, optional dated status updates); **no CSV or bulk import**;
+> **no mailed letters** (email notices only); **no repayment API yet** (available on request). Categories are now
+> data theft or backdooring, deception, document fraud, impersonation, data mishandling, payment delinquency and
+> default. `lib/reports.js` is the source of truth for categories, requirements and guidance.
+
+
 Status: proposal, with decisions recorded below. Build step A (AI-assisted review) is built. Not legal advice; items marked **Counsel** need review.
 
 ## 1. What "evidence-based" should mean

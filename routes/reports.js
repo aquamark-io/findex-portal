@@ -137,7 +137,7 @@ router.post('/reports/new/:who', (req, res, next) => {
         }
 
         await logEvent({ accountId: account.id, reportId, event: 'report_submitted', actor: 'account', detail: { category: report.category, files: stored.length }, ip: req.ip });
-        const info = { reportId, subjectLabel: R.SUBJECT_TYPES[subjectType], subjectName: subject.name, categoryLabel: R.CATEGORIES[report.category].label, incidentDate: fmtDate(report.incident_date), fileCount: stored.length, isTest };
+        const info = { reportId, subjectLabel: R.SUBJECT_TYPES[subjectType], subjectName: subject.name, categoryLabel: R.CATEGORIES[report.category].label, incidentDate: fmtDate(report.incident_date), dateLabel: (R.REPAYMENT_FIELDS[report.category] || {}).dateLabel || 'Incident date', fileCount: stored.length, isTest };
         const jobs = [sendEmail({ to: account.email, tag: 'fx-report-received', ...templates.reportReceived(account, info) })];
         if (process.env.ONBOARDING_NOTIFY_EMAIL && (!isTest || testNotificationsOn())) {
           jobs.push(sendEmail({ to: process.env.ONBOARDING_NOTIFY_EMAIL, tag: 'fx-admin-new-report', ...templates.adminNewReport(account, info) }));
