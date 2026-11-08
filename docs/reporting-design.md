@@ -27,7 +27,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 | Account | Search | Report | View own record | Dispute / appeal |
 |---|---|---|---|---|
 | Company (member) | Yes, with a permissible purpose | Yes (incidents) | Yes (own company) | Yes |
-| Company: funder or lender | As above | Also funded-business repayment issues (slow pay, missed payments, defaults) | Yes | Yes |
+| Company: funder or lender | As above | Also funded-business repayment issues (missed payments, defaults) | Yes | Yes |
 | Individual | No (own record only) | No | Yes | Yes |
 | Funded business | No (own record only) | No | Yes | Yes |
 
@@ -120,7 +120,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 
 ## Funded-business reports
 
-- Repayment reports (slow pay, defaults) are about the **business only**, identified by its EIN.
+- Repayment reports (missed payments, defaults) are about the **business only**, identified by its EIN.
 - FinDex does not ask for or store information about owners or personal guarantors in these reports, even when
   the funding included a personal guarantee.
 - **Counsel / open:** how to handle sole proprietors with no EIN.

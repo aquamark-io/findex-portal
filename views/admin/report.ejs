@@ -17,6 +17,38 @@
 <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
 <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
 
+<section class="card ai-card">
+    <h2 class="flush-top">AI evidence review</h2>
+    <% const ai = aiReview; const checkLabels = { matches_reported_party: 'Matches the reported party', supports_incident: 'Supports the incident', dates_consistent: 'Dates consistent', required_documents_present: 'Required documents present', evidence_quality: 'Evidence quality' }; %>
+    <% if (!aiEnabled) { %>
+      <p class="muted">Off. Add ANTHROPIC_API_KEY in Render to turn it on.</p>
+    <% } else if (!ai) { %>
+      <p class="muted">No AI review yet.</p>
+    <% } else if (ai.status === 'running') { %>
+      <p class="muted">Reviewing the evidence&hellip; refresh in a minute.</p>
+    <% } else if (ai.status === 'failed') { %>
+      <div class="alert error">AI review failed: <%= ai.error %></div>
+    <% } else { const res = ai.result || {}; %>
+      <p class="ai-note">A summary to check, not a decision. It reads what the files show; it can&rsquo;t confirm they&rsquo;re genuine.</p>
+      <p><%= res.summary %></p>
+      <table class="checks">
+        <% (res.checks || []).forEach(c => { %>
+          <tr><td class="nowrap"><span class="ai-result <%= c.result %>"><%= c.result %></span></td><td><strong><%= checkLabels[c.check] || c.check %></strong><div class="muted"><%= c.explanation %></div></td></tr>
+        <% }) %>
+      </table>
+      <% if ((res.concerns || []).length) { %><p class="flush mt"><strong>Concerns</strong></p><ul class="checklist"><% res.concerns.forEach(x => { %><li><%= x %></li><% }) %></ul><% } %>
+      <% if ((res.missing || []).length) { %><p class="flush mt"><strong>Missing</strong></p><ul class="checklist"><% res.missing.forEach(x => { %><li><%= x %></li><% }) %></ul><% } %>
+      <details class="mt"><summary>What each file shows (<%= (res.files || []).length %>)</summary>
+        <ul class="checklist mt"><% (res.files || []).forEach(f => { %><li><strong><%= f.file %></strong> <span class="muted">(<%= f.document_type %><%= f.readable ? '' : ', not readable' %>)</span><div><%= f.what_it_shows %></div><% if ((f.dates_seen || []).length) { %><div class="muted">Dates: <%= f.dates_seen.join(', ') %></div><% } %></li><% }) %></ul>
+      </details>
+      <% if ((ai.files_skipped || []).length) { %><p class="muted mt">Not reviewed by AI: <%= ai.files_skipped.map(x => x.file + ' (' + x.reason + ')').join('; ') %></p><% } %>
+      <p class="muted">Reviewed <%= fmt(ai.completed_at) %> &middot; <%= ai.model %> &middot; prompt <%= ai.prompt_version %></p>
+    <% } %>
+    <% if (aiEnabled) { %>
+      <form method="post" action="/admin/reports/<%= r.id %>/ai-review"><button class="btn secondary" type="submit"><%= ai ? 'Run AI review again' : 'Run AI review' %></button></form>
+    <% } %>
+  </section>
+
 <div class="detail-grid">
   <section class="card">
     <h2 class="flush-top">Report</h2>
@@ -62,7 +94,7 @@
       <% if (r.status === 'removed') { %><p><strong>Removed</strong> <%= fmtDay(r.removed_at) %>.</p><% } %>
       <% if (r.status === 'notice_sent' && r.publish_at) { %><p><strong>Publishes <%= fmtDay(r.publish_at) %></strong> unless disputed.</p><% } %>
       <% if (r.status === 'published') { %><p><strong>Published <%= fmtDay(r.published_at) %>.</strong></p><% } %>
-      <% if (r.status === 'notice_undeliverable') { %><p><strong>Paused:</strong> the notice couldn&rsquo;t be delivered. The reporter has been asked for another email or a mailing address.</p><% } %>
+      <% if (r.status === 'notice_undeliverable') { %><p><strong>Paused:</strong> the notice couldn&rsquo;t be delivered. The reporter has been asked for another email address. It won&rsquo;t publish until a notice is delivered.</p><% } %>
     <% } else if (r.status === 'rejected') { %>
       <p><strong>Rejected:</strong> <%= r.rejection_reason %></p>
       <% if (r.review_note) { %><p class="muted">Internal note: <%= r.review_note %></p><% } %>
@@ -98,13 +130,6 @@
             <strong><%= { sent: 'sent', bounced: 'bounced', failed: 'could not send', to_mail: 'waiting to be mailed', mailed: 'mailed' }[n.status] %></strong>
             <span class="muted"><%= fmt(n.sent_at || n.mailed_at || n.created_at) %></span>
             <% if (n.bounce_detail && n.status !== 'sent') { %><div class="muted"><%= n.bounce_detail %></div><% } %>
-            <% if (n.status === 'to_mail') { %>
-              <div class="prewrap muted"><%= n.mailing_address %></div>
-              <div class="actions mt">
-                <a class="btn secondary" href="/admin/reports/<%= r.id %>/letter" target="_blank" rel="noopener">Print letter</a>
-                <form method="post" action="/admin/reports/<%= r.id %>/notices/<%= n.id %>/mailed"><button class="btn" type="submit" data-confirm="Mark the letter as mailed? The 10 days start now.">Mark mailed</button></form>
-              </div>
-            <% } %>
           </li>
         <% }) %>
       </ul>

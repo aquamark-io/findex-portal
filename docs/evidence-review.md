@@ -1,6 +1,6 @@
 # Evidence Review at Scale: Proposed Workflow
 
-Status: proposal for discussion. Nothing here is built yet. Not legal advice; items marked **Counsel** need review.
+Status: proposal, with decisions recorded below. Build step A (AI-assisted review) is built. Not legal advice; items marked **Counsel** need review.
 
 ## 1. What "evidence-based" should mean
 
@@ -212,3 +212,30 @@ volume and Postmark sending.
 - **C. CSV bulk upload** with ZIP evidence, staging, pacing, consolidated notices.
 - **D. Repayment API** reusing B/C validation (per-company API keys).
 - **E. Measured automation** for repayment once section 8's rule is met.
+
+## 11. Decisions (Nov 8, 2026)
+
+- **Events, not outcomes.** Reporters report what happened on a date (a missed payment, a declared default). Later
+  repayment or settlement does not erase the event, and FinDex does not track ongoing status. A dispute asks whether
+  the event happened as reported; the reporter points to its contract and may choose to release the report.
+- **Missed payment:** a scheduled payment not received on its due date (including returned payments), reportable even
+  if made up later, regardless of product. A payment the reporter agreed to adjust (e.g. approved reconciliation) was
+  not due. **Default:** declared by the reporter under its contract; default notice required; incident date = date
+  declared. **Slow pay is dropped.**
+- **7-year window** for all categories, including historical imports.
+- **Public view** shows only date, category, reporter, description and evidence. Review details stay in admin.
+- **Automation:** none yet. Claude writes a review summary; the admin makes every decision. No scores or thresholds
+  until there is enough reviewed history to learn from.
+- **Consequences:** falsified or careless submissions lead to removal from the index and an admin incident report
+  filed by FinDex about the member (same notice and dispute process). **Counsel:** add to member terms.
+- **Bulk and API are for funded-business repayment incidents only** (missed payments, default). Individual, partner,
+  and merchant-fraud reports stay in the portal.
+- **CSV import is for historical incidents only:** incidents dated before the member's account was approved. Current
+  and future incidents go through the portal or API. The CSV rows are claims; a system-of-record payment export
+  (one file can cover the batch, matched by deal ID) is the evidence. Each row succeeds or fails on its own.
+- **API authentication:** per-company API keys created on the dashboard (not one shared key).
+- **Email only:** every report needs a deliverable email for the reported party. No mailed letters; a report never
+  publishes without a delivered notice.
+- **Exports are accepted in good faith,** backed by certification, indemnity, the merchant's right to dispute, and
+  consequences for falsification.
+- No onboarding source check.

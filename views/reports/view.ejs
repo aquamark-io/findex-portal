@@ -11,16 +11,11 @@
   <% if (report.status === 'published') { %><div class="alert ok">Published <%= fmtDay(report.published_at) %>.</div><% } %>
   <% if (report.status === 'notice_undeliverable') { %>
     <div class="alert error"><strong>Action needed:</strong> we couldn&rsquo;t deliver the notice to <%= report.notice_email %>. The report is paused until the reported party can be notified.</div>
-    <% if (notices.some(n => n.status === 'to_mail')) { %>
-      <p class="muted">Thanks, we&rsquo;ll mail the notice. The 10 days start when it&rsquo;s mailed.</p>
-    <% } else { %>
-      <form method="post" action="/reports/<%= report.id %>/contact" class="card-inset">
-        <div class="field"><label for="c_email">Another email address</label><input type="email" id="c_email" name="email" maxlength="254"></div>
-        <p class="muted center">or</p>
-        <div class="field"><label for="c_addr">Mailing address</label><textarea id="c_addr" name="address" rows="3" maxlength="500" placeholder="Name&#10;Street&#10;City, State ZIP"></textarea></div>
-        <button class="btn" type="submit">Send notice</button>
-      </form>
-    <% } %>
+    <form method="post" action="/reports/<%= report.id %>/contact" class="card-inset">
+      <div class="field"><label for="c_email">Another email address for the reported party</label><input type="email" id="c_email" name="email" maxlength="254" required></div>
+      <p class="muted">The report can&rsquo;t be published until a notice is delivered.</p>
+      <button class="btn" type="submit">Send notice</button>
+    </form>
   <% } %>
   <% if (report.status === 'rejected' && report.rejection_reason) { %>
     <div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div>

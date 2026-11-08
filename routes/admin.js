@@ -44,6 +44,7 @@ const EVENT_LABELS = {
   dispute_amended: 'Dispute resolved: amended (published with corrections)',
   dispute_removed: 'Dispute resolved: report removed',
   report_expired_deleted: 'Deleted after 7 years',
+  ai_review_requested: 'AI review requested',
   duplicate_request: 'Submitted again with the same email (no new request created)',
   approved: 'Approved',
   denied: 'Denied',
@@ -247,6 +248,7 @@ const R = require('../lib/reports');
 const { STATUS_LABELS } = require('./reports');
 const N = require('../lib/notices');
 const D = require('../lib/disputes');
+const AI = require('../lib/ai-review');
 const REPORT_STATUSES = ['submitted', 'rejected', 'notice_sent', 'notice_undeliverable', 'published', 'disputed', 'removed', 'expired'];
 const dateOnly = d => d ? new Date(`${String(d).slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '';
 
@@ -306,7 +308,7 @@ router.get('/reports/:id', async (req, res, next) => {
     res.render('admin/report', {
       pageTitle: report.subject_name_reported, report, subject: report.fx_subjects, reporter: report.reporter,
       identity: maskedSubject(report.fx_subjects), files: files || [], events: events || [],
-      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0, notices: notices || [], disputes: disputes || [], links: links || [], fmtDay: N.fmtDay,
+      subjectEmails: (emails || []).map(e => e.email), otherReports: otherReports || 0, notices: notices || [], disputes: disputes || [], links: links || [], fmtDay: N.fmtDay, aiReview: await AI.latestReview(report.id), aiEnabled: AI.enabled(),
       msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });
   } catch (err) { next(err); }
@@ -338,35 +340,23 @@ router.post('/reports/:id/accept', async (req, res, next) => {
     if (!claimed) return res.redirect(303, backReport(report.id, 'This report changed while you were viewing it.', true));
     await logEvent({ accountId: report.reporter_account_id, reportId: report.id, event: 'report_accepted', actor: 'admin', ip: req.ip });
     const result = await N.sendEmailNotice(report, report.notice_email, { ip: req.ip });
-    if (!result.ok) return res.redirect(303, backReport(report.id, 'Accepted, but the notice email could not be sent. The reporter was asked for another email or a mailing address.', true));
+    if (!result.ok) return res.redirect(303, backReport(report.id, 'Accepted, but the notice email could not be sent. The reporter was asked for another email address.', true));
     const info = { reportId: report.id, subjectName: report.subject_name_reported, categoryLabel: R.CATEGORIES[report.category].label, publishDate: N.fmtDay(result.publishAt) };
     await sendOrLog({ to: report.reporter.email, tag: 'fx-report-accepted', ...templates.reportAccepted(report.reporter, info) }, report.reporter.id);
     res.redirect(303, backReport(report.id, `Accepted. Notice sent to ${report.notice_email}; publishes ${info.publishDate} unless disputed.`));
   } catch (err) { next(err); }
 });
 
-// Printable notice letter for a mailed notice.
-router.get('/reports/:id/letter', async (req, res, next) => {
+router.post('/reports/:id/ai-review', async (req, res, next) => {
   try {
-    const report = await N.loadFull(req.params.id);
-    if (!report) return res.redirect('/admin/reports');
-    const { data: n } = await supabase.from('fx_notices').select('*').eq('report_id', report.id).eq('channel', 'mail').order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (!n) return res.redirect(`/admin/reports/${report.id}`);
-    const publishAt = new Date(Date.now() + N.NOTICE_DAYS * 24 * 3600 * 1000);
-    const info = { subjectType: report.fx_subjects.subject_type, subjectName: report.fx_subjects.subject_type === 'individual' ? report.subject_name_reported : (report.fx_subjects.contact_name || ''),
-      reporterName: report.reporter.business_legal_name, categoryLabel: R.CATEGORIES[report.category].label, incidentDate: dateOnly(report.incident_date), description: report.description, publishDate: N.fmtDay(publishAt) };
-    const t = templates.noticeToSubject(info);
-    res.type('text/plain').send(`${n.mailing_address}\n\n${new Date().toLocaleDateString('en-US', { dateStyle: 'long', timeZone: 'America/Los_Angeles' })}\n\n${t.text.replace(/reply to this email/g, `email ${process.env.ONBOARDING_NOTIFY_EMAIL || 'us'}`)}\n\n(Publish date assumes the letter is mailed today.)`);
-  } catch (err) { next(err); }
-});
-
-router.post('/reports/:id/notices/:noticeId/mailed', async (req, res, next) => {
-  try {
-    const report = await N.loadFull(req.params.id);
-    if (!report) return res.redirect(303, '/admin/reports');
-    const publishAt = await N.markMailed(report, req.params.noticeId, req.ip);
-    if (!publishAt) return res.redirect(303, backReport(report.id, 'That letter was already marked mailed.', true));
-    res.redirect(303, backReport(report.id, `Marked mailed. Publishes ${N.fmtDay(publishAt)} unless disputed.`));
+    if (!AI.enabled()) return res.redirect(303, backReport(req.params.id, 'AI review is off: ANTHROPIC_API_KEY is not set in Render.', true));
+    const latest = await AI.latestReview(req.params.id);
+    if (latest && latest.status === 'running' && Date.now() - new Date(latest.created_at).getTime() < 5 * 60 * 1000) {
+      return res.redirect(303, backReport(req.params.id, 'An AI review is already running. Refresh in a minute.'));
+    }
+    setImmediate(() => AI.reviewReport(req.params.id, 'admin'));
+    await logEvent({ reportId: req.params.id, event: 'ai_review_requested', actor: 'admin', ip: req.ip });
+    res.redirect(303, backReport(req.params.id, 'AI review started. Refresh in a minute or two.'));
   } catch (err) { next(err); }
 });
 
