@@ -4,7 +4,7 @@
 > slow pay and "missed payments" are replaced by **Payment delinquency** (one or more missed payments, one report per
 > delinquency, at the reporter's discretion, within 90 days, optional dated status updates); **no CSV or bulk import**;
 > **no mailed letters** (email notices only); **no repayment API yet** (available on request). Categories are now
-> data theft or backdooring, deception, document manipulation, impersonation, data mishandling, payment delinquency and
+> data theft or backdooring, misleading statements, document manipulation, impersonation, data mishandling, payment delinquency and
 > default. `lib/reports.js` is the source of truth for categories, requirements and guidance.
 
 
@@ -60,7 +60,7 @@ Items marked **Counsel** need legal review before launch. This document is not l
 - Must be documented, verifiable, and sufficient. Attestations, unsupported statements, and hearsay aren't
   accepted on their own.
 - Per category: backdooring/data theft (redirecting messages, CRM records, system activity, access logs);
-  deceiving merchants (false/misleading communications + documents showing the facts); fraud (copies of the files
+  misleading statements to merchants (false/misleading communications + documents showing the facts); fraud (copies of the files
   suspected of manipulation + evidence linking it to the reported party; fraud-detection reports as support only);
   partner data mishandling (communications, access logs, system records); repayment (payment history from the
   system of record).
