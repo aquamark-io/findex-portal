@@ -4,7 +4,7 @@
 > slow pay and "missed payments" are replaced by **Payment delinquency** (one or more missed payments, one report per
 > delinquency, at the reporter's discretion, within 90 days, optional dated status updates); **no CSV or bulk import**;
 > **no mailed letters** (email notices only); **no repayment API yet** (available on request). Categories are now
-> data theft or backdooring, deception, document fraud, impersonation, data mishandling, payment delinquency and
+> data theft or backdooring, deception, document manipulation, impersonation, data mishandling, payment delinquency and
 > default. `lib/reports.js` is the source of truth for categories, requirements and guidance.
 
 
