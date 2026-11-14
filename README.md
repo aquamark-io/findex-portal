@@ -57,7 +57,7 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 
 Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with
 evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
-are limited by subject type, and missed payments / default are funders and lenders only; default reports require
+are limited by subject type, and default is funders and lenders only; default reports require
 the default notice. Reported parties (`fx_subjects`) are de-duplicated by DOB + SSN last 4, EIN, or website
 domain, with identifiers encrypted. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
 links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting emails the

@@ -50,18 +50,10 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.requirementsFor(c.key, subjectType)) %>" data-guide="<%= R.guidanceFor(c.key, subjectType) %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-repay="1" data-date-label="<%= rp.dateLabel %>" <% if (rp.delinquency) { %>data-delinquency="1" <% } %><% if (rp.amountLabel) { %>data-amount-label="<%= rp.amountLabel %>" <% } %><% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.requirementsFor(c.key, subjectType)) %>" data-guide="<%= R.guidanceFor(c.key, subjectType) %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-repay="1" data-date-label="<%= rp.dateLabel %>" <% } %><%= sel('category', c.key) %>><%= c.label %></option><% }) %>
         </select>
       </div>
       <div class="field"><label for="incident_date" id="incident_date_label">Incident date</label><input type="date" id="incident_date" name="incident_date" value="<%= v('incident_date') %>" max="<%= maxDate %>" required aria-describedby="date_hint"><p class="field-hint" id="date_hint"></p></div>
-    </div>
-    <div class="row" id="delinquency-fields" hidden>
-      <div class="field"><label for="payment_frequency">Payment frequency</label>
-        <select id="payment_frequency" name="payment_frequency" disabled><option value="">Select…</option><% Object.entries(R.FREQUENCIES).forEach(([k, l]) => { %><option value="<%= k %>" <%= sel('payment_frequency', k) %>><%= l %></option><% }) %></select></div>
-      <div class="field"><label for="missed_count">Number of missed payments</label><input type="number" id="missed_count" name="missed_count" min="1" max="1000" step="1" inputmode="numeric" value="<%= v('missed_count') %>" disabled></div>
-    </div>
-    <div class="row" id="repayment-fields" hidden>
-      <div class="field"><label for="payment_amount" id="payment_amount_label">Payment amount</label><input type="text" id="payment_amount" name="payment_amount" inputmode="decimal" placeholder="$0.00" maxlength="20" value="<%= v('payment_amount') %>" disabled></div>
     </div>
     <div class="field"><label for="description">Incident description <span class="hint" id="description_opt" hidden>(optional)</span></label>
       <textarea id="description" name="description" rows="6" maxlength="5000" required><%= v('description') %></textarea>

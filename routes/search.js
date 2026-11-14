@@ -128,7 +128,7 @@ router.get('/search/results/:id', async (req, res, next) => {
     if (!search.expired && search.result_report_ids.length) {
       // Re-check: anything disputed or removed since the search is no longer shown.
       const { data } = await supabase.from('fx_reports')
-        .select('id, category, incident_date, description, published_at, missed_count, payment_frequency, delinquency_status, caught_up_on, delinquency_as_of, subject_name_reported, reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
+        .select('id, category, incident_date, description, published_at, subject_name_reported, reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
         .in('id', search.result_report_ids).eq('status', 'published').order('incident_date', { ascending: false });
       reports = data || [];
       if (reports.length) {
