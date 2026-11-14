@@ -122,6 +122,6 @@ off (e.g. in tests).
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
 | `ANTHROPIC_API_KEY` | Optional. Turns on the Claude evidence review in admin (an aid; admins still decide) |
 | `POSTMARK_WEBHOOK_TOKEN` | Long random value. Postmark's Bounce webhook calls `https://app.joinfindex.com/webhooks/postmark?token=<value>` |
-| `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in activity emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off |
+| `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in attempt and duplicate sign-up emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off. Successful sign-ins never email the admin |
 | `TEST_NOTIFICATIONS` | Optional. `[TEST]` requests email the admin like real ones; set `false` to keep them silent |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |

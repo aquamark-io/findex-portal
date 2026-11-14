@@ -182,7 +182,6 @@ router.post('/login/verify', verifyLimiter, async (req, res, next) => {
 
     await supabase.from('fx_accounts').update({ last_login_at: new Date().toISOString() }).eq('id', account.id);
     await logEvent({ accountId: account.id, event: 'login', actor: 'account', ip: req.ip });
-    notifyAdminActivity('login', { email: account.email, account });
     session.clearLoginEmail(res);
     session.setSession(res, account);
     return res.redirect(303, '/dashboard');
