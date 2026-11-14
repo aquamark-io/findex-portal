@@ -116,7 +116,7 @@ off (e.g. in tests).
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Aquamark project, service role |
 | `POSTMARK_SERVER_TOKEN` | |
 | `ONBOARDING_FROM_EMAIL` | `FinDex <christina@aquamark.io>` |
-| `ONBOARDING_NOTIFY_EMAIL` | Admin email. Receives only: new access requests, new reports, new disputes, and customer changes to a report or dispute (dispute response, report removed, payment status updated, new notice email) |
+| `ONBOARDING_NOTIFY_EMAIL` | Admin email. Receives only: new access requests, new reports, new disputes, and customer changes to a report or dispute (dispute response, report removed, new notice email) |
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
