@@ -13,7 +13,7 @@ const supabase = require('../lib/supabase');
 const { encrypt, blindIndex } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
-const { testNotificationsOn, notifyAdminActivity } = require('../lib/notify-admin');
+const { testNotificationsOn } = require('../lib/notify-admin');
 const turnstile = require('../lib/turnstile');
 const { validateRequest, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 const { INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
@@ -146,7 +146,6 @@ async function handleDuplicate(account, ip) {
     const approved = account.status === 'approved';
     const tpl = approved ? templates.alreadyHaveAccount(account) : templates.requestAlreadyPending(account);
     await sendEmail({ to: account.email, tag: approved ? 'fx-duplicate-approved' : 'fx-duplicate-pending', ...tpl });
-    await notifyAdminActivity(approved ? 'duplicate_approved' : 'duplicate_pending', { email: account.email, account });
   } catch (err) {
     console.error(`Duplicate sign-up handling for account ${account.id} failed:`, err.message);
   }

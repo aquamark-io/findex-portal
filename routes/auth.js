@@ -21,7 +21,6 @@ const { codeHash, blindIndex } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const session = require('../lib/session');
-const { notifyAdminActivity } = require('../lib/notify-admin');
 
 const router = express.Router();
 
@@ -72,7 +71,6 @@ async function sendNotice({ email, account, kind, ip }) {
   const tpl = kind === 'pending' ? templates.signInPending(account) : templates.signInNoAccount();
   await sendEmail({ to: email, tag: kind === 'pending' ? 'fx-sign-in-pending' : 'fx-sign-in-no-account', ...tpl });
   await logEvent({ accountId: account ? account.id : null, event: 'signin_notice', actor: 'system', detail: { kind, email_hash: emailHash }, ip });
-  await notifyAdminActivity(kind, { email, account });
 }
 
 // Runs after the response is sent, so timing doesn't reveal whether the account exists.

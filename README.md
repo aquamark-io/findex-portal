@@ -36,7 +36,7 @@ emails, logs or URLs. Anti-spam: honeypot field + rate limits; Cloudflare Turnst
 `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
 
 A first name, last name or business name starting with `[TEST]` marks the request as a test: it is flagged in admin and
-can be deleted there. Test requests still email the admin (new request + sign-in activity) unless `TEST_NOTIFICATIONS=false`.
+can be deleted there. Test requests still email the admin (new request) unless `TEST_NOTIFICATIONS=false`.
 
 ## Sign-in
 
@@ -90,8 +90,8 @@ are stored in `fx_evidence_reviews` with the model and prompt version. Off unles
 
 A reported party disputes from their dashboard (reason + optional files). The report is withheld at once (out of
 search results and the publishing job), and a 30-day due date is set. The reporter sees the dispute on their report
-page and responds with text and files. Admin works the Disputes queue (due dates, overdue flagged; a daily reminder
-covers disputes due within 5 days) and resolves each one as upheld (published), amended (published with a corrected
+page and responds with text and files. Admin works the Disputes queue (due dates, overdue
+flagged) and resolves each one as upheld (published), amended (published with a corrected
 description) or removed. The resolution note is emailed to both sides.
 
 ## Retention and member notices (phase two, step 5)
@@ -103,7 +103,7 @@ CFPB Notice to Users and Notice to Furnishers (linked) together with the indemni
 ## Daily job
 
 Runs once a day after 6 AM Pacific (checked every 15 minutes; logged as `daily_job` so it runs once): publishes reports
-past their 10-day notice, emails dispute reminders, and deletes expired reports. Set `DISABLE_DAILY_JOB=true` to turn it
+past their 10-day notice and deletes expired reports. Set `DISABLE_DAILY_JOB=true` to turn it
 off (e.g. in tests).
 
 ## Environment variables (Render)
@@ -116,12 +116,11 @@ off (e.g. in tests).
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Aquamark project, service role |
 | `POSTMARK_SERVER_TOKEN` | |
 | `ONBOARDING_FROM_EMAIL` | `FinDex <christina@aquamark.io>` |
-| `ONBOARDING_NOTIFY_EMAIL` | Receives new-request notifications |
+| `ONBOARDING_NOTIFY_EMAIL` | Admin email. Receives only: new access requests, new reports, new disputes, and customer changes to a report or dispute (dispute response, report removed, payment status updated, new notice email) |
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
 | `ANTHROPIC_API_KEY` | Optional. Turns on the Claude evidence review in admin (an aid; admins still decide) |
 | `POSTMARK_WEBHOOK_TOKEN` | Long random value. Postmark's Bounce webhook calls `https://app.joinfindex.com/webhooks/postmark?token=<value>` |
-| `ADMIN_ACTIVITY_EMAILS` | Optional. Sign-in attempt and duplicate sign-up emails to `ONBOARDING_NOTIFY_EMAIL` are on by default; set `false` to turn them off. Successful sign-ins never email the admin |
 | `TEST_NOTIFICATIONS` | Optional. `[TEST]` requests email the admin like real ones; set `false` to keep them silent |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional |

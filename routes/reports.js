@@ -14,7 +14,7 @@ const supabase = require('../lib/supabase');
 const { requireAccount } = require('../middleware/auth');
 const { encrypt, blindIndex } = require('../lib/crypto');
 const { logEvent } = require('../lib/events');
-const { sendEmail, templates } = require('../lib/email');
+const { sendEmail, templates, disputeEmails } = require('../lib/email');
 const { testNotificationsOn } = require('../lib/notify-admin');
 const R = require('../lib/reports');
 const { validateReport } = require('../lib/report-validate');
@@ -235,6 +235,11 @@ router.post('/reports/:id/contact', async (req, res, next) => {
     await supabase.from('fx_subject_emails').upsert({ subject_id: report.subject_id, email }, { onConflict: 'subject_id,email', ignoreDuplicates: true });
     await logEvent({ accountId: req.account.id, reportId: report.id, event: 'notice_resent', actor: 'account', ip: req.ip });
     const result = await N.sendEmailNotice({ ...report, notice_email: email }, email, { ip: req.ip, actor: 'account' });
+    if (process.env.ONBOARDING_NOTIFY_EMAIL && (!report.is_test || testNotificationsOn())) {
+      sendEmail({ to: process.env.ONBOARDING_NOTIFY_EMAIL, tag: 'fx-admin-notice-email', ...disputeEmails.contactToAdmin({
+        reportId: report.id, reporterName: report.reporter.business_legal_name, subjectName: report.subject_name_reported, email, sent: result.ok, isTest: report.is_test }) })
+        .catch(err => console.error(`New notice email to admin for ${report.id} failed:`, err.message));
+    }
     return res.redirect(303, result.ok ? back(`Notice sent to ${email}. The 10 days start now.`) : back('That email couldn\u2019t be sent either. Please try another.', true));
   } catch (err) { next(err); }
 });

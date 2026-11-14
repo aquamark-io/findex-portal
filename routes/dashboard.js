@@ -13,8 +13,6 @@ const { PURPOSES } = require('../lib/search');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
-const { sendEmail, templates } = require('../lib/email');
-const { testNotificationsOn } = require('../lib/notify-admin');
 
 const router = express.Router();
 
@@ -71,10 +69,6 @@ router.post('/dashboard/full-access', requireAccount, async (req, res, next) => 
     if (!updated) return res.redirect(303, '/dashboard');
 
     await logEvent({ accountId: a.id, event: 'full_access_accepted', actor: 'account', detail: { terms_version: MEMBER_TERMS_VERSION }, ip: req.ip });
-    if (process.env.ONBOARDING_NOTIFY_EMAIL && (!updated.is_test || testNotificationsOn())) {
-      sendEmail({ to: process.env.ONBOARDING_NOTIFY_EMAIL, tag: 'fx-admin-full-access', ...templates.adminFullAccess(updated) })
-        .catch(err => console.error(`Full-access email for account ${a.id} failed:`, err.message));
-    }
     return res.redirect(303, '/dashboard?upgraded=1');
   } catch (err) {
     return next(err);
