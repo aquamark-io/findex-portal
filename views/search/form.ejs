@@ -31,7 +31,7 @@
 
     <% if (subjectType === 'individual') { %>
     <h2>Permissible purpose</h2>
-    <p class="muted">Searches of individuals are subject to the Fair Credit Reporting Act (FCRA).</p>
+    <p class="muted">Searches of individuals are subject to the Fair Credit Reporting Act (FCRA) and are offered for employment screening only, including independent contractors such as ISO reps.</p>
     <div class="field">
       <label for="purpose">Purpose of this search</label>
       <select id="purpose" name="purpose" required>
@@ -40,7 +40,7 @@
       </select>
     </div>
     <% } else { %>
-    <p class="muted mt">Searches of <%= subjectType === 'company' ? 'partners' : 'funded businesses' %> are not subject to the FCRA. Results are exact matches only; FinDex does not provide lists.</p>
+    <p class="muted mt">Searches of <%= subjectType === 'company' ? 'vendors' : 'funded businesses' %> are not subject to the FCRA. Results are exact matches only; FinDex does not provide lists.</p>
     <% } %>
 
     <% if (subjectType === 'individual') { %>
@@ -59,7 +59,7 @@
     <% if (subjectType === 'individual') { %>
     <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that this search is for the purpose selected above and the results will be used only for that purpose.</span></label>
     <% } else { %>
-    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I confirm the results will be used only to evaluate this <%= subjectType === 'company' ? 'partner' : 'business' %>, not for marketing or solicitation.</span></label>
+    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I confirm the results will be used only to evaluate this <%= subjectType === 'company' ? 'vendor' : 'business' %>, not for marketing or solicitation.</span></label>
     <% } %>
     <button class="btn block" type="submit">Search</button>
   </form>
