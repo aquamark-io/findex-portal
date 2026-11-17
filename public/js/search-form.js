@@ -5,8 +5,8 @@
   if (!form) return;
   var purpose = document.getElementById('purpose');
   var emp = document.getElementById('employment-fields');
-  function sync() { if (!emp) return; var on = purpose.value === 'employment'; emp.hidden = !on; emp.disabled = !on; }
-  purpose.addEventListener('change', sync);
+  function sync() { if (!emp || !purpose) return; var on = purpose.value === 'employment'; emp.hidden = !on; emp.disabled = !on; }
+  if (purpose) purpose.addEventListener('change', sync);
   form.addEventListener('input', function (e) {
     var t = e.target;
     if (t.name === 'ssn_last4') t.value = t.value.replace(/\D/g, '').slice(0, 4);

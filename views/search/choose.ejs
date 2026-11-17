@@ -1,11 +1,11 @@
 <%- include('../partials/head') %>
 <section class="card">
   <h1 class="title">Search</h1>
-  <p class="lead">Who are you searching for?</p>
+  <p class="lead">Who are you searching for? Searches are exact matches only. FinDex does not provide lists.</p>
   <div class="pick">
-    <a class="pick-card" href="/search/individual"><strong>An individual</strong><span>Full name plus email or date of birth</span></a>
-    <a class="pick-card" href="/search/partner"><strong>A partner</strong><span>Company name or website</span></a>
-    <a class="pick-card" href="/search/funded-business"><strong>A funded business</strong><span>Legal name and EIN</span></a>
+    <a class="pick-card" href="/search/individual"><strong>An individual</strong><span>Full name plus email or date of birth</span><em class="pick-tag fcra">Subject to FCRA &middot; permissible purpose required</em></a>
+    <a class="pick-card" href="/search/partner"><strong>A partner</strong><span>Company name or website</span><em class="pick-tag">Not subject to FCRA</em></a>
+    <a class="pick-card" href="/search/funded-business"><strong>A funded business</strong><span>Legal name and EIN</span><em class="pick-tag">Not subject to FCRA</em></a>
   </div>
 </section>
 <% if (recent.length) { %>
