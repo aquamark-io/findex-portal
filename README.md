@@ -73,6 +73,15 @@ recorded before they happen, changes right after. `fx_events` still records admi
 Postmark accepting the token (plus a "Send a test email" button), the daily job
 having run today, no test or old-format records, and a final (non-draft) member terms version.
 
+## Contact form
+
+`/contact` (linked from the website nav and footer and the portal footer): name, email, topic, message. Each message
+is saved in `fx_contact_requests` with a reference like `FX-7F3A21`; the sender gets a confirmation email and
+`ONBOARDING_NOTIFY_EMAIL` gets an alert with the topic and reference only, never the message text. Signed-in members
+have their details filled in and the message linked to their account; otherwise it is linked to the account with that
+email (the sender isn't told). Spam: honeypot + 5 messages per hour per IP. Admins work the queue at `/admin/contact`
+(open / in progress / closed, internal note, reply by email); opening a message and changing it are in the audit log.
+
 ## Reports (phase two, step 1)
 
 Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with

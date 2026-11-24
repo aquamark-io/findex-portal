@@ -62,6 +62,7 @@ app.use('/', require('./routes/dashboard'));
 app.use('/', require('./routes/reports'));
 app.use('/', require('./routes/search'));
 app.use('/', require('./routes/access'));
+app.use('/', require('./routes/contact'));
 app.use('/', require('./routes/api'));
 app.use('/', require('./routes/api-access'));
 app.use('/admin', require('./routes/admin'));

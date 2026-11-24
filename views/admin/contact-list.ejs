@@ -1,0 +1,26 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Contact messages</h1>
+<nav class="tabs" aria-label="Filter by status">
+  <% Object.entries(STATUSES).forEach(([key, label]) => { %>
+    <a class="tab <%= status === key ? 'active' : '' %>" href="/admin/contact?status=<%= key %>"><%= label %><% if (counts[key] !== undefined) { %> <span class="count"><%= counts[key] %></span><% } %></a>
+  <% }) %>
+</nav>
+<% if (!rows.length) { %>
+  <div class="card"><p class="lead flush">No <%= STATUSES[status].toLowerCase() %> messages.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Received</th><th>Reference</th><th>From</th><th>Topic</th><% if (status === 'closed') { %><th>Closed</th><% } %></tr></thead>
+    <tbody>
+      <% rows.forEach(r => { %>
+        <tr>
+          <td class="nowrap"><%= fmt(r.created_at) %></td>
+          <td class="nowrap"><a href="/admin/contact/<%= r.id %>"><strong><%= referenceOf(r.id) %></strong></a></td>
+          <td><%= r.name || r.contact_email %><% if (r.name) { %><div class="muted"><%= r.contact_email %></div><% } %><% if (r.account_id) { %><div class="muted">Has an account</div><% } %></td>
+          <td><%= TOPICS[r.topic] %></td>
+          <% if (status === 'closed') { %><td class="nowrap"><%= fmt(r.closed_at) %></td><% } %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+<%- include('../partials/foot') %>

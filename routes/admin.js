@@ -540,5 +540,6 @@ router.post('/reports/:id/reject', async (req, res, next) => {
 });
 
 router.use('/', require('./admin-tools'));
+router.use('/', require('./admin-contact'));
 
 module.exports = router;

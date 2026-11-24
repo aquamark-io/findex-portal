@@ -40,6 +40,7 @@ const DEFAULTS = {
   fx_admins: { status: 'active', added_by: null, last_login_at: null },
   fx_admin_login_codes: { attempts: 0, used_at: null },
   fx_admin_audit: { detail: {} },
+  fx_contact_requests: { status: 'open', account_id: null, name: null, admin_note: null, closed_at: null },
 };
 const INT_IDS = new Set(['fx_events', 'fx_admin_audit']);
 // Mirrors the fx_admin_audit trigger: rows can't be changed or deleted.

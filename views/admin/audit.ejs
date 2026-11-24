@@ -27,8 +27,8 @@
     <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>About</th><th>IP address</th></tr></thead>
     <tbody>
       <% entries.forEach(e => { const d = e.detail || {};
-           const href = e.target_type === 'account' ? `/admin/accounts/${e.target_id}` : e.target_type === 'report' ? `/admin/reports/${e.target_id}` : e.target_type === 'admin' ? '/admin/settings' : null;
-           const about = d.name || d.subject || d.file || (d.to && e.action === 'test_email_sent' ? d.to : null) || (e.target_type ? TARGET_TYPES[e.target_type] : '');
+           const href = e.target_type === 'account' ? `/admin/accounts/${e.target_id}` : e.target_type === 'report' ? `/admin/reports/${e.target_id}` : e.target_type === 'admin' ? '/admin/settings' : e.target_type === 'contact' ? `/admin/contact/${e.target_id}` : null;
+           const about = d.name || d.subject || d.file || d.reference || (d.to && e.action === 'test_email_sent' ? d.to : null) || (e.target_type ? TARGET_TYPES[e.target_type] : '');
            const extra = [d.file && d.name ? d.file : null, d.method ? `with ${d.method === 'code' ? 'emailed code' : 'shared password'}` : null, d.prefix ? `key ${d.prefix}…` : null,
              d.from && e.action === 'admin_renamed' ? `was ${d.from}` : null, d.email && e.target_type === 'admin' ? d.email : null, d.email_sent === false || d.sent === false ? 'email failed' : null].filter(Boolean); %>
         <tr>

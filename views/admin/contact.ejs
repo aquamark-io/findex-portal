@@ -1,0 +1,32 @@
+<%- include('../partials/head', { wide: true }) %>
+<p><a href="/admin/contact?status=<%= row.status %>">&larr; Back to <%= STATUSES[row.status].toLowerCase() %> messages</a></p>
+<h1 class="title"><%= referenceOf(row.id) %></h1>
+<p class="lead"><span class="pill <%= row.status === 'closed' ? 'approved' : row.status === 'open' ? 'pending' : 'notice_sent' %>"><%= STATUSES[row.status] %></span></p>
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+<section class="card">
+  <h2 class="flush-top">Message</h2>
+  <div class="table-wrap"><table class="table">
+    <tbody>
+      <tr><th scope="row">From</th><td><%= row.name || '(no name given)' %><div class="muted"><%= row.contact_email %></div></td></tr>
+      <tr><th scope="row">Account</th><td><% if (account) { %><a href="/admin/accounts/<%= account.id %>"><%= account.business_legal_name || `${account.first_name} ${account.last_name}` %></a> <span class="muted">(<%= account.status %>)</span><% } else { %>None found for this email<% } %></td></tr>
+      <tr><th scope="row">Topic</th><td><%= TOPICS[row.topic] %></td></tr>
+      <tr><th scope="row">Received</th><td><%= fmt(row.created_at) %></td></tr>
+    </tbody>
+  </table></div>
+  <div class="message-body mt"><%= row.message %></div>
+  <p class="mt"><a class="btn secondary" href="mailto:<%= encodeURIComponent(row.contact_email).replace(/%40/g, '@') %>?subject=<%= encodeURIComponent(`Re: your FinDex message (${referenceOf(row.id)})`) %>">Reply by email</a></p>
+</section>
+<section class="card">
+  <h2 class="flush-top">Status and note</h2>
+  <form method="post" action="/admin/contact/<%= row.id %>">
+    <div class="field"><label for="note">Internal note <span class="hint">(admins only)</span></label><textarea id="note" name="note" rows="3" maxlength="2000"><%= row.admin_note || '' %></textarea></div>
+    <div class="actions">
+      <% Object.entries(STATUSES).forEach(([key, label]) => { if (key === row.status) return; %>
+        <button class="btn <%= key === 'closed' ? '' : 'secondary' %>" type="submit" name="status" value="<%= key %>">Mark <%= label.toLowerCase() %></button>
+      <% }) %>
+      <button class="btn secondary" type="submit" name="status" value="<%= row.status %>">Save note</button>
+    </div>
+  </form>
+</section>
+<%- include('../partials/foot') %>

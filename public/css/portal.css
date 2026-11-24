@@ -360,3 +360,6 @@ form.row-inline + .muted { margin-top: 18px; }
 .checklist li + li { border-top: 1px solid var(--lav-border); }
 .checklist .pill { flex: none; min-width: 64px; justify-content: center; margin-top: 1px; }
 .checklist p { overflow-wrap: anywhere; margin-top: 4px; }
+.message-body { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--lav); border: 1px solid var(--lav-border); border-radius: 6px; padding: 14px 16px; line-height: 1.6; }
+.table th[scope=row] { text-transform: none; letter-spacing: 0; font-size: 0.9rem; background: none; width: 140px; border-top: 1px solid var(--lav-border); }
+.foot a { margin-left: 4px; }

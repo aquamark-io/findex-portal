@@ -1,0 +1,29 @@
+<%- include('partials/head') %>
+<section class="card narrow">
+  <h1 class="title">Contact Us</h1>
+  <% if (sent) { %>
+    <div class="alert ok" role="status">Thanks, we received your message<% if (sent.reference) { %> (reference <strong><%= sent.reference %></strong>)<% } %>. We&rsquo;ll reply by email, usually within one business day.</div>
+    <p class="flush"><a href="<%= marketingUrl %>">Return to the home page</a></p>
+  <% } else { %>
+    <p class="lead">We reply by email, usually within one business day.</p>
+    <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/contact" novalidate>
+      <div class="field"><label for="name">Your name</label><input type="text" id="name" name="name" maxlength="100" autocomplete="name" value="<%= values.name || '' %>"></div>
+      <div class="field"><label for="email">Email address</label><input type="email" id="email" name="email" maxlength="254" autocomplete="email" required value="<%= values.email || '' %>" <% if (errors.email) { %>aria-invalid="true" aria-describedby="email-err"<% } %>>
+        <% if (errors.email) { %><p class="field-error" id="email-err"><%= errors.email %></p><% } %></div>
+      <div class="field"><label for="topic">Topic</label>
+        <select id="topic" name="topic" required <% if (errors.topic) { %>aria-invalid="true" aria-describedby="topic-err"<% } %>>
+          <option value="">Choose a topic</option>
+          <% Object.entries(TOPICS).forEach(([k, label]) => { %><option value="<%= k %>" <%= values.topic === k ? 'selected' : '' %>><%= label %></option><% }) %>
+        </select>
+        <% if (errors.topic) { %><p class="field-error" id="topic-err"><%= errors.topic %></p><% } %></div>
+      <div class="field"><label for="message">Message</label>
+        <textarea id="message" name="message" rows="6" maxlength="5000" required aria-describedby="message-hint<%= errors.message ? ' message-err' : '' %>" <% if (errors.message) { %>aria-invalid="true"<% } %>><%= values.message || '' %></textarea>
+        <% if (errors.message) { %><p class="field-error" id="message-err"><%= errors.message %></p><% } %>
+        <p class="field-hint" id="message-hint">Please don&rsquo;t include a date of birth, EIN or Social Security number.</p></div>
+      <div class="hp" aria-hidden="true"><label for="company_fax">Leave this field empty</label><input type="text" id="company_fax" name="company_fax" tabindex="-1" autocomplete="off"></div>
+      <button class="btn block" type="submit">Send Message</button>
+    </form>
+  <% } %>
+</section>
+<%- include('partials/foot') %>
