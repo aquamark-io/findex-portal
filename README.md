@@ -78,7 +78,7 @@ having run today, no test or old-format records, and a final (non-draft) member 
 Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with
 evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
 are limited by subject type, and default is funders and lenders only; default reports require
-the default notice. Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (partners), or, for people,
+the default notice and must be filed within 90 days of the default date (other incidents: within 7 years). Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (partners), or, for people,
 DOB + last name plus a matching email or mobile (`lib/identity.js`), with identifiers encrypted or kept as one-way keys. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
 links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting emails the
 notice to the reported party (naming the reporter; individuals also get the CFPB Summary of Rights link) and starts

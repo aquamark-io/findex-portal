@@ -6,7 +6,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { setup } = require('./helpers');
+const { setup, daysAgo } = require('./helpers');
+const DEFAULT_DATE = daysAgo(30);
 
 const ctx = setup();
 const supabase = require('../lib/supabase');
@@ -180,7 +181,7 @@ test('report accept, reject, evidence opens, dispute decisions and test deletes 
   const submit = async (name, ein) => {
     const r = await lender.req('/reports/new/funded-business', {
       subject_name: name, subject_ein: ein, subject_state: 'TX', subject_contact: 'Joe Smith', subject_email: `owner@${ein.replace(/\D/g, '')}.com`,
-      category: 'default', incident_date: '2026-09-15', description: 'Declared in default after missed payments.', certify: 'on',
+      category: 'default', incident_date: DEFAULT_DATE, description: 'Declared in default after missed payments.', certify: 'on',
     }, { files: { evidence: [{ name: 'ledger.pdf' }], default_notice: [{ name: 'notice.pdf' }] } });
     assert.equal(r.status, 303, r.text.slice(0, 300));
     return fake.tables.fx_reports.at(-1);

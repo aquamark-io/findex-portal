@@ -4,7 +4,8 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup } = require('./helpers');
+const { setup, daysAgo } = require('./helpers');
+const DEFAULT_DATE = daysAgo(30);
 
 const ctx = setup();
 const N = require('../lib/notices');
@@ -29,7 +30,7 @@ test('setup: a lender reports a default that gets published', async () => {
   other = await ctx.member(admin, { email: 'sam@bestcapital.com', domain: 'bestcapital.com', company: 'Best Capital Inc', companyType: 'lender' });
   const r = await lender.req('/reports/new/funded-business', {
     subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
-    category: 'default', incident_date: '2026-09-15', description: 'Missed payments.', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'Missed payments.', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   assert.equal(r.status, 303);
   const rep = fake.tables.fx_reports.at(-1);
@@ -98,7 +99,7 @@ test('lookup by EIN returns the published default, the reporter, and logs the se
   assert.deepEqual(r.body.searched_by, ['ein']);
   assert.deepEqual(r.body.checks.default.reports[0].matched_on, ['ein']);
   assert.equal(r.body.checks.default.reports.length, 1);
-  assert.equal(r.body.checks.default.reports[0].incident_date, '2026-09-15');
+  assert.equal(r.body.checks.default.reports[0].incident_date, DEFAULT_DATE);
   assert.equal(r.body.checks.default.reports[0].reported_by, 'Acme Funding LLC');
   assert.deepEqual(r.body.checks.document_tampering, { on_record: false, reports: [] });
   assert.ok(!('description' in r.body.checks.default.reports[0]), 'descriptions stay in the portal');
@@ -187,7 +188,7 @@ test('checks are modular: defaults, document tampering, or both; results_url sho
 test('reports still in their notice period are not returned', async () => {
   await lender.req('/reports/new/funded-business', {
     subject_name: 'Pending Co LLC', subject_ein: '55-5555555', subject_state: 'CA', subject_contact: 'P', subject_email: 'p@pending.co',
-    category: 'default', incident_date: '2026-10-01', description: 'x', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   await admin.req(`/admin/reports/${fake.tables.fx_reports.at(-1).id}/accept`, { note: '' });
   const r = await api('/api/v1/funded-business', { ein: '55-5555555' }, { auth: key });

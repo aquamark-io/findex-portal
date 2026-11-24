@@ -134,4 +134,7 @@ function setup(extraEnv = {}) {
   return ctx;
 }
 
-module.exports = { setup };
+// YYYY-MM-DD n days before today (defaults must be reported within 90 days, so test dates stay recent).
+const daysAgo = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+
+module.exports = { setup, daysAgo };

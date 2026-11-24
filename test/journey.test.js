@@ -5,7 +5,8 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup } = require('./helpers');
+const { setup, daysAgo } = require('./helpers');
+const DEFAULT_DATE = daysAgo(30);
 
 const ctx = setup();
 const N = require('../lib/notices');
@@ -68,7 +69,7 @@ test('free email providers and mismatched domains are refused for company accoun
 test('a lender reports a default with evidence and the default notice', async () => {
   const r = await lender.req('/reports/new/funded-business', {
     subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe Smith', subject_email: merchantEmail,
-    category: 'default', incident_date: '2026-09-15', description: 'Declared in default after missed payments.', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'Declared in default after missed payments.', certify: 'on',
   }, { files: { evidence: [{ name: 'ledger.pdf' }], default_notice: [{ name: 'notice.pdf' }] } });
   assert.equal(r.status, 303, r.text.slice(0, 500));
   const rep = fake.tables.fx_reports.at(-1);
@@ -83,7 +84,7 @@ test('a lender reports a default with evidence and the default notice', async ()
 test('a default without the default notice is refused', async () => {
   const r = await lender.req('/reports/new/funded-business', {
     subject_name: 'Other Co', subject_ein: '98-7654321', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@other.co',
-    category: 'default', incident_date: '2026-09-01', description: 'x', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
   assert.equal(r.status, 422);
   assert.match(r.text, /default notice/);
@@ -125,4 +126,20 @@ test('reports older than 7 years are deleted with their files', async () => {
   assert.equal(await N.deleteExpired(), 1);
   assert.ok(!fake.tables.fx_reports.some(r => r.id === reportId));
   assert.equal(Object.keys(fake.files).length, before - 2);
+});
+
+test('defaults must be reported within 90 days of the default date', async () => {
+  const { daysAgo } = require('./helpers');
+  const form = { subject_name: 'Late Co LLC', subject_ein: '44-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@lateco.com',
+    category: 'default', description: 'x', certify: 'on' };
+  const files = { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } };
+  const late = await lender.req('/reports/new/funded-business', { ...form, incident_date: daysAgo(91) }, files);
+  assert.equal(late.status, 422);
+  assert.match(late.text, /within 90 days of the default date/);
+  const page = await lender.req('/reports/new/funded-business');
+  assert.match(page.text, /data-max-age="90"/);
+  // Other categories still allow up to 7 years.
+  const old = await lender.req('/reports/new/funded-business', { ...form, category: 'fraud', subject_ein: '44-7654321', incident_date: daysAgo(400) },
+    { files: { evidence: [{ name: 'a.pdf' }] } });
+  assert.equal(old.status, 303, old.text.slice(0, 300));
 });

@@ -3,7 +3,8 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup } = require('./helpers');
+const { setup, daysAgo } = require('./helpers');
+const DEFAULT_DATE = daysAgo(30);
 
 const ctx = setup();
 const N = require('../lib/notices');
@@ -42,13 +43,13 @@ test('setup: four member companies', async () => {
 test('reporting a business requires the state of registration', async () => {
   const r = await lender.req('/reports/new/funded-business', {
     subject_name: 'Joe’s Cafe, L.L.C.', subject_ein: '12-3456789', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
-    category: 'default', incident_date: '2026-09-15', description: 'x', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   assert.equal(r.status, 422);
   assert.match(r.text, /State of registration is required/);
   const ok = await lender.req('/reports/new/funded-business', {
     subject_name: 'Joe’s Cafe, L.L.C.', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
-    category: 'default', incident_date: '2026-09-15', description: 'x', certify: 'on',
+    category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   assert.equal(ok.status, 303);
   await publishLatest();
