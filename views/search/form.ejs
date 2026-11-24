@@ -2,7 +2,7 @@
 <% const v = k => (values && typeof values[k] === 'string') ? values[k] : ''; const purposes = S.PURPOSES_FOR[subjectType]; %>
 <section class="card">
   <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
-  <% const TITLES = { merchant: ['Check a funded business', 'See reported defaults and fraud, and how many lenders searched this business in the last 30 days.'],
+  <% const TITLES = { merchant: ['Check a funded business', 'See reported defaults and document tampering, and how many lenders searched this business in the last 30 days.'],
        company: ['Check a partner', 'See reports about a broker, lender, ISO or vendor before you work with them.'],
        individual: ['Screen an individual', 'See reports about an employee or contractor, for employment screening.'] }; %>
   <h1 class="title"><%= TITLES[subjectType][0] %></h1>

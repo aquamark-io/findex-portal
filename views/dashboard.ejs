@@ -36,7 +36,7 @@
 <% if (canUseApi) { %>
 <section class="card">
   <h2 class="flush-top">API access</h2>
-  <p>Check funded businesses for defaults and document tampering from your own systems, by EIN or by legal name and state.</p>
+  <p>Check funded businesses for defaults and document tampering from your own systems.</p>
   <% if (!apiAccess || ['denied', 'revoked'].includes(apiAccess.status)) { %>
     <p><a class="btn secondary" href="/api-access">Request API access</a></p>
   <% } else if (apiAccess.status === 'requested') { %>
