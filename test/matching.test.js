@@ -221,3 +221,19 @@ test('no part of an SSN is stored anywhere', () => {
   assert.ok(!all.includes('1990-04-12'), 'dates of birth are only stored encrypted');
   assert.ok(emails.length > 0);
 });
+
+test('impersonation can be reported about individuals and partners, not funded businesses', async () => {
+  const R = require('../lib/reports');
+  const funder = { account_type: 'company', company_type: 'funder' };
+  const keys = t => R.categoriesFor(t, funder).map(c => c.key);
+  assert.ok(keys('individual').includes('impersonation'));
+  assert.ok(keys('company').includes('impersonation'));
+  assert.ok(!keys('merchant').includes('impersonation'), 'funded businesses: defaults and document tampering only');
+  const form = await lender.req('/reports/new/individual');
+  assert.match(form.text, /Impersonation/);
+  const r = await lender.req('/reports/new/funded-business', {
+    subject_name: 'Imp Test LLC', subject_ein: '33-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@imptest.com',
+    category: 'impersonation', incident_date: '2026-08-01', description: 'x', certify: 'on',
+  }, { files: { evidence: [{ name: 'a.pdf' }] } });
+  assert.equal(r.status, 422);
+});
