@@ -72,8 +72,12 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { pageTitle: 'Something went wrong', message: 'Something went wrong. Please try again.' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`FinDex portal running on port ${PORT}`));
+// Started directly (npm start): listen and run the daily job. Required by tests: just export the app.
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`FinDex portal running on port ${PORT}`));
+  // Daily 6 AM Pacific job: publishes reports whose 10-day notice window has passed.
+  if (process.env.DISABLE_DAILY_JOB !== 'true') require('./lib/notices').startDailyJob();
+}
 
-// Daily 6 AM Pacific job: publishes reports whose 10-day notice window has passed.
-if (process.env.DISABLE_DAILY_JOB !== 'true') require('./lib/notices').startDailyJob();
+module.exports = app;
