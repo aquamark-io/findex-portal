@@ -223,7 +223,7 @@ test('no part of an SSN is stored anywhere', () => {
   assert.ok(emails.length > 0);
 });
 
-test('impersonation can be reported about individuals and partners, not funded businesses', async () => {
+test('impersonation can be reported about individuals and vendors, not funded businesses', async () => {
   const R = require('../lib/reports');
   const funder = { account_type: 'company', company_type: 'funder' };
   const keys = t => R.categoriesFor(t, funder).map(c => c.key);
@@ -237,4 +237,36 @@ test('impersonation can be reported about individuals and partners, not funded b
     category: 'impersonation', incident_date: '2026-08-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
   assert.equal(r.status, 422);
+});
+
+test('vendors: old partner links redirect, the report form requires a vendor type, and the type shows in results', async () => {
+  assert.equal((await lender.req('/search/partner')).location, '/search/vendor');
+  assert.equal((await lender.req('/reports/new/partner')).location, '/reports/new/vendor');
+  const choose = await lender.req('/reports/new');
+  assert.match(choose.text, /A vendor/);
+  assert.doesNotMatch(choose.text, /partner<\/strong>|A partner/);
+  const form = await lender.req('/reports/new/vendor');
+  assert.match(form.text, /Vendor type/);
+  assert.match(form.text, /<option value="broker_partner"\s*>Broker partner<\/option>/);
+  assert.match(form.text, /<option value="lender_partner"\s*>Lender partner<\/option>/);
+  assert.match(form.text, /<option value="other"\s*>Other Service Providers<\/option>/);
+
+  const base = { subject_name: 'Leaky CRM Inc', subject_website: 'https://leakycrm.com', subject_contact: 'Sam Vendor', subject_email: 'sam@leakycrm.com',
+    category: 'data_mishandling', incident_date: '2026-08-01', description: 'Our merchant files were exposed.', certify: 'on' };
+  const files = { files: { evidence: [{ name: 'e.pdf' }] } };
+  const missing = await lender.req('/reports/new/vendor', base, files);
+  assert.equal(missing.status, 422);
+  assert.match(missing.text, /Vendor type is required/);
+  const ok = await lender.req('/reports/new/vendor', { ...base, subject_vendor_type: 'crm_los' }, files);
+  assert.equal(ok.status, 303, ok.text.slice(0, 300));
+  const subj = fake.tables.fx_subjects.find(s => s.domain === 'leakycrm.com');
+  assert.equal(subj.subject_type, 'company');
+  assert.equal(subj.vendor_type, 'crm_los');
+  await publishLatest();
+
+  const r = await b2.req('/search/vendor', { website: 'leakycrm.com', certify: 'on' });
+  assert.equal(r.status, 303, r.text.slice(0, 300));
+  const res = await b2.req(r.location);
+  assert.match(res.text, /Vendor &middot; Vendor diligence/);
+  assert.match(res.text, /<dt>Vendor type<\/dt><dd>CRM or LOS<\/dd>/);
 });

@@ -84,10 +84,10 @@ email (the sender isn't told). Spam: honeypot + 5 messages per hour per IP. Admi
 
 ## Reports (phase two, step 1)
 
-Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with
+Companies with full access submit reports at `/reports/new` (individual, vendor, or funded business; vendors pick a vendor type, `fx_subjects.vendor_type`), with
 evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
 are limited by subject type, and default is funders and lenders only; default reports require
-the default notice and must be filed within 90 days of the default date (other incidents: within 7 years). Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (partners), or, for people,
+the default notice and must be filed within 90 days of the default date (other incidents: within 7 years). Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (vendors), or, for people,
 DOB + last name plus a matching email or mobile (`lib/identity.js`), with identifiers encrypted or kept as one-way keys. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
 links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting emails the
 notice to the reported party (naming the reporter; individuals also get the CFPB Summary of Rights link) and starts
@@ -102,7 +102,7 @@ the dashboard. Design decisions: `docs/reporting-design.md`.
 Companies with full access search at `/search`.
 - **People:** first and last name, date of birth, and an email and/or mobile (home ZIP optional). A match needs the DOB and
   last name plus a matching email or mobile; results show which details matched and flag a different first name or ZIP.
-- **Partners:** website domain or name.
+- **Vendors:** website domain or name.
 - **Businesses:** EIN, exact legal name + state of registration (case, punctuation and LLC / Inc ignored), or both;
   reports found either way are shown with what they matched on. Results
   show defaults, other reports, and how many other companies searched that business in the last 30 days (counts only,

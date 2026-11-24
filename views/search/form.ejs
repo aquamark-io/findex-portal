@@ -3,7 +3,7 @@
 <section class="card">
   <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
   <% const TITLES = { merchant: ['Check a funded business', 'See reported defaults and document tampering, and how many lenders searched this business in the last 30 days.'],
-       company: ['Check a partner', 'See reports about a broker, lender, ISO or vendor before you work with them.'],
+       company: ['Check a vendor', 'See reports about a service provider, broker partner or lender partner before you work with them.'],
        individual: ['Screen an individual', 'See reports about an employee or contractor, for employment screening.'] }; %>
   <h1 class="title"><%= TITLES[subjectType][0] %></h1>
   <p class="lead"><%= TITLES[subjectType][1] %> Only published reports are shown, and every search is logged.</p>
@@ -68,7 +68,7 @@
     <% if (subjectType === 'individual') { %>
     <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that this search is for the purpose selected above and the results will be used only for that purpose.</span></label>
     <% } else { %>
-    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I confirm the results will be used only to evaluate this <%= subjectType === 'company' ? 'partner' : 'business' %>, not for marketing or solicitation.</span></label>
+    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I confirm the results will be used only to evaluate this <%= subjectType === 'company' ? 'vendor' : 'business' %>, not for marketing or solicitation.</span></label>
     <% } %>
     <button class="btn block" type="submit">Search</button>
   </form>

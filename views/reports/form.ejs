@@ -38,6 +38,8 @@
         <div class="field"><label for="s_contact">Contact person</label><input type="text" id="s_contact" name="subject_contact" value="<%= v('subject_contact') %>" maxlength="160" required></div>
         <div class="field"><label for="s_email">Contact email</label><input type="email" id="s_email" name="subject_email" value="<%= v('subject_email') %>" maxlength="254" required></div>
       </div>
+      <div class="field"><label for="s_vtype">Vendor type</label>
+        <select id="s_vtype" name="subject_vendor_type" required><option value="">Select…</option><% Object.entries(R.VENDOR_TYPES).forEach(([k, label]) => { %><option value="<%= k %>" <%= v('subject_vendor_type') === k ? 'selected' : '' %>><%= label %></option><% }) %></select></div>
     <% } else { %>
       <h2>Who are you reporting?</h2>
       <div class="row">

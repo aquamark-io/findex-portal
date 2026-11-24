@@ -2,7 +2,7 @@
  * Member reporting (companies with full access).
  *
  *   GET  /reports                       your reports
- *   GET  /reports/new                   who are you reporting? (individual / partner / funded business)
+ *   GET  /reports/new                   who are you reporting? (individual / vendor / funded business)
  *   GET  /reports/new/:who              report form
  *   POST /reports/new/:who              validate, store evidence in fx-evidence, create the report
  *   GET  /reports/:id                   one of your reports
@@ -90,6 +90,9 @@ function renderForm(res, { who, subjectType, values = {}, errors = [], status = 
   });
 }
 
+// Old /partner links (partners are now vendors).
+router.get('/reports/new/partner', (req, res) => res.redirect(301, '/reports/new/vendor'));
+
 router.get('/reports/new/:who', (req, res) => {
   const subjectType = R.SUBJECT_SLUG[req.params.who];
   if (!subjectType) return res.redirect('/reports/new');
@@ -158,7 +161,7 @@ router.post('/reports/new/:who', (req, res, next) => {
   });
 });
 
-// One subject per identity. Businesses by EIN, partners by website domain. People by DOB + last name AND a
+// One subject per identity. Businesses by EIN, vendors by website domain. People by DOB + last name AND a
 // matching email or mobile (lib/identity.js): same DOB and last name with different contact details is treated
 // as a different person.
 async function findOrCreateSubject(s, noticeEmail) {
@@ -186,14 +189,15 @@ async function findOrCreateSubject(s, noticeEmail) {
     Object.assign(row, { dba: s.dba || null, ein_enc: encrypt(s.ein), identity_hash: hash, state: s.state, biz_key: ID.bizKey(s.state, s.name) });
   } else {
     find = () => supabase.from('fx_subjects').select('*').eq('subject_type', 'company').eq('domain', s.domain).maybeSingle();
-    Object.assign(row, { website: s.website, domain: s.domain });
+    Object.assign(row, { website: s.website, domain: s.domain, vendor_type: s.vendor_type || null });
   }
   const { data: existing, error: findErr } = await find();
   if (findErr) throw new Error(`Find subject: ${findErr.message}`);
   if (existing) {
     // Keep the latest ZIP (people) and name + state (businesses) so they stay searchable.
     const patch = s.subject_type === 'individual' && s.zip5 ? { zip5: s.zip5 }
-      : s.subject_type === 'merchant' && !existing.biz_key ? { state: s.state, biz_key: row.biz_key } : null;
+      : s.subject_type === 'merchant' && !existing.biz_key ? { state: s.state, biz_key: row.biz_key }
+      : s.subject_type === 'company' && !existing.vendor_type && s.vendor_type ? { vendor_type: s.vendor_type } : null;
     if (patch) await supabase.from('fx_subjects').update(patch).eq('id', existing.id);
     return existing;
   }

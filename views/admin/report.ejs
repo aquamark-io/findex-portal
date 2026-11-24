@@ -3,6 +3,7 @@
   const r = report, s = subject;
   const subjRows = [
     ['Type', R.SUBJECT_TYPES[s.subject_type]],
+    ['Vendor type', s.vendor_type ? R.VENDOR_TYPES[s.vendor_type] : null],
     ['Name', s.name + (s.name !== r.subject_name_reported ? ` (reported as "${r.subject_name_reported}")` : '')],
     ['DBA', s.dba], ['Website', s.website], ['Contact', s.contact_name],
     ...identity,

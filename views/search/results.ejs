@@ -24,6 +24,7 @@
         <div class="record-head"><strong><%= R.CATEGORIES[r.category].label %></strong><span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %></span></div>
         <dl class="kv">
           <dt>Name on file</dt><dd><%= r.subject_name_reported %></dd>
+          <% if (r.fx_subjects && r.fx_subjects.vendor_type) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[r.fx_subjects.vendor_type] %></dd><% } %>
           <% const m = matched[r.subject_id]; if (search.subject_type === 'individual' && m) { %>
           <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
             <% if (!m.first_name || m.zip === 'differs') { %><div class="muted"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</div><% } %></dd>

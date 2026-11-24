@@ -1,7 +1,7 @@
 /**
  * Search (companies with full access).
  *   GET  /search                 who are you searching for? + your recent searches
- *   GET  /search/:who            search form (individual | partner | funded-business)
+ *   GET  /search/:who            search form (individual | vendor | funded-business)
  *   POST /search/:who            validate, upload employment authorization, run, log, show results
  *   GET  /search/results/:id     results of one of your searches (for 7 days)
  *   GET  /search/results/:id/files/:fileId   evidence from those results (signed link, logged)
@@ -58,6 +58,9 @@ function renderForm(res, { who, subjectType, values = {}, errors = [], status = 
   const safe = { ...values }; delete safe.dob; delete safe.ein;
   res.status(status).render('search/form', { pageTitle: 'Search', who, subjectType, values: safe, errors });
 }
+
+// Old /partner links (partners are now vendors).
+router.get('/search/partner', (req, res) => res.redirect(301, '/search/vendor'));
 
 router.get('/search/:who', (req, res) => {
   const subjectType = R.SUBJECT_SLUG[req.params.who];
@@ -131,7 +134,7 @@ router.get('/search/results/:id', async (req, res, next) => {
     if (!search.expired && search.result_report_ids.length) {
       // Re-check: anything disputed or removed since the search is no longer shown.
       const { data } = await supabase.from('fx_reports')
-        .select('id, subject_id, category, incident_date, description, published_at, subject_name_reported, reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
+        .select('id, subject_id, category, incident_date, description, published_at, subject_name_reported, fx_subjects(vendor_type), reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
         .in('id', search.result_report_ids).eq('status', 'published').order('incident_date', { ascending: false });
       reports = data || [];
       if (reports.length) {
