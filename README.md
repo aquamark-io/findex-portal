@@ -74,7 +74,8 @@ Companies with full access search at `/search`.
 - **People:** first and last name, date of birth, and an email and/or mobile (home ZIP optional). A match needs the DOB and
   last name plus a matching email or mobile; results show which details matched and flag a different first name or ZIP.
 - **Partners:** website domain or name.
-- **Businesses:** EIN alone, or exact legal name + state of registration (case, punctuation and LLC / Inc ignored). Results
+- **Businesses:** EIN, exact legal name + state of registration (case, punctuation and LLC / Inc ignored), or both;
+  reports found either way are shown with what they matched on. Results
   show defaults, other reports, and how many other companies searched that business in the last 30 days (counts only,
   never who). Business searches store one-way keys of the EIN and name + state (`fx_searches.subject_keys`), never the EIN.
 
@@ -85,9 +86,9 @@ parties see "Who has viewed your record", and admin has a Search log. Limit: 60 
 
 ## Funded Business API
 
-- `POST /api/v1/funded-business` with `Authorization: Bearer fdx_...` and JSON `{ "ein": "12-3456789" }` or
-  `{ "name": "Joe's Cafe LLC", "state": "TX" }`, plus optional `"checks": ["default", "document_tampering"]` (both when
-  omitted). Each check returns `on_record` and, per published report, the incident date, publish date and reporting
+- `POST /api/v1/funded-business` with `Authorization: Bearer fdx_...` and JSON with what the lender has: `"ein"`,
+  `"name"` + `"state"`, or all three (matched on each; every report carries `matched_on`), plus optional
+  `"checks": ["default", "document_tampering"]` (both when omitted). Portal business search works the same way. Each check returns `on_record` and, per published report, the incident date, publish date and reporting
   company. Descriptions and evidence stay in the portal: `results_url` opens the full results, showing only the
   checks requested. Also returns searches by other companies in the last 30 days (counts only).
 - `POST /api/v1/defaults` is the original endpoint: same response, `checks` defaults to `["default"]`.

@@ -1,6 +1,6 @@
 /**
  * Funded Business API (approved companies; access approved by an admin, keys created by the company).
- *   POST /api/v1/funded-business   JSON { "ein": "12-3456789" }  or  { "name": "Joe's Cafe LLC", "state": "TX" },
+ *   POST /api/v1/funded-business   JSON with what you have: "ein", and/or "name" + "state" (matched on each),
  *                                  plus optional "checks": ["default", "document_tampering"] (both when omitted)
  *   POST /api/v1/defaults          same, with "checks" defaulting to ["default"] (the original endpoint)
  * Each check returns whether anything is on record and, per report, the date and the reporting company. The
@@ -95,6 +95,7 @@ const lookup = defaultChecks => async (req, res, next) => {
       out[c] = {
         on_record: list.length > 0,
         reports: list.map(r => ({
+          matched_on: [].concat((found.matched[r.subject_id] || {}).by || []),
           incident_date: r.incident_date,
           published_on: r.published_at ? String(r.published_at).slice(0, 10) : null,
           reported_by: r.reporter ? r.reporter.business_legal_name : null,
@@ -104,7 +105,7 @@ const lookup = defaultChecks => async (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     return res.json({
       search_id: searchId,
-      searched_by: q.ein ? 'ein' : 'name_state',
+      searched_by: [q.ein && 'ein', q.state && 'name_state'].filter(Boolean),
       checks: out,
       recent_searches: { days: 30, companies: activity.companies, searches: activity.searches },
       results_url: `${BASE()}/search/results/${searchId}`,

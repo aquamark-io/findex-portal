@@ -95,7 +95,8 @@ test('lookup by EIN returns the published default, the reporter, and logs the se
   const r = await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: key });
   assert.equal(r.status, 200, JSON.stringify(r.body));
   assert.equal(r.body.checks.default.on_record, true);
-  assert.equal(r.body.searched_by, 'ein');
+  assert.deepEqual(r.body.searched_by, ['ein']);
+  assert.deepEqual(r.body.checks.default.reports[0].matched_on, ['ein']);
   assert.equal(r.body.checks.default.reports.length, 1);
   assert.equal(r.body.checks.default.reports[0].incident_date, '2026-09-15');
   assert.equal(r.body.checks.default.reports[0].reported_by, 'Acme Funding LLC');
@@ -117,8 +118,23 @@ test('lookup by EIN returns the published default, the reporter, and logs the se
 test('lookup by legal name and state works, ignoring punctuation and LLC', async () => {
   const r = await api('/api/v1/funded-business', { name: 'joes cafe', state: 'tx' }, { auth: key });
   assert.equal(r.status, 200);
-  assert.equal(r.body.searched_by, 'name_state');
+  assert.deepEqual(r.body.searched_by, ['name_state']);
   assert.equal(r.body.checks.default.on_record, true);
+});
+
+test('send what you have: EIN plus name and state in one call, each report says what it matched on', async () => {
+  const both = await api('/api/v1/funded-business', { ein: '12-3456789', name: 'Joe’s Cafe, LLC', state: 'TX', checks: ['default'] }, { auth: key });
+  assert.equal(both.status, 200);
+  assert.deepEqual(both.body.searched_by, ['ein', 'name_state']);
+  assert.deepEqual(both.body.checks.default.reports[0].matched_on, ['ein', 'name_state']);
+  // A wrong EIN still finds the business by name and state, and says so.
+  const nameOnly = await api('/api/v1/funded-business', { ein: '99-9999999', name: 'Joes Cafe', state: 'TX', checks: ['default'] }, { auth: key });
+  assert.equal(nameOnly.body.checks.default.on_record, true);
+  assert.deepEqual(nameOnly.body.checks.default.reports[0].matched_on, ['name_state']);
+  // A name without its state is not enough on its own.
+  const noState = await api('/api/v1/funded-business', { name: 'Joes Cafe' }, { auth: key });
+  assert.equal(noState.status, 422);
+  assert.match(noState.body.error.message, /state/);
 });
 
 test('no match, invalid input, and bad JSON', async () => {

@@ -27,8 +27,9 @@
           <% const m = matched[r.subject_id]; if (search.subject_type === 'individual' && m) { %>
           <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
             <% if (!m.first_name || m.zip === 'differs') { %><div class="muted"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</div><% } %></dd>
-          <% } else if (search.subject_type === 'merchant' && m && m.by === 'name_state') { %>
-          <dt>Matched on</dt><dd>Legal name and state <div class="muted">Confirm the EIN with the business before relying on this result.</div></dd>
+          <% } else if (search.subject_type === 'merchant' && m) { const by = [].concat(m.by); %>
+          <dt>Matched on</dt><dd><%= [by.includes('ein') && 'EIN', by.includes('name_state') && 'Legal name and state'].filter(Boolean).join(', ') %>
+            <% if (!by.includes('ein')) { %><div class="muted">Confirm the EIN with the business before relying on this result.</div><% } %></dd>
           <% } %>
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
