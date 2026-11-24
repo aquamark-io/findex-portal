@@ -1,0 +1,40 @@
+<% const a = account; %>
+<section class="card">
+  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Reports about you' : 'Reports about ' + (a.business_legal_name || 'your business') %></h2>
+  <% if (!aboutMe.length) { %>
+    <p class="muted flush">There are no reports about <%= a.account_type === 'individual' ? 'you' : 'your ' + (a.account_type === 'company' ? 'company' : 'business') %> on FinDex.</p>
+  <% } else { %>
+    <% aboutMe.forEach(r => { %>
+      <article class="record-item">
+        <div class="record-head">
+          <strong><%= CATEGORIES[r.category].label %></strong>
+          <span class="pill <%= r.status %>"><%= r.status === 'published' ? 'Published' : r.status === 'notice_sent' ? 'Publishes ' + fmtDay(r.publish_at) : r.status === 'disputed' ? 'Disputed' : 'Pending notice' %></span>
+        </div>
+        <dl class="kv">
+          <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
+          <dt>Incident date</dt><dd><%= new Date(r.incident_date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) %></dd>
+        </dl>
+        <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
+        <% if ((aboutFiles[r.id] || []).length) { %>
+          <p class="muted flush">Evidence:</p>
+          <ul class="checklist"><% aboutFiles[r.id].forEach(f => { %><li><a href="/my-record/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>
+        <% } %>
+        <% if (disputes[r.id]) { %>
+          <p class="muted flush mt">Your dispute is under review. The report is withheld until we decide, by <%= fmtDay(disputes[r.id].due_at) %>.</p>
+        <% } else if (DISPUTABLE.includes(r.status)) { %>
+          <p class="flush mt"><a class="btn secondary" href="/my-record/reports/<%= r.id %>/dispute">Dispute</a></p>
+        <% } %>
+      </article>
+    <% }) %>
+    <p class="muted">Disputing is free. Disputed reports are withheld while we review the evidence.</p>
+  <% } %>
+  <% if (viewers.length) { %>
+    <h2>Who has viewed your record</h2>
+    <ul class="history">
+      <% viewers.forEach(s => { %><li><%= s.fx_accounts ? s.fx_accounts.business_legal_name : 'A FinDex member' %> <span class="muted">&middot; <%= PURPOSES[s.purpose] %> &middot; <%= fmtDay(s.created_at) %></span></li><% }) %>
+    </ul>
+  <% } %>
+  <% if (a.account_type === 'individual') { %>
+    <p class="muted"><a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a></p>
+  <% } %>
+</section>

@@ -1,6 +1,8 @@
 <%- include('../partials/head', { wide: true }) %>
-<h1 class="title">Your reports</h1>
-<p class="lead"><a class="btn" href="/reports/new">Submit a report</a></p>
+<h1 class="title">Reports</h1>
+<% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<h2>Reports you submitted</h2>
+<p><a class="btn" href="/reports/new">Submit a report</a></p>
 <% if (!reports.length) { %>
   <div class="card"><p class="lead flush">You haven&rsquo;t submitted any reports yet.</p></div>
 <% } else { %>
@@ -19,4 +21,6 @@
     </tbody>
   </table></div>
 <% } %>
+<div class="mt"></div>
+<%- include('../partials/about-me') %>
 <%- include('../partials/foot') %>

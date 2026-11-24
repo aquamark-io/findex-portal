@@ -1,6 +1,6 @@
 <%- include('partials/head') %>
 <section class="card">
-  <p class="signing-as"><a href="/dashboard">&larr; Your record</a></p>
+  <p class="signing-as"><a href="<%= account.account_type === 'company' && account.terms_version ? '/reports' : '/dashboard' %>">&larr; Your record</a></p>
   <h1 class="title">Dispute a report</h1>
   <p class="lead"><%= CATEGORIES[r.category].label %> &middot; reported by <%= r.reporter ? r.reporter.business_legal_name : '' %></p>
   <% if (r.description) { %><p class="prewrap muted"><%= r.description %></p><% } %>

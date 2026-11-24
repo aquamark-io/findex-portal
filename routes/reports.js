@@ -25,6 +25,7 @@ const AI = require('../lib/ai-review');
 const D = require('../lib/disputes');
 const respUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: R.MAX_FILE_BYTES, files: D.MAX_DISPUTE_FILES, fields: 10, fieldSize: 20000 } }).array('files', D.MAX_DISPUTE_FILES);
 
+const { loadMyRecord } = require('../lib/my-record');
 const router = express.Router();
 const BUCKET = 'fx-evidence';
 
@@ -67,7 +68,10 @@ router.get('/reports', async (req, res, next) => {
       .select('id, category, incident_date, status, created_at, subject_name_reported, fx_subjects(subject_type)')
       .eq('reporter_account_id', req.account.id).order('created_at', { ascending: false }).limit(500);
     if (error) throw new Error(`List reports: ${error.message}`);
-    res.render('reports/list', { pageTitle: 'Your reports', reports: data || [] });
+    // Reports about this company (and its disputes) live here rather than on the dashboard.
+    const record = await loadMyRecord(req.account.id);
+    res.render('reports/list', { ...record, pageTitle: 'Reports', reports: data || [],
+      msg: req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null });
   } catch (err) { next(err); }
 });
 

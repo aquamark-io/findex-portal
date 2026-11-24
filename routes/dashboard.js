@@ -14,6 +14,7 @@ const { CFPB_SUMMARY_URL } = require('../lib/email');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
 const K = require('../lib/api-keys');
+const { loadMyRecord, recordOnReportsTab } = require('../lib/my-record');
 
 const router = express.Router();
 
@@ -21,27 +22,14 @@ const canUpgrade = a => a.account_type === 'company' && !a.terms_version;
 
 router.get('/dashboard', requireAccount, async (req, res, next) => {
   const a = req.account;
-  let aboutMe = [];
-  let viewers = [];
-  const disputes = {};
-  let files = {};
-  let apiAccess = null;
+  let record, apiAccess = null;
   try {
     if (K.canUseApi(a)) apiAccess = await K.getAccess(a.id);
-    const { data: full } = await supabase.from('fx_accounts').select('*').eq('id', a.id).maybeSingle();
-    if (full) await N.autoLink(full);
-    aboutMe = await N.reportsAboutAccount(a.id);
-    viewers = await N.viewersOfAccount(a.id);
-    if (aboutMe.length) {
-      const { data: ev } = await supabase.from('fx_report_evidence').select('id, report_id, file_name, size_bytes').in('report_id', aboutMe.map(r => r.id)).order('created_at');
-      (ev || []).forEach(f => { (files[f.report_id] = files[f.report_id] || []).push(f); });
-      const { data: ds } = await supabase.from('fx_disputes').select('report_id, status, due_at').in('report_id', aboutMe.map(r => r.id)).eq('status', 'open');
-      (ds || []).forEach(d => { disputes[d.report_id] = d; });
-    }
+    record = await loadMyRecord(a.id);
   } catch (err) { return next(err); }
   res.render('dashboard', {
+    ...record,
     apiAccess, canUseApi: K.canUseApi(a),
-    aboutMe, disputes, DISPUTABLE: D.DISPUTABLE, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
@@ -119,7 +107,7 @@ router.post('/my-record/reports/:id/dispute', requireAccount, (req, res, next) =
       if (reason.length > 5000) return fail('Please keep your explanation under 5,000 characters.');
       const out = await D.openDispute({ account: req.account, reportId: r.id, reason, files: req.files || [], ip: req.ip });
       if (out.error) return fail(out.error);
-      res.redirect(303, '/dashboard?disputed=1');
+      res.redirect(303, recordOnReportsTab(req.account) ? '/reports?disputed=1' : '/dashboard?disputed=1');
     } catch (err) { next(err); }
   });
 });
