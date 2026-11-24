@@ -333,7 +333,7 @@ form.inline { display: inline; margin: 0 4px 0 0; }
 /* Site style (matches joinfindex.com), applied to every page via body.light. */
 body.light .band { background: #fff; color: var(--ink); border-bottom: 1px solid #e4deec; position: sticky; top: 0; z-index: 50; }
 body.light .band-inner { max-width: 1040px; padding: 18px 24px; }
-body.light .wordmark { background: none; color: #45138c; -webkit-text-fill-color: #45138c; font-size: 1.7rem; font-weight: 750; letter-spacing: -0.025em; line-height: 1; }
+body.light .wordmark { background: none; color: #45138c; -webkit-text-fill-color: #45138c; font-size: 1.85rem; font-weight: 750; letter-spacing: -0.025em; line-height: 1; }
 body.light .wordmark span { color: #d63d8f; -webkit-text-fill-color: #d63d8f; }
 body.light .nav-link { color: #3f3650; font-weight: 500; }
 body.light .nav-link:hover, body.light .nav-link:focus-visible, body.light .nav-link.active { color: #45138c; border-bottom-color: #45138c; }
@@ -344,7 +344,7 @@ body.light .btn:hover { background: #951f62; border-color: #951f62; }
 body.light .btn.secondary { background: #fff; color: #45138c; border-color: #cfc5de; }
 @media (max-width: 640px) {
   body.light .band-inner { padding: 14px 16px; }
-  body.light .wordmark { font-size: 1.5rem; }
+  body.light .wordmark { font-size: 1.62rem; }
   body.light .menu-toggle { background: #45138c; border-color: #45138c; border-radius: 6px; }
   body.light .nav-actions { background: #45138c; border-radius: 6px; border-color: #45138c; }
   body.light .nav-link, body.light .nav-link:hover, body.light .nav-link.active { color: #fff; border-bottom-color: transparent; }
