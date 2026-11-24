@@ -23,6 +23,7 @@ const UNIQUE = {
   fx_notices: [[['postmark_message_id'], r => r.postmark_message_id != null]],
   fx_disputes: [[['report_id'], r => r.status === 'open']],
   fx_api_keys: [[['key_hash']]],
+  fx_api_access: [[['account_id']]],
 };
 
 const DEFAULTS = {
@@ -37,7 +38,7 @@ const DEFAULTS = {
   fx_api_keys: { last_used_at: null, revoked_at: null },
 };
 const INT_IDS = new Set(['fx_events']);
-const NO_ID = new Set(['fx_subject_emails', 'fx_subject_phones', 'fx_subject_links']); // composite primary keys
+const NO_ID = new Set(['fx_subject_emails', 'fx_subject_phones', 'fx_subject_links', 'fx_api_access']); // composite primary keys
 
 // Generated columns.
 function generate(table, row) {
@@ -57,6 +58,7 @@ const RELATIONS = {
     'fx_accounts!fx_reports_reporter_account_id_fkey': ['fx_accounts', 'one', 'reporter_account_id', 'id'],
   },
   fx_searches: { fx_accounts: ['fx_accounts', 'one', 'account_id', 'id'] },
+  fx_api_access: { fx_accounts: ['fx_accounts', 'one', 'account_id', 'id'] },
   fx_disputes: {
     fx_dispute_files: ['fx_dispute_files', 'many', 'id', 'dispute_id'],
     fx_accounts: ['fx_accounts', 'one', 'account_id', 'id'],

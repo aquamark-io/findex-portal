@@ -1,0 +1,70 @@
+<%- include('partials/head') %>
+<section class="card">
+  <p><a href="/dashboard">&larr; Dashboard</a></p>
+  <h1 class="title">API access</h1>
+  <p class="lead">Search for merchant defaults from your own systems, by EIN or by legal name and state. <a href="<%= docsUrl %>" target="_blank" rel="noopener">Read the API documentation</a>.</p>
+  <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+  <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
+
+  <% if (!access || access.status === 'denied' || access.status === 'revoked') { %>
+    <% if (access && access.status === 'denied') { %><p class="muted">Your last request was not approved. You can request access again.</p><% } %>
+    <% if (access && access.status === 'revoked') { %><p class="muted">API access for your company was turned off. You can request access again.</p><% } %>
+    <form method="post" action="/api-access/request">
+      <div class="field">
+        <label for="use_note">How will you use it? <span class="hint">(optional)</span></label>
+        <textarea id="use_note" name="use_note" rows="3" maxlength="1000" placeholder="e.g. Check new applications for defaults in our underwriting system"></textarea>
+      </div>
+      <button class="btn" type="submit">Request API access</button>
+    </form>
+    <p class="muted mt">Every request is reviewed. We&rsquo;ll email you once it has been reviewed.</p>
+
+  <% } else if (access.status === 'requested') { %>
+    <p><span class="pill">Under review</span></p>
+    <p>Requested <%= fmt(access.requested_at) %>. We&rsquo;ll email you once it has been reviewed.</p>
+
+  <% } else { %>
+    <% if (newKey) { %>
+      <div class="key-once" role="status">
+        <strong>Your new key, <%= newKey.label %>.</strong> Copy it now and store it securely on your server. It will not be shown again.
+        <code><%= newKey.key %></code>
+      </div>
+    <% } %>
+    <h2>Your API keys</h2>
+    <% if (keys.length) { %>
+      <div class="table-scroll">
+      <table class="keys">
+        <thead><tr><th>Label</th><th>Key</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+        <tbody>
+          <% keys.forEach(k => { %>
+            <tr>
+              <td><%= k.label %></td>
+              <td class="nowrap"><%= k.key_prefix %>&hellip;</td>
+              <td class="nowrap"><%= fmt(k.created_at) %></td>
+              <td class="nowrap"><%= k.last_used_at ? fmt(k.last_used_at) : 'Never' %></td>
+              <td>
+                <% if (k.revoked_at) { %><span class="muted">Revoked</span><% } else { %>
+                  <form method="post" action="/api-access/keys/<%= k.id %>/revoke">
+                    <button class="btn secondary small" type="submit" data-confirm="Revoke <%= k.label %>? Anything using it stops working immediately.">Revoke</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      </div>
+    <% } else { %>
+      <p class="muted">No keys yet. Create one to start using the API.</p>
+    <% } %>
+    <form method="post" action="/api-access/keys" class="row-inline">
+      <div class="field">
+        <label for="key-label">Key label <span class="hint">(e.g. Production)</span></label>
+        <input id="key-label" name="label" type="text" maxlength="100" placeholder="Production">
+      </div>
+      <button class="btn" type="submit">Create API key</button>
+    </form>
+    <p class="muted">Up to <%= maxKeys %> active keys. Each key is shown once. Keep keys on your server, never in a browser or app.</p>
+  <% } %>
+</section>
+<script src="/js/admin.js?v=<%= assetV %>" defer></script>
+<%- include('partials/foot') %>

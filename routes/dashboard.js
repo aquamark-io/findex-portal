@@ -13,6 +13,7 @@ const { PURPOSES } = require('../lib/search');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
 const { MEMBER_TERMS_VERSION, INDEMNIFICATION, CFPB_NOTICE_TO_USERS_URL: CFPB_USERS, CFPB_NOTICE_TO_FURNISHERS_URL: CFPB_FURNISHERS } = require('../lib/terms');
 const { logEvent } = require('../lib/events');
+const K = require('../lib/api-keys');
 
 const router = express.Router();
 
@@ -24,7 +25,9 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
   let viewers = [];
   const disputes = {};
   let files = {};
+  let apiAccess = null;
   try {
+    if (K.canUseApi(a)) apiAccess = await K.getAccess(a.id);
     const { data: full } = await supabase.from('fx_accounts').select('*').eq('id', a.id).maybeSingle();
     if (full) await N.autoLink(full);
     aboutMe = await N.reportsAboutAccount(a.id);
@@ -37,6 +40,7 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
     }
   } catch (err) { return next(err); }
   res.render('dashboard', {
+    apiAccess, canUseApi: K.canUseApi(a),
     aboutMe, disputes, DISPUTABLE: D.DISPUTABLE, viewers, PURPOSES, aboutFiles: files, CATEGORIES, fmtDay: N.fmtDay, fmtSize, CFPB_SUMMARY_URL,
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',

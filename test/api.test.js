@@ -1,5 +1,6 @@
 /**
- * Default-search API: keys issued and revoked by an admin, lookups by EIN or name + state, logging, and privacy.
+ * Default-search API: access requested by the company and approved by an admin, keys created by the company,
+ * lookups by EIN or name + state, logging, and privacy.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -37,21 +38,52 @@ test('setup: a lender reports a default that gets published', async () => {
   assert.equal(await N.publishDue(), 1);
 });
 
-test('an admin issues a key; it is shown once and only its hash is stored', async () => {
+async function grantAccess(browser, email) {
+  const acct = ctx.accountByEmail(email);
+  await browser.req('/api-access/request', { use_note: 'Underwriting checks' });
+  await admin.req(`/admin/api/${acct.id}/approve`, {});
+  const page = await browser.req('/api-access/keys', { label: 'Production' });
+  return page.text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
+}
+
+test('a company requests API access, the admin approves, and the company creates its own key', async () => {
   const acct = ctx.accountByEmail('sam@bestcapital.com');
-  const page = await admin.req(`/admin/accounts/${acct.id}/api-keys`, { label: 'Production' });
+  const page = await other.req('/api-access');
   assert.equal(page.status, 200);
-  key = (page.text.match(/fdx_[A-Za-z0-9_-]{40}/) || [])[0];
-  assert.ok(key, 'the new key is on the page');
+  assert.match(page.text, /Request API access/);
+  // No keys before approval.
+  await other.req('/api-access/keys', { label: 'Early' });
+  assert.equal((fake.tables.fx_api_keys || []).filter(k => k.account_id === acct.id).length, 0);
+
+  const r = await other.req('/api-access/request', { use_note: 'Check new applications' });
+  assert.equal(r.status, 303);
+  assert.equal(fake.tables.fx_api_access.find(x => x.account_id === acct.id).status, 'requested');
+  const note = ctx.lastEmail(process.env.ONBOARDING_NOTIFY_EMAIL, 'fx-admin-api-request');
+  assert.ok(note, 'admin is notified');
+  assert.match(note.text, /Best Capital Inc/);
+  assert.match(note.text, /Check new applications/);
+  assert.match((await other.req('/dashboard')).text, /Requested\. We/);
+
+  const queue = await admin.req('/admin/api');
+  assert.match(queue.text, /Best Capital Inc/);
+  assert.match(queue.text, /Check new applications/);
+  const ok = await admin.req(`/admin/api/${acct.id}/approve`, {});
+  assert.equal(ok.status, 303);
+  assert.ok(ctx.lastEmail('sam@bestcapital.com', 'fx-api-approved'), 'the company is emailed');
+  assert.match((await other.req('/dashboard')).text, /Manage API keys/);
+
+  const created = await other.req('/api-access/keys', { label: 'Production' });
+  assert.equal(created.status, 200);
+  key = (created.text.match(/fdx_[A-Za-z0-9_-]{40}/) || [])[0];
+  assert.ok(key, 'the new key is shown to the company');
   const row = fake.tables.fx_api_keys.at(-1);
   keyId = row.id;
   assert.equal(row.account_id, acct.id);
-  assert.equal(row.label, 'Production');
   assert.ok(!JSON.stringify(row).includes(key), 'the key itself is not stored');
-  assert.equal(row.key_prefix, key.slice(0, 10));
-  const again = await admin.req(`/admin/accounts/${acct.id}`);
-  assert.ok(!again.text.includes(key), 'not shown again');
-  assert.match(again.text, new RegExp(`${row.key_prefix}`));
+  assert.ok(!(await other.req('/api-access')).text.includes(key), 'shown only once');
+  const adminPage = await admin.req(`/admin/accounts/${acct.id}`);
+  assert.ok(!adminPage.text.includes(key), 'FinDex admins never see the key');
+  assert.match(adminPage.text, new RegExp(row.key_prefix));
 });
 
 test('requests without a valid key are refused', async () => {
@@ -116,24 +148,50 @@ test('recent searches by other companies are counted', async () => {
   assert.equal(r.body.recent_searches.companies, 1);
 });
 
-test('a revoked key stops working immediately', async () => {
-  const acct = ctx.accountByEmail('sam@bestcapital.com');
-  const rv = await admin.req(`/admin/accounts/${acct.id}/api-keys/${keyId}/revoke`, {});
+test('a company can revoke its own key, and it stops working immediately', async () => {
+  const rv = await other.req(`/api-access/keys/${keyId}/revoke`, {});
   assert.equal(rv.status, 303);
   assert.ok(fake.tables.fx_api_keys.find(k => k.id === keyId).revoked_at);
   assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: key })).status, 401);
 });
 
-test('keys stop working when the company loses access, and are not issued to pending accounts', async () => {
-  const acct = ctx.accountByEmail('pat@acmefunding.com');
-  const page = await admin.req(`/admin/accounts/${acct.id}/api-keys`, { label: 'Test' });
-  const k2 = page.text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
+test('turning off API access revokes every key; the company can ask again', async () => {
+  const acct = ctx.accountByEmail('sam@bestcapital.com');
+  const k1 = (await other.req('/api-access/keys', { label: 'A' })).text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
+  const k2 = (await other.req('/api-access/keys', { label: 'B' })).text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
+  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k1 })).status, 200);
+  await admin.req(`/admin/api/${acct.id}/revoke`, { back: 'account' });
+  assert.ok(ctx.lastEmail('sam@bestcapital.com', 'fx-api-revoked'));
+  for (const k of [k1, k2]) assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k })).status, 401);
+  assert.match((await other.req('/api-access')).text, /turned off/);
+  await other.req('/api-access/request', {});
+  assert.equal(fake.tables.fx_api_access.find(x => x.account_id === acct.id).status, 'requested');
+  await admin.req(`/admin/api/${acct.id}/deny`, {});
+  assert.ok(ctx.lastEmail('sam@bestcapital.com', 'fx-api-denied'));
+  assert.equal((await other.req('/api-access/keys', { label: 'C' })).status, 303, 'no keys while denied');
+});
+
+test('keys stop working when the company loses FinDex access; accounts without full access cannot request', async () => {
+  const k2 = await grantAccess(lender, 'pat@acmefunding.com');
   assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k2 })).status, 200);
+  const acct = ctx.accountByEmail('pat@acmefunding.com');
   await admin.req(`/admin/accounts/${acct.id}/deny`, { note: '' });
   assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k2 })).status, 401);
-  const r = await admin.req(`/admin/accounts/${acct.id}/api-keys`, { label: 'Nope' });
-  assert.equal(r.status, 303);
-  assert.match(new URL(r.location, ctx.base).searchParams.get('err'), /only for approved companies/);
+  // A company without the member terms (Check My Record sign-up) is sent back to its dashboard.
+  acct.status = 'approved'; acct.terms_version = null;
+  const b = await ctx.signIn(ctx.browser(), 'pat@acmefunding.com');
+  const r = await b.req('/api-access');
+  assert.equal(r.location, '/dashboard');
+});
+
+test('a company can have at most 5 active keys', async () => {
+  const acct = ctx.accountByEmail('sam@bestcapital.com');
+  await other.req('/api-access/request', {});
+  await admin.req(`/admin/api/${acct.id}/approve`, {});
+  for (let i = 0; i < 5; i++) assert.equal((await other.req('/api-access/keys', { label: `K${i}` })).status, 200);
+  const r = await other.req('/api-access/keys', { label: 'Too many' });
+  assert.equal(r.status, 422);
+  assert.match(r.text, /up to 5 active keys/);
 });
 
 test('/api sends people to the documentation on joinfindex.com', async () => {

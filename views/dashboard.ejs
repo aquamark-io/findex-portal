@@ -33,6 +33,19 @@
   <%- include('partials/how-reporting-works') %>
 </section>
 <% } %>
+<% if (canUseApi) { %>
+<section class="card">
+  <h2 class="flush-top">API access</h2>
+  <p>Search for merchant defaults from your own systems, by EIN or by legal name and state.</p>
+  <% if (!apiAccess || ['denied', 'revoked'].includes(apiAccess.status)) { %>
+    <p><a class="btn secondary" href="/api-access">Request API access</a></p>
+  <% } else if (apiAccess.status === 'requested') { %>
+    <p class="muted">Requested. We&rsquo;ll email you once it has been reviewed.</p>
+  <% } else { %>
+    <p><a class="btn secondary" href="/api-access">Manage API keys</a></p>
+  <% } %>
+</section>
+<% } %>
 <section class="card">
   <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Reports about you' : 'Reports about ' + (a.business_legal_name || 'your business') %></h2>
   <% if (!aboutMe.length) { %>

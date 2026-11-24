@@ -327,3 +327,5 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .btn.small { padding: 6px 12px; font-size: 0.85rem; }
 .row-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin-top: 8px; }
 .row-inline .field { flex: 1 1 220px; margin: 0; }
+.table-scroll { overflow-x: auto; }
+form.inline { display: inline; margin: 0 4px 0 0; }

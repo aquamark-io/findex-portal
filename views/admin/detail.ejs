@@ -49,14 +49,22 @@
       </ul>
     <% } %>
     <% if (a.account_type === 'company') { %>
-      <h2 id="api-keys">API keys</h2>
-      <% if (newKey) { %>
-        <div class="key-once" role="status">
-          <strong><%= newKey.label %></strong>: copy this key and send it to the company securely. It will not be shown again.
-          <code><%= newKey.key %></code>
-        </div>
+      <h2 id="api-keys">API access</h2>
+      <% if (!apiAccess) { %>
+        <p class="muted">Not requested. Companies request API access from their dashboard.</p>
+      <% } else { %>
+        <p><span class="pill <%= apiAccess.status === 'approved' ? 'approved' : apiAccess.status === 'requested' ? 'pending' : 'denied' %>"><%= ACCESS_LABELS[apiAccess.status] %></span>
+          <span class="muted">Requested <%= fmt(apiAccess.requested_at) %><%= apiAccess.decided_at ? ` · decided ${fmt(apiAccess.decided_at)}` : '' %></span></p>
+        <% if (apiAccess.use_note) { %><p>How they&rsquo;ll use it: <%= apiAccess.use_note %></p><% } %>
+        <% if (apiAccess.status === 'requested') { %>
+          <form method="post" action="/admin/api/<%= a.id %>/approve" class="inline"><input type="hidden" name="back" value="account"><button class="btn small" type="submit" data-confirm="Approve API access and email <%= a.email %>?">Approve API access</button></form>
+          <form method="post" action="/admin/api/<%= a.id %>/deny" class="inline"><input type="hidden" name="back" value="account"><button class="btn danger small" type="submit" data-confirm="Deny API access and email <%= a.email %>?">Deny</button></form>
+        <% } else if (apiAccess.status === 'approved') { %>
+          <form method="post" action="/admin/api/<%= a.id %>/revoke" class="inline"><input type="hidden" name="back" value="account"><button class="btn secondary small" type="submit" data-confirm="Turn off API access? All of this company's keys stop working immediately.">Turn off API access</button></form>
+        <% } %>
       <% } %>
       <% if (apiKeys.length) { %>
+        <div class="table-scroll">
         <table class="keys">
           <thead><tr><th>Label</th><th>Key</th><th>Created</th><th>Last used</th><th></th></tr></thead>
           <tbody>
@@ -77,21 +85,9 @@
             <% }) %>
           </tbody>
         </table>
-      <% } else { %>
-        <p class="muted">No keys. Issue one when the company requests API access.</p>
+        </div>
       <% } %>
-      <% if (a.status === 'approved' && a.terms_version) { %>
-        <form method="post" action="/admin/accounts/<%= a.id %>/api-keys" class="row-inline">
-          <div class="field">
-            <label for="key-label">New key label <span class="hint">(e.g. Production)</span></label>
-            <input id="key-label" name="label" type="text" maxlength="100" placeholder="Production">
-          </div>
-          <button class="btn" type="submit">Create API key</button>
-        </form>
-        <p class="muted">Keys work for default searches only. See <a href="<%= marketingUrl %>api/" target="_blank" rel="noopener">the API documentation</a> to send to the company.</p>
-      <% } else { %>
-        <p class="muted">Keys can be issued once the company is approved and has accepted the member terms.</p>
-      <% } %>
+      <p class="muted">Keys are created by the company and never shown to FinDex. <a href="<%= marketingUrl %>api/" target="_blank" rel="noopener">API documentation</a>.</p>
     <% } %>
   </section>
 

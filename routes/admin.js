@@ -58,6 +58,10 @@ const EVENT_LABELS = {
   logout: 'Signed out',
   api_key_created: 'API key created',
   api_key_revoked: 'API key revoked',
+  api_access_requested: 'API access requested',
+  api_access_approved: 'API access approved',
+  api_access_denied: 'API access denied',
+  api_access_revoked: 'API access turned off (all keys revoked)',
 };
 function eventLabel(e) {
   if (e.event === 'signin_notice') return e.detail && e.detail.kind === 'pending' ? 'Sign-in attempt (still pending, told by email)' : 'Sign-in attempt (no account, told by email)';
@@ -168,13 +172,15 @@ async function renderDetail(req, res, account, extra = {}) {
   const { data: events } = await supabase.from('fx_events')
     .select('event, actor, detail, created_at').eq('account_id', account.id).order('created_at', { ascending: false }).limit(50);
   const apiKeys = account.account_type === 'company' ? await K.listKeys(account.id) : [];
+  const apiAccess = account.account_type === 'company' ? await K.getAccess(account.id) : null;
   res.render('admin/detail', {
     pageTitle: displayName(account),
     account,
     identity: maskedIdentity(account),
     events: events || [],
     apiKeys,
-    newKey: null,
+    apiAccess,
+    ACCESS_LABELS: K.ACCESS_LABELS,
     displayName,
     msg: typeof req.query.msg === 'string' ? req.query.msg : null,
     err: typeof req.query.err === 'string' ? req.query.err : null,
@@ -190,22 +196,47 @@ router.get('/accounts/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ---------- API keys ----------
-// Issued on request to approved companies that accepted the member terms. The full key is shown once, on the
-// page that creates it (never in a redirect URL), and only its HMAC is stored.
+// ---------- API access ----------
+// Companies request access from their dashboard; you approve or deny here. Approved companies create their own keys
+// (only they ever see them). Turning access off revokes every key the company has.
 
-router.post('/accounts/:id/api-keys', async (req, res, next) => {
+const { apiEmails } = require('../lib/email');
+
+router.get('/api', async (req, res, next) => {
   try {
-    const account = await loadAccount(req.params.id);
-    if (!account) return res.redirect(303, '/admin');
-    if (account.account_type !== 'company' || account.status !== 'approved' || !account.terms_version) {
-      return res.redirect(303, back(account.id, 'API keys are only for approved companies that have accepted the member terms.', true));
-    }
-    const label = (typeof req.body.label === 'string' ? req.body.label.trim().replace(/\s+/g, ' ') : '').slice(0, 100) || 'API key';
-    const created = await K.createKey(account.id, label);
-    await logEvent({ accountId: account.id, event: 'api_key_created', actor: 'admin', detail: { key_id: created.id, prefix: created.key_prefix }, ip: req.ip });
-    res.set('Cache-Control', 'no-store');
-    await renderDetail(req, res, account, { newKey: created, msg: 'API key created. Copy it now: it will not be shown again.' });
+    const { data, error } = await supabase.from('fx_api_access')
+      .select('account_id, status, use_note, requested_at, decided_at, fx_accounts(business_legal_name, company_type, email, is_test)')
+      .order('requested_at', { ascending: false }).limit(500);
+    if (error) throw new Error(`API access list: ${error.message}`);
+    const rows = data || [];
+    const order = { requested: 0, approved: 1, denied: 2, revoked: 3 };
+    rows.sort((a, b) => order[a.status] - order[b.status]);
+    res.render('admin/api', { pageTitle: 'API access', rows, ACCESS_LABELS: K.ACCESS_LABELS,
+      msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null });
+  } catch (err) { next(err); }
+});
+
+const API_DECISIONS = {
+  approve: { status: 'approved', from: ['requested'], event: 'api_access_approved', email: 'approved', done: 'API access approved. The company was emailed and can now create its keys.' },
+  deny: { status: 'denied', from: ['requested'], event: 'api_access_denied', email: 'denied', done: 'API access request denied. The company was emailed.' },
+  revoke: { status: 'revoked', from: ['approved'], event: 'api_access_revoked', email: 'revoked', done: 'API access turned off. All of the company\u2019s keys stopped working, and the company was emailed.' },
+};
+
+router.post('/api/:accountId/:action', async (req, res, next) => {
+  try {
+    const d = API_DECISIONS[req.params.action];
+    const account = await loadAccount(req.params.accountId);
+    if (!d || !account) return res.redirect(303, '/admin/api');
+    const go = (msg, isErr) => {
+      if (req.body.back === 'account') return res.redirect(303, back(account.id, msg, isErr));
+      return res.redirect(303, `/admin/api?${new URLSearchParams(isErr ? { err: msg } : { msg })}`);
+    };
+    if (d.status === 'approved' && !K.canUseApi(account)) return go('API access is only for approved companies that have accepted the member terms.', true);
+    const row = await K.decideAccess(account.id, d.status, d.from, note(req.body));
+    if (!row) return go('This request changed while you were viewing it. Please review it again.', true);
+    const sent = await sendOrLog({ to: account.email, tag: `fx-api-${d.email}`, ...apiEmails[d.email](account) }, account.id);
+    await logEvent({ accountId: account.id, event: d.event, actor: 'admin', detail: { email_sent: sent }, ip: req.ip });
+    return go(sent ? d.done : `${d.done.split('.')[0]}, but the email failed to send. Check the Postmark settings.`, !sent);
   } catch (err) { next(err); }
 });
 

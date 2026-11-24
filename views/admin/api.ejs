@@ -1,0 +1,32 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">API access</h1>
+<p class="lead">Companies request API access from their dashboard. Once approved, they create and revoke their own keys. Turning access off revokes all of a company&rsquo;s keys.</p>
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+<% if (!rows.length) { %>
+  <div class="card"><p class="lead flush">No API access requests yet.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Company</th><th>How they&rsquo;ll use it</th><th>Requested</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% rows.forEach(r => { const c = r.fx_accounts || {}; %>
+        <tr>
+          <td><a href="/admin/accounts/<%= r.account_id %>"><%= c.is_test ? '[TEST] ' : '' %><%= c.business_legal_name %></a><div class="muted"><%= COMPANY_TYPES[c.company_type] || '' %></div></td>
+          <td><%= r.use_note || '' %><% if (!r.use_note) { %><span class="muted">Not provided</span><% } %></td>
+          <td class="nowrap"><%= fmt(r.requested_at) %></td>
+          <td class="nowrap"><span class="pill <%= r.status === 'approved' ? 'approved' : r.status === 'requested' ? 'pending' : 'denied' %>"><%= ACCESS_LABELS[r.status] %></span><% if (r.decided_at) { %><div class="muted"><%= fmt(r.decided_at) %></div><% } %></td>
+          <td class="nowrap">
+            <% if (r.status === 'requested') { %>
+              <form method="post" action="/admin/api/<%= r.account_id %>/approve" class="inline"><button class="btn small" type="submit" data-confirm="Approve API access for <%= c.business_legal_name %> and email <%= c.email %>?">Approve</button></form>
+              <form method="post" action="/admin/api/<%= r.account_id %>/deny" class="inline"><button class="btn danger small" type="submit" data-confirm="Deny API access for <%= c.business_legal_name %> and email <%= c.email %>?">Deny</button></form>
+            <% } else if (r.status === 'approved') { %>
+              <form method="post" action="/admin/api/<%= r.account_id %>/revoke" class="inline"><button class="btn secondary small" type="submit" data-confirm="Turn off API access for <%= c.business_legal_name %>? All of its keys stop working immediately.">Turn off</button></form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+<script src="/js/admin.js?v=<%= assetV %>" defer></script>
+<%- include('../partials/foot') %>
