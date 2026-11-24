@@ -92,7 +92,7 @@ parties see "Who has viewed your record", and admin has a Search log. Limit: 60 
   member terms). The key is shown once; only an HMAC and a 10-character prefix are stored (`fx_api_keys`).
 - Each lookup is logged in `fx_searches` with `api_key_id` and `criteria.via = 'api'`, never the EIN.
   300 lookups per key per hour; 30 failed-key attempts per IP per 15 minutes.
-- Documentation for members: `/api`.
+- Documentation: joinfindex.com/api/ (marketing site); the portal's `/api` redirects there.
 
 ## AI evidence review
 

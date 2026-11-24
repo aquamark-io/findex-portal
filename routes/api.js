@@ -1,7 +1,7 @@
 /**
  * Default-search API (approved companies; keys issued by an admin).
  *   POST /api/v1/defaults   JSON { "ein": "12-3456789" }  or  { "name": "Joe's Cafe LLC", "state": "TX" }
- *   GET  /api               documentation
+ *   GET  /api               redirects to the documentation on the marketing site (joinfindex.com/api/)
  * Same matching and privacy as a portal search of a funded business: only published reports, the EIN is never
  * stored (one-way keys only), and every lookup is logged as a search by the key's company.
  * The EIN goes in the request body, never the URL, so it stays out of access logs.
@@ -12,7 +12,6 @@ const rateLimit = require('express-rate-limit');
 const supabase = require('../lib/supabase');
 const S = require('../lib/search');
 const K = require('../lib/api-keys');
-const { STATES } = require('../lib/validate');
 
 const router = express.Router();
 const PER_HOUR = 300;
@@ -88,11 +87,11 @@ router.post('/api/v1/defaults', authFailLimiter, requireKey, keyLimiter, json, a
 });
 
 // Anything else under /api/v1 gets a JSON 404, not the HTML page.
-router.all('/api/v1/*', (req, res) => fail(res, 404, 'not_found', 'Unknown endpoint. See /api for the documentation.'));
+router.all('/api/v1/*', (req, res) => fail(res, 404, 'not_found', `Unknown endpoint. See ${DOCS_URL()} for the documentation.`));
 
-router.get('/api', (req, res) => {
-  res.render('api-docs', { pageTitle: 'API', base: BASE(), perHour: PER_HOUR, STATES });
-});
+// The documentation lives on the marketing site.
+const DOCS_URL = () => `${(process.env.MARKETING_SITE_URL || 'https://joinfindex.com/').replace(/\/$/, '')}/api/`;
+router.get('/api', (req, res) => res.redirect(301, DOCS_URL()));
 
 // JSON errors for the API (bad JSON body, unexpected failures).
 // eslint-disable-next-line no-unused-vars

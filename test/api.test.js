@@ -136,10 +136,8 @@ test('keys stop working when the company loses access, and are not issued to pen
   assert.match(new URL(r.location, ctx.base).searchParams.get('err'), /only for approved companies/);
 });
 
-test('the documentation page is public', async () => {
-  const b = ctx.browser();
-  const r = await b.req('/api');
-  assert.equal(r.status, 200);
-  assert.match(r.text, /Default Search API/);
-  assert.match(r.text, /\/api\/v1\/defaults/);
+test('/api sends people to the documentation on joinfindex.com', async () => {
+  const r = await ctx.browser().req('/api');
+  assert.equal(r.status, 301);
+  assert.match(r.location, /^https:\/\/joinfindex\.com\/api\/$/);
 });
