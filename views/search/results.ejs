@@ -1,9 +1,17 @@
 <%- include('../partials/head') %>
-<% const c = search.criteria || {}; %>
+<% const c = search.criteria || {}; const matched = c.matched || {};
+   const tick = (label, ok) => `<span class="match ${ok ? 'yes' : 'no'}">${label} ${ok ? '&#10003;' : '&mdash;'}</span>`; %>
 <section class="card">
   <p class="signing-as"><a href="/search">&larr; New search</a></p>
   <h1 class="title"><%= c.name || c.domain %></h1>
   <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; <%= S.PURPOSES[search.purpose] %> &middot; <%= fmtDate(search.created_at) %></p>
+  <% if (activity) { const defaults = reports.filter(r => r.category === 'default').length; %>
+    <div class="biz-summary" role="status">
+      <div><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %> reported</span></div>
+      <div><span class="biz-num"><%= reports.length - defaults %></span><span>Other report<%= reports.length - defaults === 1 ? '' : 's' %></span></div>
+      <div><span class="biz-num"><%= activity.searches %></span><span>Searches by other companies in the last 30 days<%= activity.searches ? ` (${activity.companies} compan${activity.companies === 1 ? 'y' : 'ies'})` : '' %></span></div>
+    </div>
+  <% } %>
   <% if (search.expired) { %>
     <div class="alert error">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
   <% } else if (!reports.length) { %>
@@ -15,7 +23,13 @@
       <article class="record-item">
         <div class="record-head"><strong><%= R.CATEGORIES[r.category].label %></strong><span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %></span></div>
         <dl class="kv">
-          <dt>Name on file</dt><dd><%= r.subject_name_reported %><% if (search.subject_type === 'individual' && c.name && !S.nameLooksSame(c.name, r.subject_name_reported)) { %> <span class="ai-result unclear">Name differs</span><div class="muted">Matched on the identifiers you entered. Confirm this is the same person.</div><% } %></dd>
+          <dt>Name on file</dt><dd><%= r.subject_name_reported %></dd>
+          <% const m = matched[r.subject_id]; if (search.subject_type === 'individual' && m) { %>
+          <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
+            <% if (!m.first_name || m.zip === 'differs') { %><div class="muted"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</div><% } %></dd>
+          <% } else if (search.subject_type === 'merchant' && m && m.by === 'name_state') { %>
+          <dt>Matched on</dt><dd>Legal name and state <div class="muted">Confirm the EIN with the business before relying on this result.</div></dd>
+          <% } %>
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
           <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
         </dl>

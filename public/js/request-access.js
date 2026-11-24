@@ -1,6 +1,5 @@
 // Sign-up form helpers:
-//  - funded business: switch between EIN and owner details (hidden fieldsets are disabled)
-//  - format phone as (415) 555-1212 and SSN last 4 / EIN as you type
+//  - format phone as (415) 555-1212 and EIN as you type
 //  - check email, phone, and (for companies) email-vs-website domain when leaving a field and on submit,
 //    with the message shown under the field. The server checks everything again.
 (function () {
@@ -8,16 +7,6 @@
   if (!form) return;
   var isCompany = (form.querySelector('input[name="account_type"]') || {}).value === 'company';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-
-  function syncIdentity() {
-    var picked = form.querySelector('input[name="identity_method"]:checked');
-    if (!picked) return;
-    form.querySelectorAll('fieldset[data-identity]').forEach(function (el) {
-      var on = el.getAttribute('data-identity') === picked.value;
-      el.hidden = !on;
-      el.disabled = !on;
-    });
-  }
 
   function showError(input, msg) {
     input.setCustomValidity(msg || '');
@@ -82,13 +71,8 @@
     input.value = out;
   }
 
-  form.addEventListener('change', function (e) {
-    if (e.target.name === 'identity_method') syncIdentity();
-  });
-
   form.addEventListener('input', function (e) {
     var t = e.target;
-    if (t.name === 'ssn_last4') t.value = t.value.replace(/\D/g, '').slice(0, 4);
     if (t.name === 'ein') {
       var d = t.value.replace(/\D/g, '').slice(0, 9);
       t.value = d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;
@@ -118,5 +102,4 @@
     setTimeout(function () { if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; } }, 0);
   });
 
-  syncIdentity();
 })();

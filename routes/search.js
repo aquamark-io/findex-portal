@@ -16,6 +16,7 @@ const { logEvent } = require('../lib/events');
 const { CFPB_SUMMARY_URL } = require('../lib/email');
 const R = require('../lib/reports');
 const S = require('../lib/search');
+const { STATES } = require('../lib/validate');
 
 const router = express.Router();
 const RESULTS_DAYS = 7;
@@ -41,7 +42,7 @@ const fmtDate = d => {
 };
 
 router.use('/search', requireAccount, requireSearcher, (req, res, next) => {
-  Object.assign(res.locals, { R, S, fmtDate, CFPB_SUMMARY_URL });
+  Object.assign(res.locals, { R, S, fmtDate, CFPB_SUMMARY_URL, STATES });
   next();
 });
 
@@ -54,7 +55,7 @@ router.get('/search', async (req, res, next) => {
 });
 
 function renderForm(res, { who, subjectType, values = {}, errors = [], status = 200 }) {
-  const safe = { ...values }; delete safe.dob; delete safe.ssn_last4; delete safe.ein;
+  const safe = { ...values }; delete safe.dob; delete safe.ein;
   res.status(status).render('search/form', { pageTitle: 'Search', who, subjectType, values: safe, errors });
 }
 
@@ -98,11 +99,13 @@ router.post('/search/:who', searchLimiter, (req, res, next) => {
         if (aErr) { await supabase.storage.from('fx-evidence').remove([path]).catch(() => {}); throw new Error(`Save authorization: ${aErr.message}`); }
       }
 
-      const subjectIds = await S.findSubjects(subjectType, q);
+      const found = await S.findSubjects(subjectType, q);
+      const subjectIds = found.ids;
       const reports = await S.publishedReportsFor(subjectIds);
       const searchId = crypto.randomUUID();
       const { error: lErr } = await supabase.from('fx_searches').insert({
-        id: searchId, account_id: req.account.id, subject_type: subjectType, purpose: q.purpose, criteria: S.criteriaForLog(q),
+        id: searchId, account_id: req.account.id, subject_type: subjectType, purpose: q.purpose,
+        criteria: { ...S.criteriaForLog(q), matched: found.matched }, subject_keys: found.keys,
         matched_subject_ids: subjectIds, result_report_ids: reports.map(r => r.id), authorization_id: authorizationId,
         certified_at: new Date().toISOString(), ip: req.ip,
       });
@@ -128,7 +131,7 @@ router.get('/search/results/:id', async (req, res, next) => {
     if (!search.expired && search.result_report_ids.length) {
       // Re-check: anything disputed or removed since the search is no longer shown.
       const { data } = await supabase.from('fx_reports')
-        .select('id, category, incident_date, description, published_at, subject_name_reported, reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
+        .select('id, subject_id, category, incident_date, description, published_at, subject_name_reported, reporter:fx_accounts!fx_reports_reporter_account_id_fkey(business_legal_name, company_type)')
         .in('id', search.result_report_ids).eq('status', 'published').order('incident_date', { ascending: false });
       reports = data || [];
       if (reports.length) {
@@ -136,7 +139,9 @@ router.get('/search/results/:id', async (req, res, next) => {
         (ev || []).forEach(f => { (files[f.report_id] = files[f.report_id] || []).push(f); });
       }
     }
-    res.render('search/results', { pageTitle: 'Search results', search, reports, files, resultsDays: RESULTS_DAYS });
+    // Businesses: how many other companies searched this business recently (counts only, never who).
+    const activity = search.subject_type === 'merchant' && !search.expired ? await S.recentActivity(search.subject_keys, req.account.id) : null;
+    res.render('search/results', { pageTitle: 'Search results', search, reports, files, activity, resultsDays: RESULTS_DAYS });
   } catch (err) { next(err); }
 });
 

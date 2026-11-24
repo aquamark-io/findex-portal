@@ -10,7 +10,8 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const supabase = require('../lib/supabase');
-const { encrypt, blindIndex } = require('../lib/crypto');
+const { encrypt } = require('../lib/crypto');
+const { personKey, einKey } = require('../lib/identity');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const { testNotificationsOn } = require('../lib/notify-admin');
@@ -22,7 +23,7 @@ const router = express.Router();
 
 const LIVE = ['pending', 'approved'];
 // Fields that are never echoed back into the form after a validation error.
-const SENSITIVE = ['dob', 'ssn_last4', 'ein'];
+const SENSITIVE = ['dob', 'ein'];
 
 const tooMany = (req, res) => res.status(429).render('error', {
   pageTitle: 'Too many requests',
@@ -172,13 +173,12 @@ function toRow(d) {
     terms_version: d.terms_version || null,
     terms_accepted_at: d.terms_version ? new Date().toISOString() : null,
   };
-  if (d.identity_method === 'dob_ssn4') {
+  if (d.identity_method === 'dob') {
     row.dob_enc = encrypt(d.dob);
-    row.ssn_last4_enc = encrypt(d.ssn_last4);
-    row.identity_hash = blindIndex(`person:${d.dob}:${d.ssn_last4}`);
+    row.identity_hash = personKey(d.dob, d.last_name);
   } else if (d.identity_method === 'ein') {
     row.ein_enc = encrypt(d.ein);
-    row.identity_hash = blindIndex(`ein:${d.ein}`);
+    row.identity_hash = einKey(d.ein);
   }
   return row;
 }

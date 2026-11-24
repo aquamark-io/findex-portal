@@ -2,7 +2,7 @@
 //  - evidence files add up across picks (the browser normally replaces the selection), shown as a list
 //    with remove buttons; max 10 files, 25 MB each
 //  - evidence examples for the chosen category; default-notice upload only for default reports
-//  - EIN / SSN last 4 formatting; button disabled while uploading
+//  - EIN and ZIP formatting; button disabled while uploading
 (function () {
   var form = document.getElementById('report-form');
   if (!form) return;
@@ -84,7 +84,7 @@
 
   form.addEventListener('input', function (e) {
     var t = e.target;
-    if (t.name === 'subject_ssn_last4') t.value = t.value.replace(/\D/g, '').slice(0, 4);
+    if (t.name === 'subject_zip') t.value = t.value.replace(/\D/g, '').slice(0, 5);
     if (t.name === 'subject_ein') {
       var d = t.value.replace(/\D/g, '').slice(0, 9);
       t.value = d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;

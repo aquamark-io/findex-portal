@@ -12,7 +12,9 @@ const express = require('express');
 const multer = require('multer');
 const supabase = require('../lib/supabase');
 const { requireAccount } = require('../middleware/auth');
-const { encrypt, blindIndex } = require('../lib/crypto');
+const { encrypt } = require('../lib/crypto');
+const ID = require('../lib/identity');
+const { STATES } = require('../lib/validate');
 const { logEvent } = require('../lib/events');
 const { sendEmail, templates, disputeEmails } = require('../lib/email');
 const { testNotificationsOn } = require('../lib/notify-admin');
@@ -53,7 +55,7 @@ const fmtDate = d => {
 };
 
 router.use('/reports', requireAccount, requireReporter, (req, res, next) => {
-  Object.assign(res.locals, { R, STATUS_LABELS, fmtDate });
+  Object.assign(res.locals, { R, STATUS_LABELS, fmtDate, STATES });
   next();
 });
 
@@ -75,7 +77,7 @@ router.get('/reports/new', (req, res) => res.render('reports/choose', { pageTitl
 
 function renderForm(res, { who, subjectType, values = {}, errors = [], status = 200 }) {
   const safe = { ...values };
-  delete safe.subject_dob; delete safe.subject_ssn_last4; delete safe.subject_ein;
+  delete safe.subject_dob; delete safe.subject_ein;
   res.status(status).render('reports/form', {
     pageTitle: 'Submit a report', who, subjectType, values: safe, errors,
     categories: R.categoriesFor(subjectType, res.locals.account),
@@ -106,8 +108,9 @@ router.post('/reports/new/:who', (req, res, next) => {
       const { errors, subject, report, uploads } = validateReport(req.body || {}, req.files || {}, { subjectType, account });
       if (errors.length) return renderForm(res, { who, subjectType, values: req.body, errors, status: 422 });
 
-      const subjectRow = await findOrCreateSubject(subject);
+      const subjectRow = await findOrCreateSubject(subject, report.notice_email);
       await supabase.from('fx_subject_emails').upsert({ subject_id: subjectRow.id, email: report.notice_email }, { onConflict: 'subject_id,email', ignoreDuplicates: true });
+      if (subject.phone) await supabase.from('fx_subject_phones').upsert({ subject_id: subjectRow.id, phone: subject.phone }, { onConflict: 'subject_id,phone', ignoreDuplicates: true });
 
       // Upload files first (under a fresh report id); only then create the report and evidence rows.
       const reportId = crypto.randomUUID();
@@ -151,25 +154,45 @@ router.post('/reports/new/:who', (req, res, next) => {
   });
 });
 
-// One subject per identity: individuals by DOB + SSN last 4, funded businesses by EIN, partners by domain.
-async function findOrCreateSubject(s) {
-  let row = { subject_type: s.subject_type, name: s.name, contact_name: s.contact_name || null };
+// One subject per identity. Businesses by EIN, partners by website domain. People by DOB + last name AND a
+// matching email or mobile (lib/identity.js): same DOB and last name with different contact details is treated
+// as a different person.
+async function findOrCreateSubject(s, noticeEmail) {
+  const row = { subject_type: s.subject_type, name: s.name, contact_name: s.contact_name || null };
   let find;
   if (s.subject_type === 'individual') {
-    const hash = blindIndex(`person:${s.dob}:${s.ssn_last4}`);
-    find = () => supabase.from('fx_subjects').select('*').eq('subject_type', 'individual').eq('identity_hash', hash).maybeSingle();
-    Object.assign(row, { dob_enc: encrypt(s.dob), ssn_last4_enc: encrypt(s.ssn_last4), identity_hash: hash });
+    const hash = ID.personKey(s.dob, s.last_name);
+    find = async () => {
+      const { data: cands, error } = await supabase.from('fx_subjects').select('id').eq('subject_type', 'individual').eq('identity_hash', hash);
+      if (error) return { data: null, error };
+      const ids = (cands || []).map(c => c.id);
+      if (!ids.length) return { data: null, error: null };
+      const [{ data: em }, { data: ph }] = await Promise.all([
+        supabase.from('fx_subject_emails').select('subject_id').in('subject_id', ids).eq('email', noticeEmail),
+        s.phone ? supabase.from('fx_subject_phones').select('subject_id').in('subject_id', ids).eq('phone', s.phone) : Promise.resolve({ data: [] }),
+      ]);
+      const hit = [...(em || []), ...(ph || [])][0];
+      if (!hit) return { data: null, error: null };
+      return supabase.from('fx_subjects').select('*').eq('id', hit.subject_id).maybeSingle();
+    };
+    Object.assign(row, { dob_enc: encrypt(s.dob), identity_hash: hash, zip5: s.zip5 || null });
   } else if (s.subject_type === 'merchant') {
-    const hash = blindIndex(`ein:${s.ein}`);
+    const hash = ID.einKey(s.ein);
     find = () => supabase.from('fx_subjects').select('*').eq('subject_type', 'merchant').eq('identity_hash', hash).maybeSingle();
-    Object.assign(row, { dba: s.dba || null, ein_enc: encrypt(s.ein), identity_hash: hash });
+    Object.assign(row, { dba: s.dba || null, ein_enc: encrypt(s.ein), identity_hash: hash, state: s.state, biz_key: ID.bizKey(s.state, s.name) });
   } else {
     find = () => supabase.from('fx_subjects').select('*').eq('subject_type', 'company').eq('domain', s.domain).maybeSingle();
     Object.assign(row, { website: s.website, domain: s.domain });
   }
   const { data: existing, error: findErr } = await find();
   if (findErr) throw new Error(`Find subject: ${findErr.message}`);
-  if (existing) return existing;
+  if (existing) {
+    // Keep the latest ZIP (people) and name + state (businesses) so they stay searchable.
+    const patch = s.subject_type === 'individual' && s.zip5 ? { zip5: s.zip5 }
+      : s.subject_type === 'merchant' && !existing.biz_key ? { state: s.state, biz_key: row.biz_key } : null;
+    if (patch) await supabase.from('fx_subjects').update(patch).eq('id', existing.id);
+    return existing;
+  }
   const { data: created, error: insErr } = await supabase.from('fx_subjects').insert(row).select('*').single();
   if (!insErr) return created;
   if (insErr.code === '23505') { const { data: again } = await find(); if (again) return again; }

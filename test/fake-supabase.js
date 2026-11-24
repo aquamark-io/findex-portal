@@ -13,7 +13,8 @@ const LIVE = r => ['pending', 'approved'].includes(r.status);
 // [columns, optional row predicate for partial unique indexes]
 const UNIQUE = {
   fx_accounts: [[['email'], LIVE], [['email_domain'], r => r.account_type === 'company' && LIVE(r)]],
-  fx_subjects: [[['subject_type', 'identity_hash'], r => r.identity_hash != null], [['domain'], r => r.subject_type === 'company']],
+  fx_subjects: [[['identity_hash'], r => r.subject_type === 'merchant'], [['domain'], r => r.subject_type === 'company']],
+  fx_subject_phones: [[['subject_id', 'phone']]],
   fx_subject_emails: [[['subject_id', 'email']]],
   fx_subject_links: [[['subject_id', 'account_id']]],
   fx_report_evidence: [[['storage_path']]],
@@ -34,7 +35,7 @@ const DEFAULTS = {
   fx_evidence_reviews: { files_reviewed: 0, files_skipped: [] },
 };
 const INT_IDS = new Set(['fx_events']);
-const NO_ID = new Set(['fx_subject_emails', 'fx_subject_links']); // composite primary keys
+const NO_ID = new Set(['fx_subject_emails', 'fx_subject_phones', 'fx_subject_links']); // composite primary keys
 
 // Generated columns.
 function generate(table, row) {
@@ -60,6 +61,7 @@ const RELATIONS = {
     fx_reports: ['fx_reports', 'one', 'report_id', 'id'],
   },
   fx_subject_links: { fx_accounts: ['fx_accounts', 'one', 'account_id', 'id'] },
+  fx_subject_emails: { 'fx_subjects!inner': ['fx_subjects', 'one', 'subject_id', 'id'] },
 };
 
 // Split a select list on top-level commas and pick out embeds: "alias:table!fk(cols)" or "table(cols)".
@@ -76,6 +78,7 @@ function parseEmbeds(cols) {
 }
 
 const getPath = (r, c) => {
+  if (/^[a-z_]+\.[a-z_]+$/.test(c)) { const [e, f] = c.split('.'); return r[e] ? r[e][f] : undefined; } // embedded field
   const m = /^([a-z_]+)->>([a-z_]+)$/.exec(c);
   if (!m) return r[c];
   const v = r[m[1]] && r[m[1]][m[2]];
@@ -142,6 +145,7 @@ function createFake(seed = {}) {
         return api;
       },
       in(c, vs) { q.filters.push(r => vs.includes(r[c])); return api; },
+      overlaps(c, vs) { q.filters.push(r => Array.isArray(r[c]) && r[c].some(x => vs.includes(x))); return api; },
       ilike(c, pattern) { q.filters.push(r => likeMatch(r[c], pattern)); return api; },
       or(expr) {
         const conds = expr.split(',').map(part => {
@@ -202,7 +206,10 @@ function createFake(seed = {}) {
         tables[table] = rows.filter(r => !match(r));
         return { data: null, error: null };
       }
-      let out = rows.filter(match).map(r => embed(table, { ...r }, q.embeds));
+      // Embed first so filters can use embedded fields; "!inner" embeds drop rows with no match.
+      let out = rows.map(r => embed(table, { ...r }, q.embeds))
+        .filter(r => q.embeds.every(e => !/!inner$/.test(e.rel) || r[e.alias]))
+        .filter(match);
       for (const [c, asc] of [...q.orders].reverse()) {
         out.sort((a, b) => (a[c] === b[c] ? 0 : (a[c] > b[c] ? 1 : -1) * (asc ? 1 : -1)));
       }

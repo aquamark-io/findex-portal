@@ -30,7 +30,7 @@ and are reachable only through the service role.
 | `/request-access/received` | Confirmation |
 
 Sign-up rules: server-side validation; emails lowercased; websites stored as their origin; company emails must be on
-the website's domain (free providers rejected); one live account per email and per company domain. DOB, SSN last 4 and
+the website's domain (free providers rejected); one live account per email and per company domain. FinDex does not collect any part of an SSN. DOB and
 EIN are AES-256-GCM encrypted (`FIELD_ENCRYPTION_KEY`) with an HMAC match key (`FIELD_HASH_KEY`), and never appear in
 emails, logs or URLs. Anti-spam: honeypot field + rate limits; Cloudflare Turnstile switches on when
 `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
@@ -58,32 +58,37 @@ Approving and denying send the matching email. `[TEST]` requests can be deleted.
 Companies with full access submit reports at `/reports/new` (individual, partner, or funded business), with
 evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
 are limited by subject type, and default is funders and lenders only; default reports require
-the default notice. Reported parties (`fx_subjects`) are de-duplicated by DOB + SSN last 4, EIN, or website
-domain, with identifiers encrypted. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
+the default notice. Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (partners), or, for people,
+DOB + last name plus a matching email or mobile (`lib/identity.js`), with identifiers encrypted or kept as one-way keys. Admin reviews at `/admin/reports`: evidence opens through 2-minute signed
 links (each open is logged), and rejecting requires a reason that is emailed to the reporter. Accepting emails the
 notice to the reported party (naming the reporter; individuals also get the CFPB Summary of Rights link) and starts
 10 days. Bounces come back through the Postmark webhook: the report pauses and the reporter gives another email address
 (no mailed letters; a report never publishes without a delivered notice). A daily job after 6 AM
 Pacific publishes reports whose 10 days have passed. Reported parties are linked to their own accounts automatically
-(same notice email, DOB + SSN last 4, EIN, or company domain) or by the admin, and see their reports and evidence on
+(same notice email, DOB + last name + mobile, EIN, or company domain) or by the admin, and see their reports and evidence on
 the dashboard. Design decisions: `docs/reporting-design.md`.
 
 ## Search (phase two, step 3)
 
-Companies with full access search at `/search`. Individuals need a full name plus email and/or DOB (optionally with SSN
-last 4), and every identifier given must match; partners match by website domain or name; funded businesses need legal
-name and EIN (the EIN decides). Each search records a permissible purpose and a certification; employment screening
-also requires the employment certification and an uploaded signed authorization. Results show published reports only,
-with evidence (signed, logged), and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, SSN
-or EIN values; reported parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per
-hour per company.
+Companies with full access search at `/search`.
+- **People:** first and last name, date of birth, and an email and/or mobile (home ZIP optional). A match needs the DOB and
+  last name plus a matching email or mobile; results show which details matched and flag a different first name or ZIP.
+- **Partners:** website domain or name.
+- **Businesses:** EIN alone, or exact legal name + state of registration (case, punctuation and LLC / Inc ignored). Results
+  show defaults, other reports, and how many other companies searched that business in the last 30 days (counts only,
+  never who). Business searches store one-way keys of the EIN and name + state (`fx_searches.subject_keys`), never the EIN.
+
+Each search records a permissible purpose and a certification; employment screening also requires the employment
+certification and an uploaded signed authorization. Results show published reports only, with evidence (signed, logged),
+and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, EIN, mobile or ZIP values; reported
+parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per hour per company.
 
 ## AI evidence review
 
 When a report is submitted (and on demand from the admin report page), Claude (`claude-opus-5-5`) reads the evidence
 files and writes a structured summary: what each file shows, five checks (matches the party, supports the incident,
 dates consistent, required documents present, evidence quality) answered yes / no / unclear with citations, concerns,
-and anything missing. It never accepts, rejects or publishes. Only the last 4 digits of an EIN or SSN are sent. Results
+and anything missing. It never accepts, rejects or publishes. Only the last 4 digits of an EIN are sent. Results
 are stored in `fx_evidence_reviews` with the model and prompt version. Off unless `ANTHROPIC_API_KEY` is set.
 
 ## Disputes (phase two, step 4)
@@ -99,6 +104,11 @@ description) or removed. The resolution note is emailed to both sides.
 The daily job also permanently deletes reports whose incident is more than 7 years old (`expires_on`), with their
 evidence, notices and dispute files; reports with an open dispute wait until it is resolved. Companies accept the
 CFPB Notice to Users and Notice to Furnishers (linked) together with the indemnification terms.
+
+## Tests
+
+`npm test` runs the end-to-end tests in `test/` against an in-memory stand-in for Supabase (database and storage),
+with Postmark emails captured instead of sent. No network or credentials needed.
 
 ## Daily job
 
@@ -119,7 +129,7 @@ off (e.g. in tests).
 | `ONBOARDING_NOTIFY_EMAIL` | Admin email. Receives only: new access requests, new reports, new disputes, and customer changes to a report or dispute (dispute response, report removed, new notice email) |
 | `JWT_SECRET` | Long random string |
 | `ADMIN_PASSWORD` | `/admin` password |
-| `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / SSN / EIN can't be read without them. |
+| `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / EIN and the matching keys can't be read without them. |
 | `ANTHROPIC_API_KEY` | Optional. Turns on the Claude evidence review in admin (an aid; admins still decide) |
 | `POSTMARK_WEBHOOK_TOKEN` | Long random value. Postmark's Bounce webhook calls `https://app.joinfindex.com/webhooks/postmark?token=<value>` |
 | `TEST_NOTIFICATIONS` | Optional. `[TEST]` requests email the admin like real ones; set `false` to keep them silent |

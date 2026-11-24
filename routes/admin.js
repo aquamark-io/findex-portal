@@ -101,15 +101,12 @@ const fmtPhone = p => {
 
 const displayName = a => a.business_legal_name || `${a.first_name} ${a.last_name}`;
 
-// Masked identity for display. Never returns a full DOB, SSN, or EIN.
+// Masked identity for display. Never returns a full DOB or EIN.
 function maskedIdentity(a) {
   const out = [];
   try {
-    if (a.identity_method === 'dob_ssn4') {
-      const label = a.account_type === 'merchant' ? "Owner's " : '';
-      out.push([`${label}DOB`, a.dob_enc ? 'DOB on file' : 'Missing']);
-      const last4 = decrypt(a.ssn_last4_enc);
-      out.push([`${label}SSN`, last4 ? `***-**-${last4}` : 'Missing']);
+    if (a.identity_method === 'dob') {
+      out.push(['DOB', a.dob_enc ? 'DOB on file' : 'Missing']);
     } else if (a.identity_method === 'ein') {
       const ein = decrypt(a.ein_enc);
       out.push(['EIN', ein ? `**-***${ein.slice(-4)}` : 'Missing']);
@@ -277,7 +274,8 @@ function maskedSubject(s) {
   const out = [];
   try {
     if (s.dob_enc) out.push(['DOB', 'DOB on file']);
-    if (s.ssn_last4_enc) out.push(['SSN', `***-**-${decrypt(s.ssn_last4_enc)}`]);
+    if (s.zip5) out.push(['Home ZIP', s.zip5]);
+    if (s.state) out.push(['State', s.state]);
     if (s.ein_enc) { const e = decrypt(s.ein_enc); out.push(['EIN', `**-***${e.slice(-4)}`]); }
   } catch (err) {
     console.error(`Subject decrypt failed for ${s.id}`);

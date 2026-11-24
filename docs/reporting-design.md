@@ -1,5 +1,10 @@
 # Search & Reporting: Design Decisions
 
+> **Update (Nov 24, 2026):** FinDex no longer collects any part of an SSN. People are matched on date of birth +
+> last name plus a matching email or mobile (home ZIP optional, shown as confirmation only). Businesses must have an
+> EIN; they can be searched by EIN, or by exact legal name + state of registration. Business results show how many
+> other companies searched that business in the last 30 days. See `lib/identity.js` and the README.
+
 > **Status (Nov 8, 2026):** this is a design record. Several ideas here were later dropped or changed:
 > slow pay and "missed payments" are replaced by **Payment delinquency** (one or more missed payments, one report per
 > delinquency, at the reporter's discretion, within 90 days, optional dated status updates); **no CSV or bulk import**;

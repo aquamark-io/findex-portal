@@ -44,7 +44,7 @@ test('free email providers and mismatched domains are refused for company accoun
 
 test('a lender reports a default with evidence and the default notice', async () => {
   const r = await lender.req('/reports/new/funded-business', {
-    subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_contact: 'Joe Smith', subject_email: merchantEmail,
+    subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe Smith', subject_email: merchantEmail,
     category: 'default', incident_date: '2026-09-15', description: 'Declared in default after missed payments.', certify: 'on',
   }, { files: { evidence: [{ name: 'ledger.pdf' }], default_notice: [{ name: 'notice.pdf' }] } });
   assert.equal(r.status, 303, r.text.slice(0, 500));
@@ -59,7 +59,7 @@ test('a lender reports a default with evidence and the default notice', async ()
 
 test('a default without the default notice is refused', async () => {
   const r = await lender.req('/reports/new/funded-business', {
-    subject_name: 'Other Co', subject_ein: '98-7654321', subject_contact: 'X', subject_email: 'x@other.co',
+    subject_name: 'Other Co', subject_ein: '98-7654321', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@other.co',
     category: 'default', incident_date: '2026-09-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
   assert.equal(r.status, 422);

@@ -9,13 +9,17 @@
   <% } %>
   <form method="post" action="/search/<%= who %>" enctype="multipart/form-data" id="search-form">
     <% if (subjectType === 'individual') { %>
-      <div class="field"><label for="q_name">Full name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="160" required></div>
-      <p class="muted">Plus at least one of the following. Matches are made on these identifiers, so a different spelling of the name won&rsquo;t hide a result. Date of birth with last 4 of SSN is the most accurate.</p>
-      <div class="field"><label for="q_email">Email</label><input type="email" id="q_email" name="email" value="<%= v('email') %>" maxlength="254"></div>
       <div class="row">
-        <div class="field"><label for="q_dob">Date of birth</label><input type="date" id="q_dob" name="dob"></div>
-        <div class="field"><label for="q_ssn">Last 4 of SSN <span class="hint">(with date of birth)</span></label><input type="text" id="q_ssn" name="ssn_last4" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+        <div class="field"><label for="q_first">First name</label><input type="text" id="q_first" name="first_name" value="<%= v('first_name') %>" maxlength="80" required></div>
+        <div class="field"><label for="q_last">Last name</label><input type="text" id="q_last" name="last_name" value="<%= v('last_name') %>" maxlength="80" required></div>
       </div>
+      <div class="field"><label for="q_dob">Date of birth</label><input type="date" id="q_dob" name="dob" required></div>
+      <p class="muted">Plus an email or mobile number. A match needs the date of birth and last name, and at least one of these.</p>
+      <div class="row">
+        <div class="field"><label for="q_email">Email</label><input type="email" id="q_email" name="email" value="<%= v('email') %>" maxlength="254"></div>
+        <div class="field"><label for="q_phone">Mobile</label><input type="tel" id="q_phone" name="phone" value="<%= v('phone') %>" inputmode="tel" maxlength="20"></div>
+      </div>
+      <div class="field"><label for="q_zip">Home ZIP code <span class="hint">(optional)</span></label><input type="text" id="q_zip" name="zip" value="<%= v('zip') %>" inputmode="numeric" maxlength="5"></div>
     <% } else if (subjectType === 'company') { %>
       <div class="row">
         <div class="field"><label for="q_name">Company name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="200"></div>
@@ -23,9 +27,11 @@
       </div>
       <p class="muted">Enter either one. The website gives the most accurate match.</p>
     <% } else { %>
+      <div class="field"><label for="q_ein">EIN</label><input type="text" id="q_ein" name="ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off"></div>
+      <p class="muted">Or, without the EIN, the exact legal name and the state where the business is registered.</p>
       <div class="row">
-        <div class="field"><label for="q_name">Business legal name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="200" required></div>
-        <div class="field"><label for="q_ein">EIN</label><input type="text" id="q_ein" name="ein" inputmode="numeric" placeholder="XX-XXXXXXX" maxlength="10" autocomplete="off" required></div>
+        <div class="field"><label for="q_name">Business legal name</label><input type="text" id="q_name" name="name" value="<%= v('name') %>" maxlength="200"></div>
+        <div class="field"><label for="q_state">State of registration</label><select id="q_state" name="state"><option value="">Select…</option><% Object.entries(STATES).forEach(([k, label]) => { %><option value="<%= k %>" <%= v('state') === k ? 'selected' : '' %>><%= label %></option><% }) %></select></div>
       </div>
     <% } %>
 
