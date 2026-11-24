@@ -302,7 +302,7 @@ test('the launch checklist shows pass or fail for each item and never shows sett
   try {
     const r = await owner.req('/admin/launch');
     assert.equal(r.status, 200);
-    for (const label of ['Required Render settings are present', 'Postmark is sending', 'The daily job is running', 'Test accounts and reports are removed', 'Legal versions are set', 'Turnstile is on']) {
+    for (const label of ['Required Render settings are present', 'Postmark is sending', 'The daily job is running', 'Test accounts and reports are removed', 'Legal versions are set']) {
       assert.ok(r.text.includes(label), label);
     }
     for (const secret of [process.env.JWT_SECRET, process.env.FIELD_ENCRYPTION_KEY, process.env.FIELD_HASH_KEY, process.env.POSTMARK_SERVER_TOKEN]) {
@@ -314,14 +314,14 @@ test('the launch checklist shows pass or fail for each item and never shows sett
     assert.equal(checks.postmark.ok, true);
     assert.equal(checks.daily_job.ok, false, 'never ran');
     assert.equal(checks.legal.ok, false, 'member terms are still a draft');
-    assert.equal(checks.turnstile.ok, false);
+    assert.ok(!checks.turnstile, 'Turnstile is not part of the checklist');
 
     // Flip each one to passing.
-    Object.assign(process.env, { POSTMARK_WEBHOOK_TOKEN: 'x', ONBOARDING_FROM_EMAIL: 'FinDex <a@b.co>', TURNSTILE_SITE_KEY: 'k', TURNSTILE_SECRET_KEY: 's', NODE_ENV: 'production' });
+    Object.assign(process.env, { POSTMARK_WEBHOOK_TOKEN: 'x', ONBOARDING_FROM_EMAIL: 'FinDex <a@b.co>', NODE_ENV: 'production' });
     delete process.env.DISABLE_DAILY_JOB;
     await supabase.from('fx_events').insert({ event: 'daily_job', actor: 'system', detail: { day: launch.pacificNow().day, started: true } });
     const after = Object.fromEntries((await launch.runChecks()).map(c => [c.key, c]));
-    for (const k of ['settings', 'production', 'daily_job', 'turnstile']) assert.equal(after[k].ok, true, k);
+    for (const k of ['settings', 'production', 'daily_job']) assert.equal(after[k].ok, true, k);
 
     ctx.postmarkTokenOk = false;
     assert.equal((await launch.runChecks()).find(c => c.key === 'postmark').ok, false, 'a rejected token fails');
@@ -372,4 +372,21 @@ test('signing out is recorded and ends the session', async () => {
   await owner.req('/admin/logout', {});
   assert.equal(lastAudit('admin_logout').admin_email, OWNER);
   assert.equal((await owner.req('/admin')).location, '/admin/login');
+});
+
+test('emails use the current style: white header with the FinDex wordmark, solid plum and magenta, no gradients', () => {
+  const { templates, apiEmails } = require('../lib/email');
+  const samples = [
+    templates.signInCode({ first_name: 'Pat' }, '123456'),
+    templates.adminSignInCode({ name: 'Pat Lee' }, '123456'),
+    templates.launchTestEmail(),
+    apiEmails.approved({ first_name: 'Pat', business_legal_name: 'Acme' }),
+  ];
+  for (const t of samples) {
+    assert.doesNotMatch(t.html, /gradient/i);
+    assert.match(t.html, /background:#ffffff;padding:22px 32px;border-bottom:1px solid #e4deec/);
+    assert.match(t.html, /color:#45138c;">Fin<span style="color:#d63d8f;">Dex<\/span>/);
+    assert.doesNotMatch(t.html, /border-radius:1\dpx/, 'square corners');
+  }
+  assert.match(samples[3].html, /background:#b8287a/, 'magenta button');
 });

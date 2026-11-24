@@ -71,7 +71,7 @@ recorded before they happen, changes right after. `fx_events` still records admi
 
 **Launch checklist** (`/admin/launch`): pass / fail for required Render settings (names only), production mode,
 Postmark accepting the token (plus a "Send a test email" button), the daily job
-having run today, no test or old-format records, final (non-draft) member terms version, and Turnstile.
+having run today, no test or old-format records, and a final (non-draft) member terms version.
 
 ## Reports (phase two, step 1)
 
