@@ -1,0 +1,52 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Audit log</h1>
+<p class="lead">Every admin action, with who, when and from which IP address. Entries can&rsquo;t be edited or deleted. Times are Pacific.</p>
+<form method="get" action="/admin/audit" class="row-inline">
+  <div class="field"><label for="f-admin">Admin</label>
+    <select id="f-admin" name="admin">
+      <option value="">All admins</option>
+      <% admins.forEach(a => { %><option value="<%= a.id %>" <%= f.admin === a.id ? 'selected' : '' %>><%= a.name %> (<%= a.email %>)</option><% }) %>
+      <option value="shared" <%= f.admin === 'shared' ? 'selected' : '' %>>Shared password</option>
+    </select>
+  </div>
+  <div class="field"><label for="f-action">Action</label>
+    <select id="f-action" name="action">
+      <option value="">All actions</option>
+      <% Object.entries(ACTIONS).forEach(([k, label]) => { %><option value="<%= k %>" <%= f.action === k ? 'selected' : '' %>><%= label %></option><% }) %>
+    </select>
+  </div>
+  <div class="field"><label for="f-from">From</label><input type="date" id="f-from" name="from" value="<%= f.from %>"></div>
+  <div class="field"><label for="f-to">To</label><input type="date" id="f-to" name="to" value="<%= f.to %>"></div>
+  <button class="btn" type="submit">Filter</button>
+  <% if (f.admin || f.action || f.from || f.to) { %><a class="btn secondary" href="/admin/audit">Clear</a><% } %>
+</form>
+<p class="muted"><%= total %> entr<%= total === 1 ? 'y' : 'ies' %><%= pages > 1 ? ` · page ${page} of ${pages}` : '' %></p>
+<% if (!entries.length) { %>
+  <div class="card"><p class="lead flush">No entries match.</p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>About</th><th>IP address</th></tr></thead>
+    <tbody>
+      <% entries.forEach(e => { const d = e.detail || {};
+           const href = e.target_type === 'account' ? `/admin/accounts/${e.target_id}` : e.target_type === 'report' ? `/admin/reports/${e.target_id}` : e.target_type === 'admin' ? '/admin/settings' : null;
+           const about = d.name || d.subject || d.file || (d.to && e.action === 'test_email_sent' ? d.to : null) || (e.target_type ? TARGET_TYPES[e.target_type] : '');
+           const extra = [d.file && d.name ? d.file : null, d.method ? `with ${d.method === 'code' ? 'emailed code' : 'shared password'}` : null, d.prefix ? `key ${d.prefix}…` : null,
+             d.from && e.action === 'admin_renamed' ? `was ${d.from}` : null, d.email && e.target_type === 'admin' ? d.email : null, d.email_sent === false || d.sent === false ? 'email failed' : null].filter(Boolean); %>
+        <tr>
+          <td class="nowrap"><%= fmt(e.created_at) %></td>
+          <td><%= e.admin_name %><% if (e.admin_email) { %><div class="muted"><%= e.admin_email %></div><% } %></td>
+          <td><%= ACTIONS[e.action] || e.action.replace(/_/g, ' ') %></td>
+          <td><% if (href && about) { %><a href="<%= href %>"><%= about %></a><% } else { %><%= about %><% } %><% if (extra.length) { %><div class="muted"><%= extra.join(' · ') %></div><% } %></td>
+          <td class="nowrap"><%= e.ip || '' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+  <% if (pages > 1) { %>
+    <nav class="tabs" aria-label="Pages">
+      <% if (page > 1) { %><a class="tab" href="/admin/audit?<%= qs({ page: page - 1 }) %>">&larr; Newer</a><% } %>
+      <% if (page < pages) { %><a class="tab" href="/admin/audit?<%= qs({ page: page + 1 }) %>">Older &rarr;</a><% } %>
+    </nav>
+  <% } %>
+<% } %>
+<%- include('../partials/foot') %>

@@ -24,6 +24,7 @@ const UNIQUE = {
   fx_disputes: [[['report_id'], r => r.status === 'open']],
   fx_api_keys: [[['key_hash']]],
   fx_api_access: [[['account_id']]],
+  fx_admins: [[['email']]],
 };
 
 const DEFAULTS = {
@@ -36,8 +37,13 @@ const DEFAULTS = {
   fx_disputes: { status: 'open' },
   fx_evidence_reviews: { files_reviewed: 0, files_skipped: [] },
   fx_api_keys: { last_used_at: null, revoked_at: null },
+  fx_admins: { status: 'active', added_by: null, last_login_at: null },
+  fx_admin_login_codes: { attempts: 0, used_at: null },
+  fx_admin_audit: { detail: {} },
 };
-const INT_IDS = new Set(['fx_events']);
+const INT_IDS = new Set(['fx_events', 'fx_admin_audit']);
+// Mirrors the fx_admin_audit trigger: rows can't be changed or deleted.
+const APPEND_ONLY = new Set(['fx_admin_audit']);
 const NO_ID = new Set(['fx_subject_emails', 'fx_subject_phones', 'fx_subject_links', 'fx_api_access']); // composite primary keys
 
 // Generated columns.
@@ -145,6 +151,7 @@ function createFake(seed = {}) {
       not(c, op, v) {
         if (op === 'is') q.filters.push(r => (r[c] ?? null) !== v);
         else if (op === 'eq') q.filters.push(r => r[c] !== v);
+        else if (op === 'ilike') q.filters.push(r => r[c] != null && !likeMatch(r[c], v)); // SQL: NULL never matches
         else throw new Error(`fake not(): unsupported ${op}`);
         return api;
       },
@@ -196,6 +203,9 @@ function createFake(seed = {}) {
           added.push(row);
         }
         return q.returning ? shape(added.map(r => ({ ...r }))) : { data: null, error: null };
+      }
+      if ((q.op === 'update' || q.op === 'delete') && APPEND_ONLY.has(table)) {
+        return { data: null, error: { code: 'P0001', message: `${table} is append-only: entries cannot be changed or deleted` } };
       }
       if (q.op === 'update') {
         const hit = rows.filter(match);

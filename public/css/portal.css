@@ -349,3 +349,14 @@ body.light .btn.secondary { background: #fff; color: #45138c; border-color: #cfc
   body.light .nav-actions { background: #45138c; border-radius: 6px; border-color: #45138c; }
   body.light .nav-link, body.light .nav-link:hover, body.light .nav-link.active { color: #fff; border-bottom-color: transparent; }
 }
+
+/* Admin settings and audit log */
+.inline-form.flush { margin-top: 0; }
+.table .inline-form input { min-width: 140px; }
+details summary { cursor: pointer; }
+form.row-inline + .muted { margin-top: 18px; }
+.checklist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lav-border); border-radius: 6px; background: #fff; }
+.checklist li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; }
+.checklist li + li { border-top: 1px solid var(--lav-border); }
+.checklist .pill { flex: none; min-width: 64px; justify-content: center; margin-top: 1px; }
+.checklist p { overflow-wrap: anywhere; margin-top: 4px; }

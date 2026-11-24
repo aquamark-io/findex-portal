@@ -49,9 +49,30 @@ account is still approved, so revoking in `/admin` ends access immediately. Expi
 
 ## Admin
 
-`/admin` (password `ADMIN_PASSWORD`): Pending / Approved / Denied lists, details with masked identity
-(`***-**-1234`, `**-***1234`, "DOB on file"), Approve / Deny / Revoke with an internal note, and an event history.
+`/admin`: Pending / Approved / Denied lists, details with masked identity
+(`**-***1234`, "DOB on file"), Approve / Deny / Revoke with an internal note, and an event history.
 Approving and denying send the matching email. `[TEST]` requests can be deleted.
+
+**Sign-in.** Named admins (`fx_admins`) sign in at `/admin/login` with a 6-digit code emailed to them (10-minute
+expiry, single use, 5 attempts, 3 codes per 15 minutes). The email in `ADMIN_OWNER_EMAIL` can always sign in (its row
+is created on first sign-in) and can't be disabled from the app. While `ADMIN_PASSWORD` is set, the old shared
+password also works and is logged as "Shared password"; delete it from Render once code sign-in works.
+If Postmark is ever down after that, there is no way in until email works again: sign-in codes need email.
+
+**Settings** (`/admin/settings`): add admins (name + email), disable, re-enable, rename. Nobody can disable
+themselves or the owner. Admins are disabled, never deleted, so their names stay on the audit log.
+
+**Audit log** (`/admin/audit`, `fx_admin_audit`): every admin action with the admin, action, target, time and IP:
+sign-in/out and failed sign-ins, account approve/deny/revoke, report accept/reject, dispute decisions (upheld and
+amended publish the report; removed removes it), API access decisions and key revokes, evidence / dispute /
+authorization file opens, AI review, linking, test deletes, admin changes, and checklist test emails. Filter by admin,
+action and date (Pacific). A database trigger rejects every update, delete and truncate, so entries can't be edited
+or removed, even with the service key. If an entry can't be written, the request fails: file opens and sign-ins are
+recorded before they happen, changes right after. `fx_events` still records admin actions for each record's History.
+
+**Launch checklist** (`/admin/launch`): pass / fail for required Render settings (names only), production mode,
+the shared password removed, Postmark accepting the token (plus a "Send a test email" button), the daily job
+having run today, no test or old-format records, final (non-draft) member terms version, and Turnstile.
 
 ## Reports (phase two, step 1)
 
@@ -147,7 +168,8 @@ off (e.g. in tests).
 | `ONBOARDING_FROM_EMAIL` | `FinDex <christina@aquamark.io>` |
 | `ONBOARDING_NOTIFY_EMAIL` | Admin email. Receives only: new access requests, new reports, new disputes, and customer changes to a report or dispute (dispute response, report removed, new notice email) |
 | `JWT_SECRET` | Long random string |
-| `ADMIN_PASSWORD` | `/admin` password |
+| `ADMIN_OWNER_EMAIL` | The first admin's email: can always sign in to `/admin` with an emailed code |
+| `ADMIN_PASSWORD` | Old shared `/admin` password. Still works while set; delete it once code sign-in works (the launch checklist fails until then) |
 | `FIELD_ENCRYPTION_KEY`, `FIELD_HASH_KEY` | Two different long random values (Render's **Generate** button works, or a base64 32-byte key). Keep a copy somewhere safe and never change them once data exists: stored DOB / EIN and the matching keys can't be read without them. |
 | `ANTHROPIC_API_KEY` | Optional. Turns on the Claude evidence review in admin (an aid; admins still decide) |
 | `POSTMARK_WEBHOOK_TOKEN` | Long random value. Postmark's Bounce webhook calls `https://app.joinfindex.com/webhooks/postmark?token=<value>` |

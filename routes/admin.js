@@ -1,5 +1,6 @@
 /**
- * Admin (/admin). One user, ADMIN_PASSWORD.
+ * Admin (/admin). Named admins sign in with an emailed code (routes/admin-auth.js). Every admin action is
+ * written to the append-only audit log (lib/audit.js) as well as fx_events (which feeds each record's History).
  *
  *   /admin?status=pending|approved|denied|all   request list (pending first by default)
  *   /admin/accounts/:id                          details (identity masked) + history
@@ -13,6 +14,7 @@ const admin = require('../middleware/admin');
 const { decrypt } = require('../lib/crypto');
 const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
+const { logAdmin } = require('../lib/audit');
 const { ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 
 const K = require('../lib/api-keys');
@@ -67,32 +69,13 @@ function eventLabel(e) {
   if (e.event === 'signin_notice') return e.detail && e.detail.kind === 'pending' ? 'Sign-in attempt (still pending, told by email)' : 'Sign-in attempt (no account, told by email)';
   return EVENT_LABELS[e.event] || e.event.replace(/_/g, ' ');
 }
-const ACTORS = { applicant: 'applicant', account: 'user', admin: 'you', system: 'system' };
+const ACTORS = { applicant: 'applicant', account: 'user', admin: 'admin', system: 'system' };
 
 const fmt = d => d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) : '';
 
-// ---------- login ----------
+// ---------- sign-in ----------
 
-router.get('/login', (req, res) => res.render('admin/login', { pageTitle: 'Admin', error: null, adminNav: false }));
-
-router.post('/login', (req, res) => {
-  const ip = req.ip;
-  const fail = (status, error) => res.status(status).render('admin/login', { pageTitle: 'Admin', error, adminNav: false });
-  if (admin.tooManyFailures(ip)) return fail(429, 'Too many attempts. Try again in 15 minutes.');
-  if (!process.env.ADMIN_PASSWORD) return fail(500, 'ADMIN_PASSWORD is not set on the server.');
-  if (!admin.passwordOk(req.body.password)) {
-    admin.recordFailure(ip);
-    return fail(401, 'Incorrect password.');
-  }
-  admin.setSession(res);
-  res.redirect(303, '/admin');
-});
-
-router.post('/logout', (req, res) => {
-  admin.clearSession(res);
-  res.redirect(303, '/admin/login');
-});
-
+router.use('/', require('./admin-auth'));
 router.use(admin.requireAdmin);
 router.use((req, res, next) => {
   Object.assign(res.locals, { fmt, fmtPhone, eventLabel, ACTORS, adminNav: true, ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES });
@@ -236,6 +219,7 @@ router.post('/api/:accountId/:action', async (req, res, next) => {
     if (!row) return go('This request changed while you were viewing it. Please review it again.', true);
     const sent = await sendOrLog({ to: account.email, tag: `fx-api-${d.email}`, ...apiEmails[d.email](account) }, account.id);
     await logEvent({ accountId: account.id, event: d.event, actor: 'admin', detail: { email_sent: sent }, ip: req.ip });
+    await logAdmin(req, d.event, { targetType: 'account', targetId: account.id, detail: { name: displayName(account), email_sent: sent } });
     return go(sent ? d.done : `${d.done.split('.')[0]}, but the email failed to send. Check the Postmark settings.`, !sent);
   } catch (err) { next(err); }
 });
@@ -248,6 +232,7 @@ router.post('/accounts/:id/api-keys/:keyId/revoke', async (req, res, next) => {
     const revoked = await K.revokeKey(account.id, req.params.keyId);
     if (!revoked) return res.redirect(303, back(account.id, 'That key was already revoked.'));
     await logEvent({ accountId: account.id, event: 'api_key_revoked', actor: 'admin', detail: { key_id: revoked.id, prefix: revoked.key_prefix }, ip: req.ip });
+    await logAdmin(req, 'api_key_revoked', { targetType: 'account', targetId: account.id, detail: { name: displayName(account), key_id: revoked.id, prefix: revoked.key_prefix } });
     res.redirect(303, back(account.id, `Revoked ${revoked.label} (${revoked.key_prefix}…). It stops working immediately.`));
   } catch (err) { next(err); }
 });
@@ -276,6 +261,7 @@ router.post('/accounts/:id/approve', async (req, res, next) => {
 
     const sent = await sendOrLog({ to: updated.email, tag: 'fx-approved', ...templates.approved(updated) }, updated.id);
     await logEvent({ accountId: updated.id, event: 'approved', actor: 'admin', detail: { from, email_sent: sent, has_note: Boolean(updated.review_note) }, ip: req.ip });
+    await logAdmin(req, 'account_approved', { targetType: 'account', targetId: updated.id, detail: { name: displayName(updated), from, email_sent: sent } });
     res.redirect(303, back(updated.id, sent ? 'Approved. Approval email sent.' : 'Approved, but the approval email failed to send. Check the Postmark settings.', !sent));
   } catch (err) { next(err); }
 });
@@ -298,6 +284,7 @@ router.post('/accounts/:id/deny', async (req, res, next) => {
 
     const sent = await sendOrLog({ to: updated.email, tag: 'fx-denied', ...templates.denied(updated) }, updated.id);
     await logEvent({ accountId: updated.id, event: from === 'approved' ? 'revoked' : 'denied', actor: 'admin', detail: { from, email_sent: sent, has_note: Boolean(updated.review_note) }, ip: req.ip });
+    await logAdmin(req, from === 'approved' ? 'account_revoked' : 'account_denied', { targetType: 'account', targetId: updated.id, detail: { name: displayName(updated), from, email_sent: sent } });
     res.redirect(303, back(updated.id, sent ? 'Denied. Denial email sent.' : 'Denied, but the denial email failed to send. Check the Postmark settings.', !sent));
   } catch (err) { next(err); }
 });
@@ -309,6 +296,7 @@ router.post('/accounts/:id/delete', async (req, res, next) => {
     if (!account.is_test) return res.redirect(303, back(account.id, 'Only [TEST] requests can be deleted.', true));
     const { error } = await supabase.from('fx_accounts').delete().eq('id', account.id).eq('is_test', true);
     if (error) throw new Error(`Delete: ${error.message}`);
+    await logAdmin(req, 'test_account_deleted', { targetType: 'account', targetId: account.id, detail: { name: displayName(account) } });
     res.redirect(303, `/admin?${new URLSearchParams({ status: 'all' })}`);
   } catch (err) { next(err); }
 });
@@ -394,6 +382,7 @@ router.get('/reports/:id/files/:fileId', async (req, res, next) => {
     if (!f) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That file does not exist.' });
     const { data, error } = await supabase.storage.from('fx-evidence').createSignedUrl(f.storage_path, 120);
     if (error) throw new Error(`Signed URL: ${error.message}`);
+    await logAdmin(req, 'evidence_opened', { targetType: 'report', targetId: f.report_id, detail: { file: f.file_name } });
     await logEvent({ reportId: f.report_id, event: 'evidence_viewed', actor: 'admin', detail: { file: f.file_name }, ip: req.ip });
     res.redirect(data.signedUrl);
   } catch (err) { next(err); }
@@ -411,6 +400,7 @@ router.post('/reports/:id/accept', async (req, res, next) => {
       .eq('id', report.id).eq('status', 'submitted').select('id').maybeSingle();
     if (!claimed) return res.redirect(303, backReport(report.id, 'This report changed while you were viewing it.', true));
     await logEvent({ accountId: report.reporter_account_id, reportId: report.id, event: 'report_accepted', actor: 'admin', ip: req.ip });
+    await logAdmin(req, 'report_accepted', { targetType: 'report', targetId: report.id, detail: { subject: report.subject_name_reported } });
     const result = await N.sendEmailNotice(report, report.notice_email, { ip: req.ip });
     if (!result.ok) return res.redirect(303, backReport(report.id, 'Accepted, but the notice email could not be sent. The reporter was asked for another email address.', true));
     const info = { reportId: report.id, subjectName: report.subject_name_reported, categoryLabel: R.CATEGORIES[report.category].label, publishDate: N.fmtDay(result.publishAt) };
@@ -428,6 +418,7 @@ router.post('/reports/:id/ai-review', async (req, res, next) => {
     }
     setImmediate(() => AI.reviewReport(req.params.id, 'admin'));
     await logEvent({ reportId: req.params.id, event: 'ai_review_requested', actor: 'admin', ip: req.ip });
+    await logAdmin(req, 'ai_review_requested', { targetType: 'report', targetId: req.params.id });
     res.redirect(303, backReport(req.params.id, 'AI review started. Refresh in a minute or two.'));
   } catch (err) { next(err); }
 });
@@ -443,6 +434,7 @@ router.post('/reports/:id/link', async (req, res, next) => {
     const { error } = await supabase.from('fx_subject_links').upsert({ subject_id: report.subject_id, account_id: acct.id, linked_by: 'admin' }, { onConflict: 'subject_id,account_id', ignoreDuplicates: true });
     if (error) throw new Error(`Link: ${error.message}`);
     await logEvent({ accountId: acct.id, reportId: report.id, event: 'subject_linked', actor: 'admin', ip: req.ip });
+    await logAdmin(req, 'subject_linked', { targetType: 'report', targetId: report.id, detail: { account_id: acct.id } });
     res.redirect(303, backReport(report.id, `Linked to ${email}. They can now see reports about them.`));
   } catch (err) { next(err); }
 });
@@ -464,6 +456,7 @@ router.get('/disputes/files/:fileId', async (req, res, next) => {
   try {
     const out = await D.signedFile(req.params.fileId, null);
     if (!out) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That file does not exist.' });
+    await logAdmin(req, 'dispute_file_opened', { targetType: 'file', targetId: out.file.id, detail: { file: out.file.file_name, dispute_id: out.file.dispute_id } });
     await logEvent({ event: 'dispute_file_viewed', actor: 'admin', detail: { file: out.file.file_name }, ip: req.ip });
     res.redirect(out.url);
   } catch (err) { next(err); }
@@ -478,6 +471,7 @@ router.post('/reports/:id/resolve', async (req, res, next) => {
     if (!note) return res.redirect(303, backReport(req.params.id, 'Add a resolution note. It is shared with both sides.', true));
     if (outcome === 'amended' && (!amended || amended.length > 5000)) return res.redirect(303, backReport(req.params.id, 'Enter the corrected description (up to 5,000 characters).', true));
     const out = await D.resolve({ reportId: req.params.id, outcome, note, amendedDescription: amended, ip: req.ip });
+    if (!out.error) await logAdmin(req, `dispute_${outcome}`, { targetType: 'report', targetId: req.params.id });
     res.redirect(303, out.error ? backReport(req.params.id, out.error, true) : backReport(req.params.id, `Dispute resolved: ${outcome}. Both sides were emailed.`));
   } catch (err) { next(err); }
 });
@@ -501,6 +495,7 @@ router.get('/authorizations/:id', async (req, res, next) => {
     if (!f) return res.redirect('/admin/searches');
     const { data, error } = await supabase.storage.from('fx-evidence').createSignedUrl(f.storage_path, 120);
     if (error) throw new Error(`Signed URL: ${error.message}`);
+    await logAdmin(req, 'authorization_opened', { targetType: 'account', targetId: f.account_id, detail: { file: f.file_name, authorization_id: f.id } });
     await logEvent({ accountId: f.account_id, event: 'authorization_viewed', actor: 'admin', detail: { file: f.file_name }, ip: req.ip });
     res.redirect(data.signedUrl);
   } catch (err) { next(err); }
@@ -516,6 +511,7 @@ router.post('/reports/:id/delete', async (req, res, next) => {
     if (files && files.length) await supabase.storage.from('fx-evidence').remove(files.map(f => f.storage_path));
     const { error } = await supabase.from('fx_reports').delete().eq('id', report.id).eq('is_test', true);
     if (error) throw new Error(`Delete report: ${error.message}`);
+    await logAdmin(req, 'test_report_deleted', { targetType: 'report', targetId: report.id, detail: { subject: report.subject_name_reported } });
     const { count } = await supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('subject_id', report.subject_id);
     if (!count) await supabase.from('fx_subjects').delete().eq('id', report.subject_id);
     res.redirect(303, '/admin/reports?status=all');
@@ -538,8 +534,11 @@ router.post('/reports/:id/reject', async (req, res, next) => {
     const info = { reportId: report.id, categoryLabel: R.CATEGORIES[report.category].label, subjectName: report.subject_name_reported };
     const sent = await sendOrLog({ to: report.reporter.email, tag: 'fx-report-rejected', ...templates.reportRejected(report.reporter, info, reason) }, report.reporter.id);
     await logEvent({ accountId: report.reporter_account_id, reportId: report.id, event: 'report_rejected', actor: 'admin', detail: { email_sent: sent }, ip: req.ip });
+    await logAdmin(req, 'report_rejected', { targetType: 'report', targetId: report.id, detail: { subject: report.subject_name_reported, email_sent: sent } });
     res.redirect(303, backReport(report.id, sent ? 'Rejected. The reporter was emailed the reason.' : 'Rejected, but the email to the reporter failed.', !sent));
   } catch (err) { next(err); }
 });
+
+router.use('/', require('./admin-tools'));
 
 module.exports = router;

@@ -1,0 +1,19 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Launch checklist</h1>
+<p class="lead"><%= passed %> of <%= checks.length %> checks pass. Render settings are checked by name only; their values are never shown.</p>
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+<ul class="checklist">
+  <% checks.forEach(c => { %>
+    <li>
+      <span class="pill <%= c.ok ? 'approved' : 'denied' %>"><%= c.ok ? 'Pass' : 'Fail' %></span>
+      <div><strong><%= c.label %></strong><p class="muted flush"><%= c.detail %></p></div>
+    </li>
+  <% }) %>
+</ul>
+<section class="card mt">
+  <h2 class="flush-top">Send a test email</h2>
+  <p class="muted">Sends a short test message through Postmark<%= testEmailTo ? ` to ${testEmailTo}` : '' %>.</p>
+  <form method="post" action="/admin/launch/test-email"><button class="btn" type="submit">Send a test email</button></form>
+</section>
+<%- include('../partials/foot') %>

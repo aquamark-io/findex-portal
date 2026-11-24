@@ -1,0 +1,56 @@
+<%- include('../partials/head', { wide: true }) %>
+<h1 class="title">Admin settings</h1>
+<p class="lead">People who can sign in to FinDex admin. Each admin signs in with a code emailed to them, and everything they do is recorded in the <a href="/admin/audit">audit log</a>.</p>
+<% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+<% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
+<% if (admin.shared) { %><div class="alert error" role="alert">You are signed in with the shared password. Sign in with your own emailed code to change this list.</div><% } %>
+
+<h2>Admins</h2>
+<% if (!admins.length) { %>
+  <div class="card"><p class="lead flush">No named admins yet. <% if (ownerEmail) { %>The owner (<%= ownerEmail %>) is added the first time they sign in with a code.<% } else { %>Set ADMIN_OWNER_EMAIL in Render, then sign in with that email.<% } %></p></div>
+<% } else { %>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+    <tbody>
+      <% admins.forEach(a => { const me = admin.id === a.id; const owner = isOwner(a); %>
+        <tr>
+          <td>
+            <form method="post" action="/admin/settings/admins/<%= a.id %>/rename" class="inline-form flush">
+              <label class="sr-only" for="name-<%= a.id %>">Name</label>
+              <input type="text" id="name-<%= a.id %>" name="name" value="<%= a.name %>" maxlength="120" required>
+              <button class="btn secondary small" type="submit">Save</button>
+            </form>
+            <% if (me || owner) { %><div class="muted"><%= [me && 'You', owner && 'Owner'].filter(Boolean).join(' · ') %></div><% } %>
+          </td>
+          <td><%= a.email %></td>
+          <td><span class="pill <%= a.status === 'active' ? 'approved' : 'denied' %>"><%= a.status === 'active' ? 'Active' : 'Disabled' %></span></td>
+          <td class="nowrap"><%= a.last_login_at ? fmt(a.last_login_at) : 'Never' %></td>
+          <td class="nowrap">
+            <% if (a.status === 'active' && !me && !owner) { %>
+              <form method="post" action="/admin/settings/admins/<%= a.id %>/disable"><button class="btn danger small" type="submit">Disable</button></form>
+            <% } else if (a.status === 'disabled') { %>
+              <form method="post" action="/admin/settings/admins/<%= a.id %>/enable"><button class="btn secondary small" type="submit">Re-enable</button></form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table></div>
+<% } %>
+
+<section class="card mt">
+  <h2 class="flush-top">Add an admin</h2>
+  <p class="muted">They&rsquo;ll sign in at <strong>/admin/login</strong> with this email. Disabled admins stay listed so their names remain on the audit log.</p>
+  <form method="post" action="/admin/settings/admins" class="row-inline">
+    <div class="field"><label for="new-name">Name</label><input type="text" id="new-name" name="name" maxlength="120" required></div>
+    <div class="field"><label for="new-email">Email</label><input type="email" id="new-email" name="email" required></div>
+    <button class="btn" type="submit">Add admin</button>
+  </form>
+</section>
+
+<section class="card mt">
+  <h2 class="flush-top">Sign-in safeguards</h2>
+  <p class="muted flush">The owner is the email in the <strong>ADMIN_OWNER_EMAIL</strong> Render setting<%= ownerEmail ? ` (${ownerEmail})` : '' %>. That address can always sign in and can&rsquo;t be disabled here. No one can disable themselves.
+  <% if (passwordEnabled) { %><br><br><strong>The shared password (ADMIN_PASSWORD) still works.</strong> Once you&rsquo;ve signed in with an emailed code, delete ADMIN_PASSWORD from Render to turn it off.<% } %></p>
+</section>
+<%- include('../partials/foot') %>

@@ -14,6 +14,7 @@ function setup(extraEnv = {}) {
     ONBOARDING_NOTIFY_EMAIL: 'admin@findex.test',
     JWT_SECRET: 'j'.repeat(40),
     ADMIN_PASSWORD: 'admin-pass-for-tests',
+    ADMIN_OWNER_EMAIL: 'owner@findex.test',
     FIELD_ENCRYPTION_KEY: 'test-encryption-key-that-is-long-enough-1234',
     FIELD_HASH_KEY: 'test-hash-key-that-is-long-enough-and-different',
     DISABLE_DAILY_JOB: 'true',
@@ -27,6 +28,10 @@ function setup(extraEnv = {}) {
   const emails = [];
   const realFetch = global.fetch;
   global.fetch = async (url, opts = {}) => {
+    if (String(url) === 'https://api.postmarkapp.com/server') {
+      const ok = ctx.postmarkTokenOk !== false;
+      return new Response(JSON.stringify(ok ? { Name: 'FinDex' } : { ErrorCode: 10 }), { status: ok ? 200 : 401 });
+    }
     if (String(url).startsWith('https://api.postmarkapp.com/')) {
       const b = JSON.parse(opts.body);
       const MessageID = crypto.randomUUID();
@@ -96,9 +101,21 @@ function setup(extraEnv = {}) {
     if (r.location !== '/dashboard') throw new Error(`sign-in failed for ${email}: ${r.status}`);
     return b;
   };
-  ctx.admin = async () => {
+  ctx.adminCodeFor = async (to, after = 0) => {
+    for (let i = 0; i < 100; i++) {
+      const e = emails.slice(after).reverse().find(x => x.to === to && x.tag === 'fx-admin-sign-in-code');
+      if (e) return e.subject.match(/(\d{6})/)[1];
+      await ctx.wait(10);
+    }
+    throw new Error(`no admin sign-in code for ${to}`);
+  };
+  // Signs in a named admin with an emailed code (the owner by default). Returns the browser.
+  ctx.admin = async (email = process.env.ADMIN_OWNER_EMAIL) => {
     const b = ctx.browser();
-    await b.req('/admin/login', { password: process.env.ADMIN_PASSWORD });
+    const mark = emails.length;
+    await b.req('/admin/login', { email });
+    const r = await b.req('/admin/login/verify', { code: await ctx.adminCodeFor(email, mark) });
+    if (r.location !== '/admin') throw new Error(`admin sign-in failed for ${email}: ${r.status}`);
     return b;
   };
   const accountByEmail = email => fake.tables.fx_accounts.find(a => a.email === email);
