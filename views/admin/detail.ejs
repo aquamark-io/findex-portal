@@ -48,6 +48,51 @@
         <li>The contact appears to work there in the stated role</li>
       </ul>
     <% } %>
+    <% if (a.account_type === 'company') { %>
+      <h2 id="api-keys">API keys</h2>
+      <% if (newKey) { %>
+        <div class="key-once" role="status">
+          <strong><%= newKey.label %></strong>: copy this key and send it to the company securely. It will not be shown again.
+          <code><%= newKey.key %></code>
+        </div>
+      <% } %>
+      <% if (apiKeys.length) { %>
+        <table class="keys">
+          <thead><tr><th>Label</th><th>Key</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+          <tbody>
+            <% apiKeys.forEach(k => { %>
+              <tr>
+                <td><%= k.label %></td>
+                <td class="nowrap"><%= k.key_prefix %>&hellip;</td>
+                <td class="nowrap"><%= fmt(k.created_at) %></td>
+                <td class="nowrap"><%= k.last_used_at ? fmt(k.last_used_at) : 'Never' %></td>
+                <td>
+                  <% if (k.revoked_at) { %><span class="muted">Revoked</span><% } else { %>
+                    <form method="post" action="/admin/accounts/<%= a.id %>/api-keys/<%= k.id %>/revoke">
+                      <button class="btn secondary small" type="submit" data-confirm="Revoke <%= k.label %>? Anything using it stops working immediately.">Revoke</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <p class="muted">No keys. Issue one when the company requests API access.</p>
+      <% } %>
+      <% if (a.status === 'approved' && a.terms_version) { %>
+        <form method="post" action="/admin/accounts/<%= a.id %>/api-keys" class="row-inline">
+          <div class="field">
+            <label for="key-label">New key label <span class="hint">(e.g. Production)</span></label>
+            <input id="key-label" name="label" type="text" maxlength="100" placeholder="Production">
+          </div>
+          <button class="btn" type="submit">Create API key</button>
+        </form>
+        <p class="muted">Keys work for default searches only. See <a href="/api" target="_blank" rel="noopener">the API documentation</a> to send to the company.</p>
+      <% } else { %>
+        <p class="muted">Keys can be issued once the company is approved and has accepted the member terms.</p>
+      <% } %>
+    <% } %>
   </section>
 
   <section class="card">

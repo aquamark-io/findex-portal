@@ -315,3 +315,20 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .how-steps strong { font-size: 0.98rem; }
 .how-steps span { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
 @media (max-width: 640px) { .how-steps { grid-template-columns: 1fr; } }
+
+/* API docs and keys */
+.api-docs { max-width: 820px; }
+.api-docs h2 { margin: 28px 0 8px; font-size: 1.1rem; }
+.api-docs .kv { margin: 14px 0; }
+.api-docs .kv dt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86rem; color: var(--ink); }
+.code { margin: 10px 0 14px; padding: 14px 16px; background: #f7f5fa; border: 1px solid #ebe5f2; border-radius: 8px; overflow-x: auto; }
+.code code, .api-docs dd code, .key-once code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86rem; color: var(--ink); }
+.key-once { margin: 12px 0 16px; padding: 14px 16px; border: 1px solid #e4daf2; border-radius: 8px; background: #faf7fd; }
+.key-once code { display: block; margin: 8px 0; word-break: break-all; user-select: all; }
+.keys { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 8px 0 14px; }
+.keys th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 8px 6px 0; border-bottom: 1px solid #ebe5f2; }
+.keys td { padding: 8px 8px 8px 0; border-bottom: 1px solid #f0ebf6; vertical-align: top; }
+.keys form { margin: 0; }
+.btn.small { padding: 6px 12px; font-size: 0.85rem; }
+.row-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin-top: 8px; }
+.row-inline .field { flex: 1 1 220px; margin: 0; }

@@ -22,6 +22,7 @@ const UNIQUE = {
   fx_authorizations: [[['storage_path']]],
   fx_notices: [[['postmark_message_id'], r => r.postmark_message_id != null]],
   fx_disputes: [[['report_id'], r => r.status === 'open']],
+  fx_api_keys: [[['key_hash']]],
 };
 
 const DEFAULTS = {
@@ -30,9 +31,10 @@ const DEFAULTS = {
   fx_events: { detail: {} },
   fx_reports: { status: 'submitted', is_test: false },
   fx_report_evidence: { kind: 'evidence' },
-  fx_searches: { criteria: {}, matched_subject_ids: [], result_report_ids: [] },
+  fx_searches: { criteria: {}, matched_subject_ids: [], result_report_ids: [], subject_keys: [], api_key_id: null },
   fx_disputes: { status: 'open' },
   fx_evidence_reviews: { files_reviewed: 0, files_skipped: [] },
+  fx_api_keys: { last_used_at: null, revoked_at: null },
 };
 const INT_IDS = new Set(['fx_events']);
 const NO_ID = new Set(['fx_subject_emails', 'fx_subject_phones', 'fx_subject_links']); // composite primary keys

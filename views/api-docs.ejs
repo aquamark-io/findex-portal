@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+<section class="card api-docs">
+  <h1 class="title">Default Search API</h1>
+  <p class="lead">Check whether a funded business has a default on record in FinDex, from your own systems. Same matching and privacy as a search in the portal.</p>
+
+  <h2>Access</h2>
+  <p>API keys are available on request to approved companies. Each key is shown once when it is created. Keep it on your server, never in a browser or app. Contact FinDex to request a key or revoke one.</p>
+
+  <h2>Request</h2>
+  <p>Send the EIN, or the business&rsquo;s legal name and state of registration.</p>
+  <pre class="code"><code>POST <%= base %>/api/v1/defaults
+Authorization: Bearer fdx_your_key
+Content-Type: application/json
+
+{ "ein": "12-3456789" }</code></pre>
+  <p>Or by legal name and state:</p>
+  <pre class="code"><code>{ "name": "Joe's Cafe LLC", "state": "TX" }</code></pre>
+  <p class="muted">Names are matched exactly, ignoring case, punctuation and endings like LLC or Inc. An EIN match is the most reliable.</p>
+
+  <h2>Response</h2>
+  <pre class="code"><code>{
+  "search_id": "3f1c…",
+  "searched_by": "ein",
+  "has_default": true,
+  "defaults": [
+    {
+      "incident_date": "2026-09-15",
+      "published_on": "2026-10-01",
+      "reported_by": "Acme Funding LLC"
+    }
+  ],
+  "other_reports": 0,
+  "recent_searches": { "days": 30, "companies": 2, "searches": 3 },
+  "results_url": "<%= base %>/search/results/3f1c…"
+}</code></pre>
+  <dl class="kv">
+    <dt>has_default</dt><dd>True when at least one published default is on record.</dd>
+    <dt>defaults</dt><dd>Each published default: when it happened, when it was published, and the company that reported it.</dd>
+    <dt>other_reports</dt><dd>Published reports of other kinds, such as document manipulation. Open <code>results_url</code> to read them.</dd>
+    <dt>recent_searches</dt><dd>Searches of this business by other companies in the last 30&nbsp;days.</dd>
+    <dt>results_url</dt><dd>The full results in the portal, for 7&nbsp;days, when signed in to your company&rsquo;s account.</dd>
+  </dl>
+  <p class="muted">Only published reports are returned. Reports in their 10-day notice period or under dispute are not included.</p>
+
+  <h2>Errors</h2>
+  <dl class="kv">
+    <dt>401 invalid_key</dt><dd>Missing, invalid, or revoked key.</dd>
+    <dt>422 invalid_request</dt><dd>The EIN, name, or state is missing or invalid. The message says which.</dd>
+    <dt>429 rate_limited</dt><dd>More than <%= perHour %> lookups in an hour for this key.</dd>
+  </dl>
+
+  <h2>Records and privacy</h2>
+  <p>Every lookup is logged as a search by your company and appears in your search history. FinDex never stores the EIN you send, only a one-way key used for matching and for counting recent searches. Use the results only for underwriting decisions, under the member terms you accepted.</p>
+</section>
+<%- include('partials/foot') %>

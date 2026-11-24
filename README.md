@@ -83,6 +83,17 @@ certification and an uploaded signed authorization. Results show published repor
 and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, EIN, mobile or ZIP values; reported
 parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per hour per company.
 
+## Default-search API
+
+- `POST /api/v1/defaults` with `Authorization: Bearer fdx_...` and JSON `{ "ein": "12-3456789" }` or
+  `{ "name": "Joe's Cafe LLC", "state": "TX" }`. Returns published defaults, the count of other published reports,
+  searches by other companies in the last 30 days, and a link to the full results in the portal.
+- Keys are issued and revoked by an admin on the company's account page (approved companies that accepted the
+  member terms). The key is shown once; only an HMAC and a 10-character prefix are stored (`fx_api_keys`).
+- Each lookup is logged in `fx_searches` with `api_key_id` and `criteria.via = 'api'`, never the EIN.
+  300 lookups per key per hour; 30 failed-key attempts per IP per 15 minutes.
+- Documentation for members: `/api`.
+
 ## AI evidence review
 
 When a report is submitted (and on demand from the admin report page), Claude (`claude-opus-5-5`) reads the evidence

@@ -15,6 +15,7 @@ const { sendEmail, templates } = require('../lib/email');
 const { logEvent } = require('../lib/events');
 const { ACCOUNT_TYPES, COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 
+const K = require('../lib/api-keys');
 const router = express.Router();
 const STATUSES = ['pending', 'approved', 'denied'];
 
@@ -55,6 +56,8 @@ const EVENT_LABELS = {
   login: 'Signed in',
   login_failed: 'Wrong sign-in code entered',
   logout: 'Signed out',
+  api_key_created: 'API key created',
+  api_key_revoked: 'API key revoked',
 };
 function eventLabel(e) {
   if (e.event === 'signin_notice') return e.detail && e.detail.kind === 'pending' ? 'Sign-in attempt (still pending, told by email)' : 'Sign-in attempt (no account, told by email)';
@@ -161,21 +164,60 @@ router.get('/', async (req, res, next) => {
 
 // ---------- detail ----------
 
+async function renderDetail(req, res, account, extra = {}) {
+  const { data: events } = await supabase.from('fx_events')
+    .select('event, actor, detail, created_at').eq('account_id', account.id).order('created_at', { ascending: false }).limit(50);
+  const apiKeys = account.account_type === 'company' ? await K.listKeys(account.id) : [];
+  res.render('admin/detail', {
+    pageTitle: displayName(account),
+    account,
+    identity: maskedIdentity(account),
+    events: events || [],
+    apiKeys,
+    newKey: null,
+    displayName,
+    msg: typeof req.query.msg === 'string' ? req.query.msg : null,
+    err: typeof req.query.err === 'string' ? req.query.err : null,
+    ...extra,
+  });
+}
+
 router.get('/accounts/:id', async (req, res, next) => {
   try {
     const account = await loadAccount(req.params.id);
     if (!account) return res.status(404).render('error', { pageTitle: 'Not found', message: 'That request does not exist.' });
-    const { data: events } = await supabase.from('fx_events')
-      .select('event, actor, detail, created_at').eq('account_id', account.id).order('created_at', { ascending: false }).limit(50);
-    res.render('admin/detail', {
-      pageTitle: displayName(account),
-      account,
-      identity: maskedIdentity(account),
-      events: events || [],
-      displayName,
-      msg: typeof req.query.msg === 'string' ? req.query.msg : null,
-      err: typeof req.query.err === 'string' ? req.query.err : null,
-    });
+    await renderDetail(req, res, account);
+  } catch (err) { next(err); }
+});
+
+// ---------- API keys ----------
+// Issued on request to approved companies that accepted the member terms. The full key is shown once, on the
+// page that creates it (never in a redirect URL), and only its HMAC is stored.
+
+router.post('/accounts/:id/api-keys', async (req, res, next) => {
+  try {
+    const account = await loadAccount(req.params.id);
+    if (!account) return res.redirect(303, '/admin');
+    if (account.account_type !== 'company' || account.status !== 'approved' || !account.terms_version) {
+      return res.redirect(303, back(account.id, 'API keys are only for approved companies that have accepted the member terms.', true));
+    }
+    const label = (typeof req.body.label === 'string' ? req.body.label.trim().replace(/\s+/g, ' ') : '').slice(0, 100) || 'API key';
+    const created = await K.createKey(account.id, label);
+    await logEvent({ accountId: account.id, event: 'api_key_created', actor: 'admin', detail: { key_id: created.id, prefix: created.key_prefix }, ip: req.ip });
+    res.set('Cache-Control', 'no-store');
+    await renderDetail(req, res, account, { newKey: created, msg: 'API key created. Copy it now: it will not be shown again.' });
+  } catch (err) { next(err); }
+});
+
+router.post('/accounts/:id/api-keys/:keyId/revoke', async (req, res, next) => {
+  try {
+    const account = await loadAccount(req.params.id);
+    if (!account) return res.redirect(303, '/admin');
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.keyId)) return res.redirect(303, back(account.id, 'That key does not exist.', true));
+    const revoked = await K.revokeKey(account.id, req.params.keyId);
+    if (!revoked) return res.redirect(303, back(account.id, 'That key was already revoked.'));
+    await logEvent({ accountId: account.id, event: 'api_key_revoked', actor: 'admin', detail: { key_id: revoked.id, prefix: revoked.key_prefix }, ip: req.ip });
+    res.redirect(303, back(account.id, `Revoked ${revoked.label} (${revoked.key_prefix}…). It stops working immediately.`));
   } catch (err) { next(err); }
 });
 

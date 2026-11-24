@@ -62,6 +62,7 @@ app.use('/', require('./routes/dashboard'));
 app.use('/', require('./routes/reports'));
 app.use('/', require('./routes/search'));
 app.use('/', require('./routes/access'));
+app.use('/', require('./routes/api'));
 app.use('/admin', require('./routes/admin'));
 
 app.use((req, res) => res.status(404).render('error', { pageTitle: 'Not found', message: 'That page does not exist.' }));
