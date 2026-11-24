@@ -329,3 +329,23 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .row-inline .field { flex: 1 1 220px; margin: 0; }
 .table-scroll { overflow-x: auto; }
 form.inline { display: inline; margin: 0 4px 0 0; }
+
+/* New site style (matches joinfindex.com): white header, solid plum, no gradients. Used on Sign In for now. */
+body.light .band { background: #fff; color: var(--ink); border-bottom: 1px solid #e4deec; position: sticky; top: 0; z-index: 50; }
+body.light .band-inner { max-width: 1040px; padding: 18px 24px; }
+body.light .wordmark { background: none; color: #45138c; -webkit-text-fill-color: #45138c; font-size: 1.7rem; font-weight: 750; letter-spacing: -0.025em; line-height: 1; }
+body.light .wordmark span { color: #d63d8f; -webkit-text-fill-color: #d63d8f; }
+body.light .nav-link { color: #3f3650; font-weight: 500; }
+body.light .nav-link:hover, body.light .nav-link:focus-visible, body.light .nav-link.active { color: #45138c; border-bottom-color: #45138c; }
+body.light .card { background: #fff; border: 1px solid #ddd6e7; border-radius: 6px; box-shadow: 0 1px 3px rgba(28, 15, 46, 0.06); }
+body.light .title { background: none; color: #45138c; -webkit-text-fill-color: #45138c; font-size: 2rem; font-weight: 650; letter-spacing: -0.015em; }
+body.light .btn { background: #b8287a; border-color: #b8287a; border-radius: 4px; }
+body.light .btn:hover { background: #951f62; border-color: #951f62; }
+body.light .btn.secondary { background: #fff; color: #45138c; border-color: #cfc5de; }
+@media (max-width: 640px) {
+  body.light .band-inner { padding: 14px 16px; }
+  body.light .wordmark { font-size: 1.5rem; }
+  body.light .menu-toggle { background: #45138c; border-color: #45138c; border-radius: 6px; }
+  body.light .nav-actions { background: #45138c; border-radius: 6px; border-color: #45138c; }
+  body.light .nav-link, body.light .nav-link:hover, body.light .nav-link.active { color: #fff; border-bottom-color: transparent; }
+}
