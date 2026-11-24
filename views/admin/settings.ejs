@@ -3,7 +3,6 @@
 <p class="lead">People who can sign in to FinDex admin. Each admin signs in with a code emailed to them, and everything they do is recorded in the <a href="/admin/audit">audit log</a>.</p>
 <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
 <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
-<% if (admin.shared) { %><div class="alert error" role="alert">You are signed in with the shared password. Sign in with your own emailed code to change this list.</div><% } %>
 
 <h2>Admins</h2>
 <% if (!admins.length) { %>
@@ -50,7 +49,6 @@
 
 <section class="card mt">
   <h2 class="flush-top">Sign-in safeguards</h2>
-  <p class="muted flush">The owner is the email in the <strong>ADMIN_OWNER_EMAIL</strong> Render setting<%= ownerEmail ? ` (${ownerEmail})` : '' %>. That address can always sign in and can&rsquo;t be disabled here. No one can disable themselves.
-  <% if (passwordEnabled) { %><br><br><strong>The shared password (ADMIN_PASSWORD) still works.</strong> Once you&rsquo;ve signed in with an emailed code, delete ADMIN_PASSWORD from Render to turn it off.<% } %></p>
+  <p class="muted flush">The owner is the email in the <strong>ADMIN_OWNER_EMAIL</strong> Render setting<%= ownerEmail ? ` (${ownerEmail})` : '' %>. That address can always sign in and can&rsquo;t be disabled here. No one can disable themselves.</p>
 </section>
 <%- include('../partials/foot') %>

@@ -6,7 +6,6 @@
     <select id="f-admin" name="admin">
       <option value="">All admins</option>
       <% admins.forEach(a => { %><option value="<%= a.id %>" <%= f.admin === a.id ? 'selected' : '' %>><%= a.name %> (<%= a.email %>)</option><% }) %>
-      <option value="shared" <%= f.admin === 'shared' ? 'selected' : '' %>>Shared password</option>
     </select>
   </div>
   <div class="field"><label for="f-action">Action</label>

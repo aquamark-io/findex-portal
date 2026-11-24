@@ -1,10 +1,9 @@
 /**
  * Admin sign-in (mounted on /admin before requireAdmin).
  *
- *   GET/POST /admin/login          enter email (named admins), or the shared password while ADMIN_PASSWORD is set
+ *   GET/POST /admin/login          enter email
  *   GET/POST /admin/login/verify   enter the 6-digit code
  *   POST     /admin/login/resend   send a fresh code
- *   POST     /admin/login/password the old shared password (only while ADMIN_PASSWORD is set in Render)
  *   POST     /admin/logout
  *
  * Codes: 6 digits, 10-minute expiry, single use, stored as HMAC, max 5 attempts, a new code cancels older ones,
@@ -33,7 +32,7 @@ const validEmail = v => v.length <= 254 && /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(v
 const hashFor = (adminId, code) => codeHash(`admin:${adminId}`, code);
 
 const loginPage = (res, status, error, email = '') => res.status(status).render('admin/login', {
-  pageTitle: 'Admin Sign In', error, email, adminNav: false, passwordEnabled: admin.passwordEnabled(),
+  pageTitle: 'Admin Sign In', error, email, adminNav: false,
 });
 const verifyPage = (res, status, error, email, resent = false) => res.status(status).render('admin/verify', {
   pageTitle: 'Admin Sign In', error, email, resent, adminNav: false,
@@ -150,22 +149,6 @@ router.post('/login/verify', verifyLimiter, async (req, res, next) => {
     admin.setSession(res, a);
     return res.redirect(303, '/admin');
   } catch (err) { return next(err); }
-});
-
-router.post('/login/password', async (req, res, next) => {
-  try {
-    const ip = req.ip;
-    if (!admin.passwordEnabled()) return loginPage(res, 410, 'Password sign-in is turned off. Sign in with your email instead.');
-    if (admin.tooManyFailures(ip)) return loginPage(res, 429, 'Too many attempts. Try again in 15 minutes.');
-    if (!admin.passwordOk(req.body.password)) {
-      admin.recordFailure(ip);
-      await logAdmin(req, 'admin_login_failed', { detail: { method: 'password' } }, admin.PASSWORD_ADMIN);
-      return loginPage(res, 401, 'Incorrect password.');
-    }
-    await logAdmin(req, 'admin_login', { detail: { method: 'password' } }, admin.PASSWORD_ADMIN);
-    admin.setSession(res, null);
-    res.redirect(303, '/admin');
-  } catch (err) { next(err); }
 });
 
 router.post('/logout', async (req, res, next) => {

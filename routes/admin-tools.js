@@ -35,14 +35,8 @@ router.get('/settings', async (req, res, next) => {
     if (error) throw new Error(`Admins: ${error.message}`);
     const admins = (data || []).sort((a, b) => (a.status === b.status ? 0 : a.status === 'active' ? -1 : 1));
     res.render('admin/settings', { pageTitle: 'Admin settings', admins, isOwner: adminMw.isOwner, ownerEmail: adminMw.ownerEmail(),
-      passwordEnabled: adminMw.passwordEnabled(), ...msgOf(req) });
+      ...msgOf(req) });
   } catch (err) { next(err); }
-});
-
-// The shared-password session isn't a person, so it can't manage the admin list.
-router.use('/settings/admins', (req, res, next) => {
-  if (req.method === 'POST' && req.admin.shared) return go(res, '/admin/settings', 'Sign in with your own emailed code to change the admin list.', true);
-  next();
 });
 
 router.post('/settings/admins', async (req, res, next) => {

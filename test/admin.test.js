@@ -1,5 +1,5 @@
 /**
- * Admin hardening: named admins with emailed codes, the shared-password fallback, admin settings,
+ * Admin hardening: named admins with emailed codes (no shared password), admin settings,
  * the append-only audit log (every admin action recorded with who, what, when and IP), and the launch checklist.
  */
 const test = require('node:test');
@@ -87,32 +87,19 @@ test('an account session can never open admin pages', async () => {
   assert.equal((await b.req('/admin')).location, '/admin/login');
 });
 
-test('the shared password still works while ADMIN_PASSWORD is set, is logged as "Shared password", and can’t manage admins', async () => {
-  const b = ctx.browser();
-  const page = await b.req('/admin/login');
-  assert.match(page.text, /shared password \(being phased out\)/);
-  const bad = await b.req('/admin/login/password', { password: 'wrong' });
-  assert.equal(bad.status, 401);
-  assert.equal(lastAudit('admin_login_failed').admin_name, 'Shared password');
-  const r = await b.req('/admin/login/password', { password: process.env.ADMIN_PASSWORD });
-  assert.equal(r.location, '/admin');
-  const e = lastAudit('admin_login');
-  assert.equal(e.admin_id, null);
-  assert.equal(e.admin_name, 'Shared password');
-  assert.equal((await b.req('/admin')).status, 200);
-  const add = await b.req('/admin/settings/admins', { name: 'Sneaky', email: 'sneaky@findex.test' });
-  assert.match(said(add), /own emailed code/);
-  assert.equal(adminRow('sneaky@findex.test'), undefined);
-
-  // Removing ADMIN_PASSWORD from Render ends password sessions and hides the option.
-  const saved = process.env.ADMIN_PASSWORD;
-  delete process.env.ADMIN_PASSWORD;
+test('there is no shared-password sign-in, even if ADMIN_PASSWORD is set again', async () => {
+  process.env.ADMIN_PASSWORD = 'old-shared-password';
   try {
+    const b = ctx.browser();
+    const page = await b.req('/admin/login');
+    assert.doesNotMatch(page.text, /password/i);
+    const r = await b.req('/admin/login/password', { password: 'old-shared-password' });
+    assert.notEqual(r.location, '/admin');
     assert.equal((await b.req('/admin')).location, '/admin/login');
-    const login = await b.req('/admin/login');
-    assert.doesNotMatch(login.text, /shared password/);
-    assert.equal((await b.req('/admin/login/password', { password: saved })).status, 410);
-  } finally { process.env.ADMIN_PASSWORD = saved; }
+    // An old shared-password session cookie no longer opens admin.
+    b.jar.fx_admin = jwt.sign({ scope: 'admin', sub: 'shared-password' }, process.env.JWT_SECRET, { expiresIn: '1h', audience: 'fx-admin' });
+    assert.equal((await b.req('/admin')).location, '/admin/login');
+  } finally { delete process.env.ADMIN_PASSWORD; }
 });
 
 // ---------- settings ----------
@@ -288,16 +275,12 @@ test('the audit log page lists entries and filters by admin, action and date', a
   const all = await owner.req('/admin/audit');
   assert.equal(all.status, 200);
   assert.match(all.text, /<td>Account approved<\/td>/);
-  assert.match(all.text, /Shared password/);
 
   const samId = adminRow('sam@findex.test').id;
   const bySam = await owner.req(`/admin/audit?admin=${samId}`);
   assert.match(bySam.text, /sam@findex.test/);
   assert.doesNotMatch(bySam.text, /<td>Account approved<\/td>/);
 
-  const shared = await owner.req('/admin/audit?admin=shared');
-  assert.match(shared.text, /Shared password/);
-  assert.doesNotMatch(shared.text, /<td>Admin added<\/td>/);
 
   const approvals = await owner.req('/admin/audit?action=account_approved');
   assert.match(approvals.text, /Acme Funding LLC/);
@@ -319,16 +302,15 @@ test('the launch checklist shows pass or fail for each item and never shows sett
   try {
     const r = await owner.req('/admin/launch');
     assert.equal(r.status, 200);
-    for (const label of ['Required Render settings are present', 'Postmark is sending', 'The daily job is running', 'Test accounts and reports are removed', 'Legal versions are set', 'Turnstile is on', 'Shared admin password removed']) {
+    for (const label of ['Required Render settings are present', 'Postmark is sending', 'The daily job is running', 'Test accounts and reports are removed', 'Legal versions are set', 'Turnstile is on']) {
       assert.ok(r.text.includes(label), label);
     }
-    for (const secret of [process.env.JWT_SECRET, process.env.FIELD_ENCRYPTION_KEY, process.env.FIELD_HASH_KEY, process.env.ADMIN_PASSWORD, process.env.POSTMARK_SERVER_TOKEN]) {
+    for (const secret of [process.env.JWT_SECRET, process.env.FIELD_ENCRYPTION_KEY, process.env.FIELD_HASH_KEY, process.env.POSTMARK_SERVER_TOKEN]) {
       assert.ok(!r.text.includes(secret), 'no setting values on the page');
     }
     const checks = Object.fromEntries((await launch.runChecks()).map(c => [c.key, c]));
     assert.equal(checks.settings.ok, false, 'POSTMARK_WEBHOOK_TOKEN etc. are not set in tests');
     assert.match(checks.settings.detail, /POSTMARK_WEBHOOK_TOKEN/);
-    assert.equal(checks.admin_password.ok, false, 'ADMIN_PASSWORD is still set');
     assert.equal(checks.postmark.ok, true);
     assert.equal(checks.daily_job.ok, false, 'never ran');
     assert.equal(checks.legal.ok, false, 'member terms are still a draft');
@@ -336,11 +318,10 @@ test('the launch checklist shows pass or fail for each item and never shows sett
 
     // Flip each one to passing.
     Object.assign(process.env, { POSTMARK_WEBHOOK_TOKEN: 'x', ONBOARDING_FROM_EMAIL: 'FinDex <a@b.co>', TURNSTILE_SITE_KEY: 'k', TURNSTILE_SECRET_KEY: 's', NODE_ENV: 'production' });
-    delete process.env.ADMIN_PASSWORD;
     delete process.env.DISABLE_DAILY_JOB;
     await supabase.from('fx_events').insert({ event: 'daily_job', actor: 'system', detail: { day: launch.pacificNow().day, started: true } });
     const after = Object.fromEntries((await launch.runChecks()).map(c => [c.key, c]));
-    for (const k of ['settings', 'production', 'admin_password', 'daily_job', 'turnstile']) assert.equal(after[k].ok, true, k);
+    for (const k of ['settings', 'production', 'daily_job', 'turnstile']) assert.equal(after[k].ok, true, k);
 
     ctx.postmarkTokenOk = false;
     assert.equal((await launch.runChecks()).find(c => c.key === 'postmark').ok, false, 'a rejected token fails');

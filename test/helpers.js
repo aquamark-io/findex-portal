@@ -13,7 +13,6 @@ function setup(extraEnv = {}) {
     POSTMARK_SERVER_TOKEN: 'test-token',
     ONBOARDING_NOTIFY_EMAIL: 'admin@findex.test',
     JWT_SECRET: 'j'.repeat(40),
-    ADMIN_PASSWORD: 'admin-pass-for-tests',
     ADMIN_OWNER_EMAIL: 'owner@findex.test',
     FIELD_ENCRYPTION_KEY: 'test-encryption-key-that-is-long-enough-1234',
     FIELD_HASH_KEY: 'test-hash-key-that-is-long-enough-and-different',

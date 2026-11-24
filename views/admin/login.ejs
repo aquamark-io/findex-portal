@@ -7,14 +7,5 @@
     <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" value="<%= email %>" autocomplete="email" required autofocus></div>
     <button class="btn block" type="submit">Send code</button>
   </form>
-  <% if (passwordEnabled) { %>
-    <details class="mt">
-      <summary class="muted">Sign in with the shared password (being phased out)</summary>
-      <form method="post" action="/admin/login/password" class="mt">
-        <div class="field"><label for="password">Shared password</label><input type="password" id="password" name="password" autocomplete="current-password" required></div>
-        <button class="btn secondary block" type="submit">Sign in with password</button>
-      </form>
-    </details>
-  <% } %>
 </section>
 <%- include('../partials/foot') %>
