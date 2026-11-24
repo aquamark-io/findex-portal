@@ -83,17 +83,21 @@ certification and an uploaded signed authorization. Results show published repor
 and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, EIN, mobile or ZIP values; reported
 parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per hour per company.
 
-## Default-search API
+## Funded Business API
 
-- `POST /api/v1/defaults` with `Authorization: Bearer fdx_...` and JSON `{ "ein": "12-3456789" }` or
-  `{ "name": "Joe's Cafe LLC", "state": "TX" }`. Returns published defaults, the count of other published reports,
-  searches by other companies in the last 30 days, and a link to the full results in the portal.
+- `POST /api/v1/funded-business` with `Authorization: Bearer fdx_...` and JSON `{ "ein": "12-3456789" }` or
+  `{ "name": "Joe's Cafe LLC", "state": "TX" }`, plus optional `"checks": ["default", "document_tampering"]` (both when
+  omitted). Each check returns `on_record` and, per published report, the incident date, publish date and reporting
+  company. Descriptions and evidence stay in the portal: `results_url` opens the full results, showing only the
+  checks requested. Also returns searches by other companies in the last 30 days (counts only).
+- `POST /api/v1/defaults` is the original endpoint: same response, `checks` defaults to `["default"]`.
+- "document_tampering" is the `fraud` report category internally.
 - Access: a company (approved, member terms accepted) requests it at `/api-access` (linked from the dashboard); the admin
   is emailed and approves or denies at `/admin/api`; the company is emailed the decision (`fx_api_access`).
   Once approved, the company creates and revokes its own keys at `/api-access` (up to 5 active). A key is shown once,
   to the company only; FinDex stores an HMAC and a 10-character prefix (`fx_api_keys`). Turning access off in admin
   revokes every key. A key also stops working if the company's FinDex access is revoked.
-- Each lookup is logged in `fx_searches` with `api_key_id` and `criteria.via = 'api'`, never the EIN.
+- Each lookup is logged in `fx_searches` with `api_key_id`, `criteria.via = 'api'` and `criteria.checks`, never the EIN.
   300 lookups per key per hour; 30 failed-key attempts per IP per 15 minutes.
 - Documentation: joinfindex.com/api/ (marketing site); the portal's `/api` redirects there.
 

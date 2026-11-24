@@ -180,7 +180,7 @@ test('people sign up to check their record without an SSN, and are linked to rep
   await admin.req(`/admin/accounts/${acct.id}/approve`, { note: '' });
   await ctx.signIn(b, 'jordan@mail.com');
   const dash = await b.req('/dashboard'); // reports are linked when the dashboard opens
-  assert.match(dash.text, /Document manipulation/);
+  assert.match(dash.text, /Document tampering/);
   const subj = fake.tables.fx_subjects.find(s => s.subject_type === 'individual' && fake.tables.fx_subject_emails.some(e => e.subject_id === s.id && e.email === 'jordan@mail.com'));
   assert.ok(fake.tables.fx_subject_links.some(l => l.account_id === acct.id && l.subject_id === subj.id));
 });
@@ -193,7 +193,7 @@ test('a person whose email differs is still linked when DOB, last name and mobil
   await admin.req(`/admin/accounts/${acct.id}/approve`, { note: '' });
   await ctx.signIn(b, 'jr.work@company.com');
   const dash = await b.req('/dashboard');
-  assert.match(dash.text, /Document manipulation/);
+  assert.match(dash.text, /Document tampering/);
   assert.ok(fake.tables.fx_subject_links.some(l => l.account_id === acct.id && l.linked_by === 'identity'));
   // Same DOB and last name but a different mobile and email: not linked.
   const c = ctx.browser();

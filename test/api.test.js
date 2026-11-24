@@ -87,19 +87,20 @@ test('a company requests API access, the admin approves, and the company creates
 });
 
 test('requests without a valid key are refused', async () => {
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' })).status, 401);
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: `fdx_${'x'.repeat(40)}` })).body.error.code, 'invalid_key');
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' })).status, 401);
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: `fdx_${'x'.repeat(40)}` })).body.error.code, 'invalid_key');
 });
 
 test('lookup by EIN returns the published default, the reporter, and logs the search without the EIN', async () => {
-  const r = await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: key });
+  const r = await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: key });
   assert.equal(r.status, 200, JSON.stringify(r.body));
-  assert.equal(r.body.has_default, true);
+  assert.equal(r.body.checks.default.on_record, true);
   assert.equal(r.body.searched_by, 'ein');
-  assert.equal(r.body.defaults.length, 1);
-  assert.equal(r.body.defaults[0].incident_date, '2026-09-15');
-  assert.equal(r.body.defaults[0].reported_by, 'Acme Funding LLC');
-  assert.equal(r.body.other_reports, 0);
+  assert.equal(r.body.checks.default.reports.length, 1);
+  assert.equal(r.body.checks.default.reports[0].incident_date, '2026-09-15');
+  assert.equal(r.body.checks.default.reports[0].reported_by, 'Acme Funding LLC');
+  assert.deepEqual(r.body.checks.document_tampering, { on_record: false, reports: [] });
+  assert.ok(!('description' in r.body.checks.default.reports[0]), 'descriptions stay in the portal');
   assert.match(r.body.results_url, /\/search\/results\/[0-9a-f-]{36}$/);
   const log = fake.tables.fx_searches.find(s => s.id === r.body.search_id);
   assert.equal(log.api_key_id, keyId);
@@ -114,22 +115,57 @@ test('lookup by EIN returns the published default, the reporter, and logs the se
 });
 
 test('lookup by legal name and state works, ignoring punctuation and LLC', async () => {
-  const r = await api('/api/v1/defaults', { name: 'joes cafe', state: 'tx' }, { auth: key });
+  const r = await api('/api/v1/funded-business', { name: 'joes cafe', state: 'tx' }, { auth: key });
   assert.equal(r.status, 200);
   assert.equal(r.body.searched_by, 'name_state');
-  assert.equal(r.body.has_default, true);
+  assert.equal(r.body.checks.default.on_record, true);
 });
 
 test('no match, invalid input, and bad JSON', async () => {
-  const none = await api('/api/v1/defaults', { ein: '98-7654321' }, { auth: key });
+  const none = await api('/api/v1/funded-business', { ein: '98-7654321' }, { auth: key });
   assert.equal(none.status, 200);
-  assert.equal(none.body.has_default, false);
-  assert.deepEqual(none.body.defaults, []);
-  const bad = await api('/api/v1/defaults', { ein: '123' }, { auth: key });
+  assert.equal(none.body.checks.default.on_record, false);
+  assert.deepEqual(none.body.checks.default.reports, []);
+  const bad = await api('/api/v1/funded-business', { ein: '123' }, { auth: key });
   assert.equal(bad.status, 422);
   assert.match(bad.body.error.message, /EIN must be 9 digits/);
-  assert.equal((await api('/api/v1/defaults', {}, { auth: key })).status, 422);
-  assert.equal((await api('/api/v1/defaults', null, { auth: key, raw: '{not json' })).body.error.code, 'invalid_json');
+  assert.equal((await api('/api/v1/funded-business', {}, { auth: key })).status, 422);
+  assert.equal((await api('/api/v1/funded-business', null, { auth: key, raw: '{not json' })).body.error.code, 'invalid_json');
+});
+
+test('checks are modular: defaults, document tampering, or both; results_url shows only what was asked', async () => {
+  await lender.req('/reports/new/funded-business', {
+    subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
+    category: 'fraud', incident_date: '2026-08-01', description: 'Altered bank statements.', certify: 'on',
+  }, { files: { evidence: [{ name: 'statements.pdf' }] } });
+  const rep = fake.tables.fx_reports.at(-1);
+  assert.equal(rep.category, 'fraud');
+  await admin.req(`/admin/reports/${rep.id}/accept`, { note: '' });
+  rep.publish_at = new Date(Date.now() - 1000).toISOString();
+  await N.publishDue();
+
+  const both = await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: key });
+  assert.deepEqual(Object.keys(both.body.checks).sort(), ['default', 'document_tampering']);
+  assert.equal(both.body.checks.document_tampering.on_record, true);
+  assert.equal(both.body.checks.document_tampering.reports[0].incident_date, '2026-08-01');
+
+  const defOnly = await api('/api/v1/funded-business', { ein: '12-3456789', checks: ['default'] }, { auth: key });
+  assert.deepEqual(Object.keys(defOnly.body.checks), ['default']);
+  const page = await other.req(new URL(defOnly.body.results_url).pathname);
+  assert.match(page.text, /Default/);
+  assert.doesNotMatch(page.text, /Altered bank statements/, 'the portal link shows only the checks requested');
+
+  const tamper = await api('/api/v1/funded-business', { ein: '12-3456789', checks: 'document_tampering' }, { auth: key });
+  assert.deepEqual(Object.keys(tamper.body.checks), ['document_tampering']);
+  assert.match((await other.req(new URL(tamper.body.results_url).pathname)).text, /Altered bank statements/);
+
+  // The original endpoint checks defaults unless told otherwise.
+  const legacy = await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: key });
+  assert.deepEqual(Object.keys(legacy.body.checks), ['default']);
+
+  const bad = await api('/api/v1/funded-business', { ein: '12-3456789', checks: ['fraud'] }, { auth: key });
+  assert.equal(bad.status, 422);
+  assert.match(bad.body.error.message, /document_tampering/);
 });
 
 test('reports still in their notice period are not returned', async () => {
@@ -138,13 +174,13 @@ test('reports still in their notice period are not returned', async () => {
     category: 'default', incident_date: '2026-10-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   await admin.req(`/admin/reports/${fake.tables.fx_reports.at(-1).id}/accept`, { note: '' });
-  const r = await api('/api/v1/defaults', { ein: '55-5555555' }, { auth: key });
-  assert.equal(r.body.has_default, false);
+  const r = await api('/api/v1/funded-business', { ein: '55-5555555' }, { auth: key });
+  assert.equal(r.body.checks.default.on_record, false);
 });
 
 test('recent searches by other companies are counted', async () => {
   await lender.req('/search/funded-business', { ein: '12-3456789', certify: 'on' });
-  const r = await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: key });
+  const r = await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: key });
   assert.equal(r.body.recent_searches.companies, 1);
 });
 
@@ -152,17 +188,17 @@ test('a company can revoke its own key, and it stops working immediately', async
   const rv = await other.req(`/api-access/keys/${keyId}/revoke`, {});
   assert.equal(rv.status, 303);
   assert.ok(fake.tables.fx_api_keys.find(k => k.id === keyId).revoked_at);
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: key })).status, 401);
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: key })).status, 401);
 });
 
 test('turning off API access revokes every key; the company can ask again', async () => {
   const acct = ctx.accountByEmail('sam@bestcapital.com');
   const k1 = (await other.req('/api-access/keys', { label: 'A' })).text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
   const k2 = (await other.req('/api-access/keys', { label: 'B' })).text.match(/fdx_[A-Za-z0-9_-]{40}/)[0];
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k1 })).status, 200);
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: k1 })).status, 200);
   await admin.req(`/admin/api/${acct.id}/revoke`, { back: 'account' });
   assert.ok(ctx.lastEmail('sam@bestcapital.com', 'fx-api-revoked'));
-  for (const k of [k1, k2]) assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k })).status, 401);
+  for (const k of [k1, k2]) assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: k })).status, 401);
   assert.match((await other.req('/api-access')).text, /turned off/);
   await other.req('/api-access/request', {});
   assert.equal(fake.tables.fx_api_access.find(x => x.account_id === acct.id).status, 'requested');
@@ -173,10 +209,10 @@ test('turning off API access revokes every key; the company can ask again', asyn
 
 test('keys stop working when the company loses FinDex access; accounts without full access cannot request', async () => {
   const k2 = await grantAccess(lender, 'pat@acmefunding.com');
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k2 })).status, 200);
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: k2 })).status, 200);
   const acct = ctx.accountByEmail('pat@acmefunding.com');
   await admin.req(`/admin/accounts/${acct.id}/deny`, { note: '' });
-  assert.equal((await api('/api/v1/defaults', { ein: '12-3456789' }, { auth: k2 })).status, 401);
+  assert.equal((await api('/api/v1/funded-business', { ein: '12-3456789' }, { auth: k2 })).status, 401);
   // A company without the member terms (Check My Record sign-up) is sent back to its dashboard.
   acct.status = 'approved'; acct.terms_version = null;
   const b = await ctx.signIn(ctx.browser(), 'pat@acmefunding.com');

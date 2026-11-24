@@ -8,7 +8,7 @@
   <% if (activity) { const defaults = reports.filter(r => r.category === 'default').length; %>
     <div class="biz-summary" role="status">
       <div><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %> reported</span></div>
-      <div><span class="biz-num"><%= reports.length - defaults %></span><span>Other report<%= reports.length - defaults === 1 ? '' : 's' %></span></div>
+      <div><span class="biz-num"><%= reports.length - defaults %></span><span>Document tampering report<%= reports.length - defaults === 1 ? '' : 's' %></span></div>
       <div><span class="biz-num"><%= activity.searches %></span><span>Searches by other companies in the last 30 days<%= activity.searches ? ` (${activity.companies} compan${activity.companies === 1 ? 'y' : 'ies'})` : '' %></span></div>
     </div>
   <% } %>
