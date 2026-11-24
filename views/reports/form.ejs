@@ -6,7 +6,6 @@
 <section class="card">
   <p class="signing-as">Reporting: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/reports/new">Change</a></p>
   <h1 class="title">Submit a report</h1>
-  <p class="lead lead-alert">API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p>
 
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong>
@@ -90,6 +89,7 @@
 
     <button class="btn block" type="submit">Submit report</button>
   </form>
+  <% if (subjectType === 'merchant') { %><p class="muted mt">Reporting many defaults? API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p><% } %>
 </section>
 <script src="/js/report-form.js?v=<%= assetV %>" defer></script>
 <%- include('../partials/foot') %>

@@ -1,11 +1,11 @@
 <%- include('../partials/head') %>
 <section class="card">
   <h1 class="title">Search</h1>
-  <p class="lead">Who are you searching for? Searches are exact matches only. FinDex does not provide lists.</p>
+  <p class="lead">What would you like to check? Searches are exact matches only. FinDex does not provide lists.</p>
   <div class="pick">
-    <a class="pick-card" href="/search/individual"><strong>An individual</strong><span>Name and date of birth, plus email or mobile</span><em class="pick-tag fcra">Subject to FCRA &middot; employment screening only</em></a>
-    <a class="pick-card" href="/search/partner"><strong>A partner</strong><span>Company name or website</span><em class="pick-tag">Not subject to FCRA</em></a>
-    <a class="pick-card" href="/search/funded-business"><strong>A funded business</strong><span>EIN, or legal name and state</span><em class="pick-tag">Not subject to FCRA</em></a>
+    <a class="pick-card" href="/search/funded-business"><strong>Check a funded business</strong><span>Before funding: reported defaults and fraud, plus how many lenders searched it in the last 30 days. Search by EIN, or legal name and state.</span><em class="pick-tag">Not subject to FCRA</em></a>
+    <a class="pick-card" href="/search/partner"><strong>Check a partner</strong><span>Before working with a broker, lender, ISO or vendor. Search by website or company name.</span><em class="pick-tag">Not subject to FCRA</em></a>
+    <a class="pick-card" href="/search/individual"><strong>Screen an individual</strong><span>Employees and contractors, such as ISO reps. Name and date of birth, plus email or mobile.</span><em class="pick-tag fcra">Subject to FCRA &middot; employment screening only</em></a>
   </div>
 </section>
 <% if (recent.length) { %>

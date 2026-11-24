@@ -73,7 +73,7 @@ router.get('/reports', async (req, res, next) => {
 
 // ---------- new ----------
 
-router.get('/reports/new', (req, res) => res.render('reports/choose', { pageTitle: 'Submit a report' }));
+router.get('/reports/new', (req, res) => res.render('reports/choose', { pageTitle: 'Submit a report', canReportRepayment: R.canReportRepayment(req.account) }));
 
 function renderForm(res, { who, subjectType, values = {}, errors = [], status = 200 }) {
   const safe = { ...values };

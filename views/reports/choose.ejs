@@ -3,19 +3,22 @@
   <h1 class="title">Submit a report</h1>
   <p class="lead">Who are you reporting?</p>
   <div class="pick">
-    <a class="pick-card" href="/reports/new/individual">
-      <strong>An individual</strong>
-      <span>An employee or contractor in FinTech</span>
+    <a class="pick-card" href="/reports/new/funded-business">
+      <strong>A funded business</strong>
+      <span><%= canReportRepayment ? 'A default, or document manipulation' : 'Document manipulation' %></span>
     </a>
     <a class="pick-card" href="/reports/new/partner">
       <strong>A partner</strong>
-      <span>A broker, funder, lender, or other provider</span>
+      <span>A broker, lender, ISO or vendor: backdooring, misleading statements or data mishandling</span>
     </a>
-    <a class="pick-card" href="/reports/new/funded-business">
-      <strong>A funded business</strong>
-      <span>A merchant or borrower</span>
+    <a class="pick-card" href="/reports/new/individual">
+      <strong>An individual</strong>
+      <span>An employee or contractor: backdooring, misleading statements or document manipulation</span>
     </a>
   </div>
   <p class="muted mt"><a href="/reports">Your reports</a></p>
+</section>
+<section class="card">
+  <%- include('../partials/how-reporting-works') %>
 </section>
 <%- include('../partials/foot') %>

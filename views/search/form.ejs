@@ -2,8 +2,11 @@
 <% const v = k => (values && typeof values[k] === 'string') ? values[k] : ''; const purposes = S.PURPOSES_FOR[subjectType]; %>
 <section class="card">
   <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
-  <h1 class="title">Search</h1>
-  <p class="lead">Results show published reports only. Every search is logged.</p>
+  <% const TITLES = { merchant: ['Check a funded business', 'See reported defaults and fraud, and how many lenders searched this business in the last 30 days.'],
+       company: ['Check a partner', 'See reports about a broker, lender, ISO or vendor before you work with them.'],
+       individual: ['Screen an individual', 'See reports about an employee or contractor, for employment screening.'] }; %>
+  <h1 class="title"><%= TITLES[subjectType][0] %></h1>
+  <p class="lead"><%= TITLES[subjectType][1] %> Only published reports are shown, and every search is logged.</p>
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong><ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
   <% } %>
@@ -46,7 +49,7 @@
       </select>
     </div>
     <% } else { %>
-    <p class="muted mt">Searches of <%= subjectType === 'company' ? 'partners' : 'funded businesses' %> are not subject to the FCRA. Results are exact matches only; FinDex does not provide lists.</p>
+    <p class="muted mt">Not subject to the FCRA. Exact matches only.</p>
     <% } %>
 
     <% if (subjectType === 'individual') { %>
