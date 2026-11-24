@@ -115,7 +115,7 @@ async function issueCode(email, ip) {
 // ---------- routes ----------
 
 router.get('/login', (req, res) => {
-  if (session.readSession(req)) return res.redirect('/dashboard');
+  if (session.readSession(req)) return res.redirect(session.takeReturnTo(req, res));
   res.render('login', { pageTitle: 'Sign In', error: null, email: '' });
 });
 
@@ -182,7 +182,7 @@ router.post('/login/verify', verifyLimiter, async (req, res, next) => {
     await logEvent({ accountId: account.id, event: 'login', actor: 'account', ip: req.ip });
     session.clearLoginEmail(res);
     session.setSession(res, account);
-    return res.redirect(303, '/dashboard');
+    return res.redirect(303, session.takeReturnTo(req, res));
   } catch (err) {
     return next(err);
   }

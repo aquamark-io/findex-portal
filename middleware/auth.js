@@ -1,11 +1,14 @@
 // Requires a signed-in, still-approved account. Re-checks the database on every request,
 // so denying or revoking an account in /admin ends its access immediately.
 const supabase = require('../lib/supabase');
-const { readSession, clearSession } = require('../lib/session');
+const { readSession, clearSession, setReturnTo } = require('../lib/session');
 
 async function requireAccount(req, res, next) {
   const session = readSession(req);
-  if (!session) return res.redirect('/login');
+  if (!session) {
+    if (req.method === 'GET') setReturnTo(res, req.originalUrl);
+    return res.redirect('/login');
+  }
   try {
     const { data: account, error } = await supabase.from('fx_accounts')
       .select('id, account_type, status, first_name, last_name, email, business_legal_name, company_type, terms_version, is_test')

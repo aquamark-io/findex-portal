@@ -31,6 +31,29 @@ test('a company requests access, is approved, and signs in with an emailed code'
   assert.match(dash.text, /Acme Funding LLC/);
 });
 
+test('a signed-out member who follows the Search link lands on search after signing in', async () => {
+  const b = ctx.browser();
+  const r = await b.req('/search');
+  assert.equal(r.location, '/login');
+  const mark = emails.length;
+  await b.req('/login', { email: lenderEmail });
+  const v = await b.req('/login/verify', { code: await ctx.codeFor(lenderEmail, mark) });
+  assert.equal(v.location, '/search');
+  assert.equal((await b.req('/search')).status, 200);
+  // Used once: the next sign-in goes to the dashboard again.
+  await b.req('/logout', {});
+  const mark2 = emails.length;
+  await b.req('/login', { email: lenderEmail });
+  const v2 = await b.req('/login/verify', { code: await ctx.codeFor(lenderEmail, mark2) });
+  assert.equal(v2.location, '/dashboard');
+});
+
+test('the return path only allows pages on this site', () => {
+  const { safeReturnPath } = require('../lib/session');
+  assert.ok(safeReturnPath('/search/funded-business'));
+  for (const p of ['//evil.com', '/\\evil.com', 'https://evil.com', '/login', '/logout']) assert.ok(!safeReturnPath(p), p);
+});
+
 test('free email providers and mismatched domains are refused for company accounts', async () => {
   const b = ctx.browser();
   const base = { account_type: 'company', first_name: 'A', last_name: 'B', phone: '4155550101', business_legal_name: 'X LLC', company_type: 'broker',
