@@ -457,3 +457,14 @@ a.file-chip:hover { border-color: var(--base); }
 .recent-meta { color: var(--muted); font-size: 0.88rem; }
 .recent-meta .hit { color: #b8287a; font-weight: 600; }
 @media (max-width: 560px) { .recent-panel { padding: 18px 18px 8px; } .recent-list li { flex-direction: column; gap: 2px; } }
+
+/* Dashboard: secondary sections as tinted panels, separate from the white main card. */
+.side-panel { margin-top: 20px; background: var(--lav); border: 1px solid var(--lav-border); border-radius: 6px; padding: 24px 28px; }
+.side-panel h2 { font-size: 1.05rem; margin-bottom: 6px; }
+.side-panel > p { margin: 0 0 4px; color: var(--body); }
+.example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.example-grid a { display: block; background: #fff; border: 1px solid var(--lav-border); border-radius: 4px; padding: 12px 14px; text-decoration: none; }
+.example-grid a:hover { border-color: var(--base); }
+.example-grid strong { display: block; color: var(--deep); }
+.example-grid span { display: block; color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+@media (max-width: 560px) { .side-panel { padding: 20px 18px; } .example-grid { grid-template-columns: 1fr; } }

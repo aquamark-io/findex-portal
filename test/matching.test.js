@@ -312,7 +312,8 @@ test('example results show sample reports for each type, clearly marked, with no
     assert.doesNotMatch(r.text, /\/files\//, 'no evidence links');
   }
   assert.equal((await lender.req('/search/example/nope')).location, '/search');
-  assert.match((await lender.req('/search')).text, /href="\/search\/example\/merchant"/);
+  assert.doesNotMatch((await lender.req('/search')).text, /search\/example/, 'examples live on the dashboard, not the search page');
+  assert.match((await lender.req('/dashboard')).text, /href="\/search\/example\/merchant"/);
   const none = await lender.req((await lender.req('/search/merchant', { ein: '77-7777777', certify: 'on' })).location);
   assert.match(none.text, /No published reports found\./);
   assert.match(none.text, /href="\/search\/example\/merchant">See an example report/);

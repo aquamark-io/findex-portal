@@ -28,14 +28,7 @@
   <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <h1 class="title">Welcome<%= a.first_name ? `, ${a.first_name}` : '' %></h1>
   <% if (a.account_type === 'company') { %>
-    <p class="lead flush"><%= a.business_legal_name %></p>
-    <% if (fullAccess) { %>
-      <div class="action-grid">
-        <a class="btn" href="/search">Search</a>
-        <a class="btn secondary" href="/reports/new">Submit a report</a>
-        <a class="btn secondary" href="/reports">Your reports</a>
-      </div>
-    <% } else { %>
+    <% if (!fullAccess) { %>
       <div class="upgrade mt">
         <p class="flush">You can view and dispute reports about your company below. Searching and reporting require full access.</p>
         <div class="action-grid"><a class="btn" href="/dashboard/full-access">Get full access</a></div>
@@ -44,10 +37,8 @@
   <% } else { %>
     <p class="lead flush">View and dispute any report about <%= a.account_type === 'individual' ? 'you' : 'your business' %> at no cost.</p>
   <% } %>
-</section>
 
-<section class="card">
-  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
+  <h2><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
   <dl class="profile">
     <% rows.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
   </dl>
@@ -55,7 +46,7 @@
 </section>
 
 <% if (canUseApi) { %>
-<section class="card">
+<section class="side-panel">
   <h2 class="flush-top">API access</h2>
   <p>Automatically check for reports of financing defaults or document tampering associated with a business.</p>
   <% if (!apiAccess || ['denied', 'revoked'].includes(apiAccess.status)) { %>
@@ -65,6 +56,17 @@
   <% } else { %>
     <div class="action-grid"><a class="btn" href="/api-access">Manage API keys</a></div>
   <% } %>
+</section>
+<% } %>
+<% if (fullAccess) { %>
+<section class="side-panel">
+  <h2 class="flush-top">Report examples</h2>
+  <p>See what search results look like, using sample data.</p>
+  <div class="example-grid">
+    <a href="/search/example/individual"><strong>Individual</strong><span>Jordan Rivera</span></a>
+    <a href="/search/example/vendor"><strong>Vendor</strong><span>Leaky CRM Inc</span></a>
+    <a href="/search/example/merchant"><strong>Merchant</strong><span>Joe&rsquo;s Cafe LLC</span></a>
+  </div>
 </section>
 <% } %>
 <% if (!fullAccess) { %>
