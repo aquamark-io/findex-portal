@@ -22,7 +22,7 @@
       <p class="side-head">Summary</p>
       <% if (type === 'merchant') { %>
         <div class="side-row"><span>Defaults</span><b class="<%= defaults ? 'hit' : '' %>"><%= search.expired ? '–' : defaults %></b></div>
-        <div class="side-row"><span>Document tampering</span><b class="<%= reports.length - defaults ? 'hit' : '' %>"><%= search.expired ? '–' : reports.length - defaults %></b></div>
+        <div class="side-row"><span>Document Tampering</span><b class="<%= reports.length - defaults ? 'hit' : '' %>"><%= search.expired ? '–' : reports.length - defaults %></b></div>
         <div class="side-row"><span>Searches last 30 days</span><b class="<%= activity && activity.searches ? 'hit' : '' %>"><%= activity ? activity.searches : '–' %></b></div>
         <% if (matchedOn) { %><div class="side-row"><span>Matched on</span><span><%= matchedOn %></span></div><% } %>
         <% if (matchedOn && !by.has('ein')) { %><p class="side-note">Confirm the EIN with the business before relying on this result.</p><% } %>

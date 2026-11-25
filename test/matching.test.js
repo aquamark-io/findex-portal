@@ -181,7 +181,7 @@ test('people sign up to check their record without an SSN, and are linked to rep
   await admin.req(`/admin/accounts/${acct.id}/approve`, { note: '' });
   await ctx.signIn(b, 'jordan@mail.com');
   const dash = await b.req('/dashboard'); // reports are linked when the dashboard opens
-  assert.match(dash.text, /Document tampering/);
+  assert.match(dash.text, /Document Tampering/);
   const subj = fake.tables.fx_subjects.find(s => s.subject_type === 'individual' && fake.tables.fx_subject_emails.some(e => e.subject_id === s.id && e.email === 'jordan@mail.com'));
   assert.ok(fake.tables.fx_subject_links.some(l => l.account_id === acct.id && l.subject_id === subj.id));
 });
@@ -194,7 +194,7 @@ test('a person whose email differs is still linked when DOB, last name and mobil
   await admin.req(`/admin/accounts/${acct.id}/approve`, { note: '' });
   await ctx.signIn(b, 'jr.work@company.com');
   const dash = await b.req('/dashboard');
-  assert.match(dash.text, /Document tampering/);
+  assert.match(dash.text, /Document Tampering/);
   assert.ok(fake.tables.fx_subject_links.some(l => l.account_id === acct.id && l.linked_by === 'identity'));
   // Same DOB and last name but a different mobile and email: not linked.
   const c = ctx.browser();
@@ -226,20 +226,23 @@ test('no part of an SSN is stored anywhere', () => {
   assert.ok(emails.length > 0);
 });
 
-test('impersonation can be reported about individuals and vendors, not merchants', async () => {
+test('categories: individuals and vendors get five, merchants get Document Tampering and Default', async () => {
   const R = require('../lib/reports');
   const funder = { account_type: 'company', company_type: 'funder' };
-  const keys = t => R.categoriesFor(t, funder).map(c => c.key);
-  assert.ok(keys('individual').includes('impersonation'));
-  assert.ok(keys('company').includes('impersonation'));
-  assert.ok(!keys('merchant').includes('impersonation'), 'merchants: defaults and document tampering only');
+  const labels = t => R.categoriesFor(t, funder).map(c => c.label);
+  const five = ['Data Mishandling', 'Theft', 'False Statements', 'Document Tampering', 'Unauthorized Activity'];
+  assert.deepEqual(labels('individual'), five);
+  assert.deepEqual(labels('company'), five);
+  assert.deepEqual(labels('merchant'), ['Document Tampering', 'Default']);
+  for (const c of R.categoriesFor('individual', funder)) assert.match(R.GUIDANCE[c.key], /^Accepted evidence: /, `${c.label}: evidence we accept`);
   const form = await lender.req('/reports/new/individual');
-  assert.match(form.text, /Impersonation/);
+  assert.match(form.text, /Unauthorized Activity/);
+  assert.doesNotMatch(form.text, /Impersonation|Misleading Statements/);
   const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Imp Test LLC', subject_ein: '33-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@imptest.com',
     category: 'impersonation', incident_date: '2026-08-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
-  assert.equal(r.status, 422);
+  assert.equal(r.status, 422, 'merchants cannot be reported for Unauthorized Activity');
 });
 
 test('vendors: old partner links redirect, the report form requires a vendor type, and the type shows in results', async () => {
