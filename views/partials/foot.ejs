@@ -2,7 +2,7 @@
 <footer class="foot">
   <span>&copy; <%= new Date().getFullYear() %> FinDex</span>
   <span>Independently administered</span>
-  <a href="/contact">Contact</a>
+  <% if (!(typeof account !== 'undefined' && account) && typeof adminNav === 'undefined') { %><a href="/contact">Contact</a><% } %>
 </footer>
 </body>
 </html>

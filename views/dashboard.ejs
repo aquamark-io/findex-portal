@@ -4,26 +4,20 @@
    const phone = p => { const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(p || ''); return m ? `(${m[1]}) ${m[2]}-${m[3]}` : p; };
    const name = `${pr.first_name || ''} ${pr.last_name || ''}`.trim();
    const fullAccess = a.account_type === 'company' && a.terms_version;
-   let rows;
+   // Shown by default; the rest appears under "See more".
+   let main, more;
    if (a.account_type === 'company') {
-     rows = [
-       ['Company', pr.business_legal_name], ['DBA', pr.business_dba], ['Role', COMPANY_TYPES[pr.company_type]],
-       ['Website', pr.website ? pr.website.replace(/^https?:\/\//, '') : null], ['State of registration', STATES[pr.state_of_registration]],
-       ['Contact', name], ['Email', pr.email], ['Phone', phone(pr.phone)],
-       ['Member since', day(pr.created_at)], ['Member terms', a.terms_version ? `Accepted ${day(pr.terms_accepted_at)}` : 'Not accepted'],
-     ];
+     main = [['Name', name], ['Company', pr.business_legal_name], ['Email', pr.email], ['Member since', day(pr.created_at)], ['Role', COMPANY_TYPES[pr.company_type]]];
+     more = [['DBA', pr.business_dba], ['Website', pr.website ? pr.website.replace(/^https?:\/\//, '') : null], ['State of registration', STATES[pr.state_of_registration]],
+       ['Phone', phone(pr.phone)], ['Member terms', a.terms_version ? `Accepted ${day(pr.terms_accepted_at)}` : 'Not accepted']];
    } else if (a.account_type === 'individual') {
-     rows = [
-       ['Name', name], ['Email', pr.email], ['Mobile', phone(pr.phone)], ['Company', pr.current_company],
-       ['Role', WORKER_TYPES[pr.worker_type]], ['Member since', day(pr.created_at)],
-     ];
+     main = [['Name', name], ['Company', pr.current_company], ['Email', pr.email], ['Member since', day(pr.created_at)], ['Role', WORKER_TYPES[pr.worker_type]]];
+     more = [['Mobile', phone(pr.phone)]];
    } else {
-     rows = [
-       ['Business', pr.business_legal_name], ['DBA', pr.business_dba], ['State of registration', STATES[pr.state_of_registration]],
-       ['Contact', name], ['Email', pr.email], ['Phone', phone(pr.phone)], ['Member since', day(pr.created_at)],
-     ];
+     main = [['Name', name], ['Business', pr.business_legal_name], ['Email', pr.email], ['Member since', day(pr.created_at)]];
+     more = [['DBA', pr.business_dba], ['State of registration', STATES[pr.state_of_registration]], ['Phone', phone(pr.phone)]];
    }
-   rows = rows.filter(([, v]) => v); %>
+   main = main.filter(([, v]) => v); more = more.filter(([, v]) => v); %>
 <section class="card">
   <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <h1 class="title">Dashboard</h1>
@@ -38,25 +32,20 @@
     <p class="lead flush">View and dispute any report about <%= a.account_type === 'individual' ? 'you' : 'your business' %> at no cost.</p>
   <% } %>
 
-  <details class="profile-toggle">
-    <summary><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></summary>
+  <h2><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
+  <dl class="profile">
+    <% main.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
+  </dl>
+  <% if (more.length) { %>
+  <details class="see-more">
+    <summary><span class="when-closed">See more</span><span class="when-open">See less</span></summary>
     <dl class="profile">
-      <% rows.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
+      <% more.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
     </dl>
   </details>
+  <% } %>
 </section>
 
-<% if (fullAccess) { %>
-<section class="side-panel">
-  <h2 class="flush-top">Report examples</h2>
-  <p>See what search results look like.</p>
-  <div class="example-grid">
-    <a href="/search/example/individual"><strong>Individual</strong><span>Jordan Rivera</span></a>
-    <a href="/search/example/vendor"><strong>Vendor</strong><span>Leaky CRM Inc</span></a>
-    <a href="/search/example/merchant"><strong>Merchant</strong><span>Joe&rsquo;s Cafe LLC</span></a>
-  </div>
-</section>
-<% } %>
 <% if (canUseApi) { %>
 <section class="side-panel">
   <h2 class="flush-top">API access</h2>
@@ -69,6 +58,9 @@
     <div class="action-grid"><a class="btn" href="/api-access">Manage API keys</a></div>
   <% } %>
 </section>
+<% } %>
+<% if (fullAccess) { %>
+<p class="example-line">Report examples: <a href="/search/example/individual">Individual</a> &middot; <a href="/search/example/vendor">Vendor</a> &middot; <a href="/search/example/merchant">Merchant</a></p>
 <% } %>
 <% if (!fullAccess) { %>
 <%- include('partials/about-me') %>

@@ -492,3 +492,13 @@ a.file-chip:hover { border-color: var(--base); }
 .results-item { padding-bottom: 28px; margin-bottom: 28px; }
 /* Individual search form: room between the certification and the upload. */
 .auth-upload { margin: 22px 0 0; }
+/* Dashboard profile: key details shown, the rest under "See more". */
+.see-more { margin-top: 4px; }
+.see-more summary { list-style: none; cursor: pointer; display: inline-block; margin-top: 14px; color: var(--deep); font-weight: 600; font-size: 0.92rem; text-decoration: underline; text-underline-offset: 3px; }
+.see-more summary::-webkit-details-marker { display: none; }
+.see-more .when-open, .see-more[open] .when-closed { display: none; }
+.see-more[open] .when-open { display: inline; }
+.see-more[open] summary { order: 2; }
+.see-more .profile { margin-top: 4px; }
+.example-line { margin: 22px 0 0; text-align: center; font-size: 0.88rem; color: var(--muted); }
+.example-line a { color: var(--deep); }

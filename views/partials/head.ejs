@@ -39,6 +39,7 @@
       <% } else if (typeof account !== 'undefined' && account) { %>
         <a <%- here('/dashboard') %> href="/dashboard">Dashboard</a>
         <% if (account.account_type === 'company' && account.terms_version) { %><a <%- here('/search') %> href="/search">Search</a><a <%- here('/reports') %> href="/reports">Reports</a><% } %>
+        <a <%- here('/contact') %> href="/contact">Contact</a>
         <form method="post" action="/logout"><button class="nav-link link-reset" type="submit">Sign Out</button></form>
       <% } else { %>
         <a <%- here('/check-my-record') %> href="/check-my-record">Check My Record</a>
