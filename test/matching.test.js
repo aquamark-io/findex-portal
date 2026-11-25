@@ -218,7 +218,10 @@ test('businesses sign up with an EIN; there is no SSN option', async () => {
 
 test('no part of an SSN is stored anywhere', () => {
   const all = JSON.stringify(fake.tables);
-  assert.doesNotMatch(all, /ssn/i);
+  // Field names and readable values only: encrypted values, hashes and ids are random and can contain "ssn" by chance.
+  const RANDOM = /^(v1:[A-Za-z0-9+/=:]+|[0-9a-f]{32,}|[0-9a-f-]{36})$/;
+  const readable = JSON.stringify(fake.tables, (k, v) => (typeof v === 'string' && RANDOM.test(v) ? '' : v));
+  assert.doesNotMatch(readable, /ssn|social security/i);
   assert.ok(!all.includes('1990-04-12'), 'dates of birth are only stored encrypted');
   assert.ok(emails.length > 0);
 });
