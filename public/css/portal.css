@@ -446,3 +446,14 @@ a.file-chip:hover { border-color: var(--base); }
 .results-details p { margin: 2px 0; }
 .results-files { margin: 0 !important; gap: 6px 18px; }
 .results-item { padding-bottom: 24px; margin-bottom: 24px; }
+
+/* Search page: recent searches as a tinted panel, separate from the white search card. */
+.recent-panel { margin-top: 20px; background: var(--lav); border: 1px solid var(--lav-border); border-radius: 6px; padding: 22px 28px 10px; }
+.recent-panel h2 { font-size: 1rem; margin-bottom: 8px; }
+.recent-list { list-style: none; margin: 0; padding: 0; }
+.recent-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--lav-border); }
+.recent-list a { color: var(--deep); font-weight: 600; text-decoration: none; }
+.recent-list a:hover { text-decoration: underline; }
+.recent-meta { color: var(--muted); font-size: 0.88rem; }
+.recent-meta .hit { color: #b8287a; font-weight: 600; }
+@media (max-width: 560px) { .recent-panel { padding: 18px 18px 8px; } .recent-list li { flex-direction: column; gap: 2px; } }

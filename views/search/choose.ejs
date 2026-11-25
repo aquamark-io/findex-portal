@@ -10,12 +10,14 @@
   <p class="muted example-links">New to FinDex? See example results for an <a href="/search/example/individual">individual</a>, a <a href="/search/example/vendor">vendor</a> or a <a href="/search/example/merchant">merchant</a>.</p>
 </section>
 <% if (recent.length) { %>
-<section class="card">
+<section class="recent-panel">
   <h2 class="flush-top">Your recent searches</h2>
-  <ul class="history">
-    <% recent.forEach(s => { const c = s.criteria || {}; %>
-      <li><a href="/search/results/<%= s.id %>"><%= c.name || c.domain || (c.ein ? 'Merchant by EIN' : R.SUBJECT_TYPES[s.subject_type] + ' search') %></a>
-        <span class="muted">&middot; <%= R.SUBJECT_TYPES[s.subject_type] %> &middot; <%= s.result_report_ids.length %> report<%= s.result_report_ids.length === 1 ? '' : 's' %> &middot; <%= fmtDate(s.created_at) %></span></li>
+  <ul class="recent-list">
+    <% recent.forEach(s => { const c = s.criteria || {}; const n = s.result_report_ids.length; %>
+      <li>
+        <a href="/search/results/<%= s.id %>"><%= c.name || c.domain || (c.ein ? 'Merchant by EIN' : R.SUBJECT_TYPES[s.subject_type] + ' search') %></a>
+        <span class="recent-meta"><%= R.SUBJECT_TYPES[s.subject_type] %> &middot; <span class="<%= n ? 'hit' : '' %>"><%= n %> report<%= n === 1 ? '' : 's' %></span> &middot; <%= fmtDate(s.created_at) %></span>
+      </li>
     <% }) %>
   </ul>
 </section>
