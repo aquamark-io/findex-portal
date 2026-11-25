@@ -620,8 +620,9 @@ body:not(.admin) .pill.rejected, body:not(.admin) .pill.removed, body:not(.admin
 }
 .act-list .example-tag { margin: 0 10px 0 0; vertical-align: 1px; }
 /* Activity v3: a plain, filterable list. */
-.raw-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.raw-top a { color: #b8287a; font-weight: 600; text-decoration: none; }
+.raw-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.btn.magenta { padding: 9px 18px; font-size: 0.92rem; background: #b8287a; border-color: #b8287a; border-radius: 4px; }
+.btn.magenta:hover { background: #9c2067; border-color: #9c2067; }
 .raw-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 14px; font-size: 0.9rem; color: var(--muted); }
 .raw-filters label { display: flex; align-items: center; gap: 6px; font-weight: 400; margin: 0; }
 .raw-filters select { width: auto; padding: 5px 28px 5px 8px; font-size: 0.9rem; }

@@ -160,7 +160,7 @@ test('Activity: one plain list with filters, examples at the end; old Reports li
   assert.match(nav.text, /href="\/activity">Activity<\/a>/);
 
   const all = await b.req('/activity');
-  assert.match(all.text, /href="\/reports\/new">\+ Submit a report<\/a>/);
+  assert.match(all.text, /class="btn magenta" href="\/reports\/new">Submit a report<\/a>/);
   assert.match(all.text, /<select name="show">/);
   assert.equal((all.text.match(/class="raw-ex"/g) || []).length, 7, '3 example reports, 1 about you, 3 searches');
   assert.match(all.text, /href="\/activity\/example\/1"/);
