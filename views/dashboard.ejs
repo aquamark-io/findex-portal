@@ -57,7 +57,7 @@
 <% if (canUseApi) { %>
 <section class="card">
   <h2 class="flush-top">API access</h2>
-  <p>Check funded businesses for defaults and document tampering from your own systems.</p>
+  <p>Automatically check for reports of financing defaults or document tampering associated with a funded business.</p>
   <% if (!apiAccess || ['denied', 'revoked'].includes(apiAccess.status)) { %>
     <div class="action-grid"><a class="btn" href="/api-access">Request API access</a></div>
   <% } else if (apiAccess.status === 'requested') { %>
