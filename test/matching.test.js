@@ -236,10 +236,12 @@ test('categories: the final list, alphabetical; merchants get Defaulted on Finan
   assert.deepEqual(labels('company'), ten);
   assert.deepEqual(labels('merchant'), ['Defaulted on Financing', 'Document Tampering']);
   assert.deepEqual(R.categoriesFor('merchant', { account_type: 'company', company_type: 'broker' }).map(c => c.label), ['Document Tampering'], 'only funders and lenders report defaults');
+  // AI review: one general checklist and the general evidence list for every category; defaults keep their own two items.
   for (const c of R.categoriesFor('individual', funder)) {
-    assert.match(R.GUIDANCE[c.key], /^Accepted evidence: /, `${c.label}: evidence we accept`);
-    assert.ok(R.REQUIREMENTS[c.key].length >= 2, `${c.label}: what the evidence must show`);
+    assert.deepEqual(R.requirementsFor(c.key, 'individual').map(R.reqLabel), ['Reported individual', 'The incident', 'Connection to the reported party', 'Date']);
+    assert.match(R.guidanceFor(c.key), /Fee schedules/);
   }
+  assert.deepEqual(R.requirementsFor('default', 'merchant').map(R.reqLabel), ['Default notice', 'Proof of delivery']);
   const form = await lender.req('/reports/new/individual');
   assert.match(form.text, /Unauthorized Fees/);
   assert.match(form.text, /Something else\? <a href="\/contact">Contact us<\/a>/);
@@ -285,7 +287,7 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   assert.match(res.text, /<span>Vendor type<\/span><span>CRM or LOS<\/span>/);
 });
 
-test('funded businesses are now merchants: old links redirect, and defaults are labelled for funded merchants only', async () => {
+test('funded businesses are now merchants: old links redirect, and the default category is Defaulted on Financing', async () => {
   assert.equal((await lender.req('/search/funded-business')).location, '/search/merchant');
   assert.equal((await lender.req('/reports/new/funded-business')).location, '/reports/new/merchant');
   assert.equal((await ctx.browser().req('/check-my-record/funded-business')).location, '/check-my-record/merchant');
@@ -293,7 +295,7 @@ test('funded businesses are now merchants: old links redirect, and defaults are 
   assert.match(choose.text, /A merchant/);
   assert.match(choose.text, /applied for or received funding/);
   const form = await lender.req('/reports/new/merchant');
-  assert.match(form.text, /Defaulted on Financing \(funded merchants only\)/);
+  assert.match(form.text, />Defaulted on Financing</);
   const record = await ctx.browser().req('/check-my-record');
   assert.match(record.text, /A merchant/);
   assert.doesNotMatch(record.text + choose.text, /funded business/i);
