@@ -46,6 +46,24 @@
   <% } %>
 </section>
 
+<% if (activity) { %>
+<section class="activity" aria-label="Your activity">
+  <h2 class="flush-top">Your activity</h2>
+  <div class="activity-grid">
+    <a href="/search"><b><%= activity.searches %></b><span>Search<%= activity.searches === 1 ? '' : 'es' %> in the last 30 days</span></a>
+    <a href="/reports"><b><%= activity.submitted %></b><span>Report<%= activity.submitted === 1 ? '' : 's' %> submitted</span></a>
+    <a href="/reports"><b class="<%= activity.aboutUs ? 'hit' : '' %>"><%= activity.aboutUs %></b><span>Report<%= activity.aboutUs === 1 ? '' : 's' %> about your company</span></a>
+  </div>
+</section>
+<section class="examples-bar">
+  <div><strong>Report examples</strong><span>See what search results look like.</span></div>
+  <nav aria-label="Report examples">
+    <a href="/search/example/individual">Individual</a>
+    <a href="/search/example/vendor">Vendor</a>
+    <a href="/search/example/merchant">Merchant</a>
+  </nav>
+</section>
+<% } %>
 <% if (canUseApi) { %>
 <section class="side-panel">
   <h2 class="flush-top">API access</h2>
@@ -58,9 +76,6 @@
     <div class="action-grid"><a class="btn" href="/api-access">Manage API keys</a></div>
   <% } %>
 </section>
-<% } %>
-<% if (fullAccess) { %>
-<p class="example-line">Report examples: <a href="/search/example/individual">Individual</a> &middot; <a href="/search/example/vendor">Vendor</a> &middot; <a href="/search/example/merchant">Merchant</a></p>
 <% } %>
 <% if (!fullAccess) { %>
 <%- include('partials/about-me') %>

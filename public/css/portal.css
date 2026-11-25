@@ -502,3 +502,25 @@ a.file-chip:hover { border-color: var(--base); }
 .see-more .profile { margin-top: 4px; }
 .example-line { margin: 22px 0 0; text-align: center; font-size: 0.88rem; color: var(--muted); }
 .example-line a { color: var(--deep); }
+/* Dashboard: activity numbers and a slim report-examples bar. */
+.activity { margin-top: 20px; background: #fff; border: 1px solid var(--lav-border); border-radius: 6px; padding: 22px 28px 24px; }
+.activity h2 { font-size: 1.05rem; margin-bottom: 14px; }
+.activity-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.activity-grid a { display: block; text-decoration: none; border: 1px solid var(--lav-border); border-top: 3px solid var(--deep); border-radius: 4px; padding: 12px 14px; }
+.activity-grid a:hover { border-color: var(--base); }
+.activity-grid b { display: block; font-size: 1.6rem; line-height: 1.1; color: var(--ink); }
+.activity-grid b.hit { color: #b8287a; }
+.activity-grid span { display: block; margin-top: 4px; font-size: 0.85rem; color: var(--muted); }
+.examples-bar { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; flex-wrap: wrap; background: #fdf0f7; border: 1px solid #f2c4dd; border-radius: 6px; padding: 16px 22px; }
+.examples-bar strong { display: block; color: var(--deep); }
+.examples-bar div span { font-size: 0.88rem; color: var(--muted); }
+.examples-bar nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.examples-bar nav a { padding: 7px 14px; border: 1px solid #b8287a; border-radius: 4px; background: #fff; color: #b8287a; font-weight: 600; font-size: 0.88rem; text-decoration: none; }
+.examples-bar nav a:hover { background: #b8287a; color: #fff; }
+@media (max-width: 560px) {
+  .activity { padding: 20px 18px; }
+  .activity-grid { gap: 8px; } .activity-grid a { padding: 10px; } .activity-grid b { font-size: 1.35rem; } .activity-grid span { font-size: 0.76rem; }
+  .examples-bar { flex-direction: column; align-items: flex-start; padding: 16px 18px; }
+  .examples-bar nav { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); }
+  .examples-bar nav a { text-align: center; padding: 8px 6px; }
+}

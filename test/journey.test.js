@@ -143,3 +143,13 @@ test('defaults must be reported within 90 days of the default date', async () =>
     { files: { evidence: [{ name: 'a.pdf' }] } });
   assert.equal(old.status, 303, old.text.slice(0, 300));
 });
+
+test('the dashboard shows the company activity and the report example links above API access', async () => {
+  const d = await lender.req('/dashboard');
+  assert.match(d.text, /Your activity/);
+  assert.match(d.text, /Searches? in the last 30 days/);
+  assert.match(d.text, /Reports? submitted/);
+  assert.match(d.text, /Reports? about your company/);
+  assert.ok(d.text.indexOf('Report examples') < d.text.indexOf('API access'), 'examples above API access');
+  assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
+});
