@@ -157,10 +157,11 @@ test('Activity: one plain list with filters, examples at the end; old Reports li
   assert.equal((await b.req('/reports')).location, '/activity');
   assert.equal((await b.req('/reports/about')).location, '/activity?tab=about');
   const nav = await b.req('/dashboard');
-  assert.match(nav.text, /href="\/activity">Activity<\/a>/);
+  assert.match(nav.text, /href="\/reports\/new">Report<\/a><a class="nav-link" href="\/activity">Activity<\/a>/, 'Report tab before Activity');
+  assert.match((await b.req('/reports/new/merchant')).text, /class="nav-link active" aria-current="page" href="\/reports\/new">Report</, 'Report tab is active on the report forms');
 
   const all = await b.req('/activity');
-  assert.match(all.text, /class="btn magenta" href="\/reports\/new">Submit a report<\/a>/);
+  assert.doesNotMatch(all.text, /Submit a report<\/a>/, 'reporting lives on the Report tab');
   assert.match(all.text, /<select name="show">/);
   assert.equal((all.text.match(/class="raw-ex"/g) || []).length, 7, '3 example reports, 1 about you, 3 searches');
   assert.match(all.text, /href="\/activity\/example\/1"/);
