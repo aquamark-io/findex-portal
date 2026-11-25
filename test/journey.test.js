@@ -51,7 +51,7 @@ test('a signed-out member who follows the Search link lands on search after sign
 
 test('the return path only allows pages on this site', () => {
   const { safeReturnPath } = require('../lib/session');
-  assert.ok(safeReturnPath('/search/funded-business'));
+  assert.ok(safeReturnPath('/search/merchant'));
   for (const p of ['//evil.com', '/\\evil.com', 'https://evil.com', '/login', '/logout']) assert.ok(!safeReturnPath(p), p);
 });
 
@@ -67,7 +67,7 @@ test('free email providers and mismatched domains are refused for company accoun
 });
 
 test('a lender reports a default with evidence and the default notice', async () => {
-  const r = await lender.req('/reports/new/funded-business', {
+  const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Joe’s Cafe LLC', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe Smith', subject_email: merchantEmail,
     category: 'default', incident_date: DEFAULT_DATE, description: 'Declared in default after missed payments.', certify: 'on',
   }, { files: { evidence: [{ name: 'ledger.pdf' }], default_notice: [{ name: 'notice.pdf' }] } });
@@ -82,7 +82,7 @@ test('a lender reports a default with evidence and the default notice', async ()
 });
 
 test('a default without the default notice is refused', async () => {
-  const r = await lender.req('/reports/new/funded-business', {
+  const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Other Co', subject_ein: '98-7654321', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@other.co',
     category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
@@ -103,7 +103,7 @@ test('admin accepts the report: the business gets a notice and it publishes afte
 
 test('another member finds the published default by searching the business', async () => {
   other = await ctx.member(admin, { email: otherEmail, domain: 'bestcapital.com', company: 'Best Capital Inc', companyType: 'lender' });
-  const r = await other.req('/search/funded-business', { name: 'Joe’s Cafe LLC', ein: '12-3456789', certify: 'on' });
+  const r = await other.req('/search/merchant', { name: 'Joe’s Cafe LLC', ein: '12-3456789', certify: 'on' });
   assert.equal(r.status, 303);
   const res = await other.req(r.location);
   assert.match(res.text, /1 published report/);
@@ -114,7 +114,7 @@ test('another member finds the published default by searching the business', asy
 });
 
 test('a search with a different EIN finds nothing', async () => {
-  const r = await other.req('/search/funded-business', { name: 'Joe’s Cafe LLC', ein: '11-1111111', certify: 'on' });
+  const r = await other.req('/search/merchant', { name: 'Joe’s Cafe LLC', ein: '11-1111111', certify: 'on' });
   const res = await other.req(r.location);
   assert.match(res.text, /No published reports found/);
 });
@@ -133,13 +133,13 @@ test('defaults must be reported within 90 days of the default date', async () =>
   const form = { subject_name: 'Late Co LLC', subject_ein: '44-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@lateco.com',
     category: 'default', description: 'x', certify: 'on' };
   const files = { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } };
-  const late = await lender.req('/reports/new/funded-business', { ...form, incident_date: daysAgo(91) }, files);
+  const late = await lender.req('/reports/new/merchant', { ...form, incident_date: daysAgo(91) }, files);
   assert.equal(late.status, 422);
   assert.match(late.text, /within 90 days of the default date/);
-  const page = await lender.req('/reports/new/funded-business');
+  const page = await lender.req('/reports/new/merchant');
   assert.match(page.text, /data-max-age="90"/);
   // Other categories still allow up to 7 years.
-  const old = await lender.req('/reports/new/funded-business', { ...form, category: 'fraud', subject_ein: '44-7654321', incident_date: daysAgo(400) },
+  const old = await lender.req('/reports/new/merchant', { ...form, category: 'fraud', subject_ein: '44-7654321', incident_date: daysAgo(400) },
     { files: { evidence: [{ name: 'a.pdf' }] } });
   assert.equal(old.status, 303, old.text.slice(0, 300));
 });

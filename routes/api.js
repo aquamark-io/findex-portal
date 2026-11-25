@@ -1,12 +1,12 @@
 /**
- * Funded Business API (approved companies; access approved by an admin, keys created by the company).
- *   POST /api/v1/funded-business   JSON with what you have: "ein", and/or "name" + "state" (matched on each),
- *                                  plus optional "checks": ["default", "document_tampering"] (both when omitted)
- *   POST /api/v1/defaults          same, with "checks" defaulting to ["default"] (the original endpoint)
+ * Merchant API (approved companies; access approved by an admin, keys created by the company). A merchant is a
+ * business that applied for or received funding.
+ *   POST /api/v1/merchant   JSON with what you have: "ein", and/or "name" + "state" (matched on each),
+ *                           plus optional "checks": ["default", "document_tampering"] (both when omitted)
  * Each check returns whether anything is on record and, per report, the date and the reporting company. The
  * reporter's description and evidence stay in the portal (results_url), which shows only the checks requested.
  *   GET  /api               redirects to the documentation on the marketing site (joinfindex.com/api/)
- * Same matching and privacy as a portal search of a funded business: only published reports, the EIN is never
+ * Same matching and privacy as a portal search of a merchant: only published reports, the EIN is never
  * stored (one-way keys only), and every lookup is logged as a search by the key's company.
  * The EIN goes in the request body, never the URL, so it stays out of access logs.
  */
@@ -113,8 +113,7 @@ const lookup = defaultChecks => async (req, res, next) => {
   } catch (err) { return next(err); }
 };
 
-router.post('/api/v1/funded-business', authFailLimiter, requireKey, keyLimiter, json, lookup(['default', 'document_tampering']));
-router.post('/api/v1/defaults', authFailLimiter, requireKey, keyLimiter, json, lookup(['default']));
+router.post('/api/v1/merchant', authFailLimiter, requireKey, keyLimiter, json, lookup(['default', 'document_tampering']));
 
 // Anything else under /api/v1 gets a JSON 404, not the HTML page.
 router.all('/api/v1/*', (req, res) => fail(res, 404, 'not_found', `Unknown endpoint. See ${DOCS_URL()} for the documentation.`));

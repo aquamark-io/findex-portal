@@ -1,7 +1,7 @@
 /**
  * Search (companies with full access).
  *   GET  /search                 who are you searching for? + your recent searches
- *   GET  /search/:who            search form (individual | vendor | funded-business)
+ *   GET  /search/:who            search form (individual | vendor | merchant)
  *   POST /search/:who            validate, upload employment authorization, run, log, show results
  *   GET  /search/results/:id     results of one of your searches (for 7 days)
  *   GET  /search/results/:id/files/:fileId   evidence from those results (signed link, logged)
@@ -61,6 +61,7 @@ function renderForm(res, { who, subjectType, values = {}, errors = [], status = 
 
 // Old /partner links (partners are now vendors).
 router.get('/search/partner', (req, res) => res.redirect(301, '/search/vendor'));
+router.get('/search/funded-business', (req, res) => res.redirect(301, '/search/merchant'));
 
 router.get('/search/:who', (req, res) => {
   const subjectType = R.SUBJECT_SLUG[req.params.who];

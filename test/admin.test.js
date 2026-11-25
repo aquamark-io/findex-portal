@@ -179,7 +179,7 @@ test('account approvals and denials are recorded with the admin, target and IP',
 
 test('report accept, reject, evidence opens, dispute decisions and test deletes are recorded', async () => {
   const submit = async (name, ein) => {
-    const r = await lender.req('/reports/new/funded-business', {
+    const r = await lender.req('/reports/new/merchant', {
       subject_name: name, subject_ein: ein, subject_state: 'TX', subject_contact: 'Joe Smith', subject_email: `owner@${ein.replace(/\D/g, '')}.com`,
       category: 'default', incident_date: DEFAULT_DATE, description: 'Declared in default after missed payments.', certify: 'on',
     }, { files: { evidence: [{ name: 'ledger.pdf' }], default_notice: [{ name: 'notice.pdf' }] } });

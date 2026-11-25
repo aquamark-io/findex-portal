@@ -41,13 +41,13 @@ test('setup: four member companies', async () => {
 // ---------- businesses ----------
 
 test('reporting a business requires the state of registration', async () => {
-  const r = await lender.req('/reports/new/funded-business', {
+  const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Joe’s Cafe, L.L.C.', subject_ein: '12-3456789', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
     category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
   assert.equal(r.status, 422);
   assert.match(r.text, /State of registration is required/);
-  const ok = await lender.req('/reports/new/funded-business', {
+  const ok = await lender.req('/reports/new/merchant', {
     subject_name: 'Joe’s Cafe, L.L.C.', subject_ein: '12-3456789', subject_state: 'TX', subject_contact: 'Joe', subject_email: 'joe@joescafe.com',
     category: 'default', incident_date: DEFAULT_DATE, description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }], default_notice: [{ name: 'n.pdf' }] } });
@@ -59,45 +59,45 @@ test('reporting a business requires the state of registration', async () => {
 });
 
 test('a business can be found by EIN alone', async () => {
-  const res = await search(b2, 'funded-business', { ein: '123456789' });
+  const res = await search(b2, 'merchant', { ein: '123456789' });
   assert.match(res.text, /1 published report/);
   assert.doesNotMatch(res.text, /Confirm the EIN/, 'an EIN match needs no extra confirmation');
 });
 
 test('or by legal name + state, ignoring case, punctuation and LLC / Inc', async () => {
-  const res = await search(b3, 'funded-business', { name: 'JOES CAFE LLC', state: 'TX' });
+  const res = await search(b3, 'merchant', { name: 'JOES CAFE LLC', state: 'TX' });
   assert.match(res.text, /1 published report/);
   assert.match(res.text, /Legal name and state/);
   assert.match(res.text, /Confirm the EIN/);
 });
 
 test('the same name in another state, or a name without a state, finds nothing', async () => {
-  let res = await search(b3, 'funded-business', { name: 'Joes Cafe', state: 'CA' });
+  let res = await search(b3, 'merchant', { name: 'Joes Cafe', state: 'CA' });
   assert.match(res.text, /No published reports found/);
-  res = await search(b3, 'funded-business', { name: 'Joes Cafe' });
+  res = await search(b3, 'merchant', { name: 'Joes Cafe' });
   assert.equal(res.status, 422);
   assert.match(res.text, /state where the business is registered/);
-  res = await search(b3, 'funded-business', {});
+  res = await search(b3, 'merchant', {});
   assert.match(res.text, /Enter the EIN, or the business legal name and state/);
 });
 
 test('results show how many other companies searched the business in the last 30 days', async () => {
   // So far: b2 (EIN) and b3 (name + state) searched Joe's Cafe. b3 also searched the CA name, which isn't this business.
-  const res = await search(b4, 'funded-business', { ein: '12-3456789' });
+  const res = await search(b4, 'merchant', { ein: '12-3456789' });
   assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches by other companies in the last 30 days \(2 companies\)/);
   assert.match(res.text, /<span class="biz-num">1<\/span><span>Default reported/);
   // The searcher's own searches don't count, and searches over 30 days old drop off.
-  const again = await search(b4, 'funded-business', { name: 'Joe’s Cafe LLC', state: 'TX' });
+  const again = await search(b4, 'merchant', { name: 'Joe’s Cafe LLC', state: 'TX' });
   assert.match(again.text, /<span class="biz-num">2<\/span><span>Searches by other/);
   const old = fake.tables.fx_searches.find(s => s.account_id === ctx.accountByEmail('a@two.com').id);
   old.created_at = new Date(Date.now() - 31 * 864e5).toISOString();
-  const later = await search(b4, 'funded-business', { ein: '12-3456789' });
+  const later = await search(b4, 'merchant', { ein: '12-3456789' });
   assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches by other companies in the last 30 days \(1 company\)/);
 });
 
 test('the count works for a business with no reports, and the EIN is never stored', async () => {
-  await search(b2, 'funded-business', { ein: '55-5555555' });
-  const res = await search(b3, 'funded-business', { ein: '55-5555555' });
+  await search(b2, 'merchant', { ein: '55-5555555' });
+  const res = await search(b3, 'merchant', { ein: '55-5555555' });
   assert.match(res.text, /No published reports found/);
   assert.match(res.text, /<span class="biz-num">1<\/span><span>Searches by other companies/);
   assert.ok(!JSON.stringify(fake.tables.fx_searches).includes('555555555'));
@@ -208,7 +208,7 @@ test('a person whose email differs is still linked when DOB, last name and mobil
 
 test('businesses sign up with an EIN; there is no SSN option', async () => {
   const b = ctx.browser();
-  const form = await b.req('/check-my-record/funded-business');
+  const form = await b.req('/check-my-record/merchant');
   assert.doesNotMatch(form.text, /SSN|No EIN/);
   const r = await b.req('/request-access', { account_type: 'merchant', mode: 'record', first_name: 'Joe', last_name: 'Smith', email: 'joe@joescafe.com',
     phone: '4155550111', business_legal_name: 'Joe’s Cafe LLC', state_of_registration: 'TX', job_title: 'Owner', attest: 'on' });
@@ -226,16 +226,16 @@ test('no part of an SSN is stored anywhere', () => {
   assert.ok(emails.length > 0);
 });
 
-test('impersonation can be reported about individuals and vendors, not funded businesses', async () => {
+test('impersonation can be reported about individuals and vendors, not merchants', async () => {
   const R = require('../lib/reports');
   const funder = { account_type: 'company', company_type: 'funder' };
   const keys = t => R.categoriesFor(t, funder).map(c => c.key);
   assert.ok(keys('individual').includes('impersonation'));
   assert.ok(keys('company').includes('impersonation'));
-  assert.ok(!keys('merchant').includes('impersonation'), 'funded businesses: defaults and document tampering only');
+  assert.ok(!keys('merchant').includes('impersonation'), 'merchants: defaults and document tampering only');
   const form = await lender.req('/reports/new/individual');
   assert.match(form.text, /Impersonation/);
-  const r = await lender.req('/reports/new/funded-business', {
+  const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Imp Test LLC', subject_ein: '33-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@imptest.com',
     category: 'impersonation', incident_date: '2026-08-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
@@ -272,4 +272,18 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   const res = await b2.req(r.location);
   assert.match(res.text, /Vendor &middot; Vendor diligence/);
   assert.match(res.text, /<dt>Vendor type<\/dt><dd>CRM or LOS<\/dd>/);
+});
+
+test('funded businesses are now merchants: old links redirect, and defaults are labelled for funded merchants only', async () => {
+  assert.equal((await lender.req('/search/funded-business')).location, '/search/merchant');
+  assert.equal((await lender.req('/reports/new/funded-business')).location, '/reports/new/merchant');
+  assert.equal((await ctx.browser().req('/check-my-record/funded-business')).location, '/check-my-record/merchant');
+  const choose = await lender.req('/reports/new');
+  assert.match(choose.text, /A merchant/);
+  assert.match(choose.text, /applied for or received funding/);
+  const form = await lender.req('/reports/new/merchant');
+  assert.match(form.text, /Default \(funded merchants only\)/);
+  const record = await ctx.browser().req('/check-my-record');
+  assert.match(record.text, /A merchant/);
+  assert.doesNotMatch(record.text + choose.text, /funded business/i);
 });

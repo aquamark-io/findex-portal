@@ -3,9 +3,9 @@
   <h1 class="title">Submit a report</h1>
   <p class="lead">Who are you reporting?</p>
   <div class="pick">
-    <a class="pick-card" href="/reports/new/funded-business">
-      <strong>A funded business</strong>
-      <span><%= canReportRepayment ? 'A default, or document tampering' : 'Document tampering' %></span>
+    <a class="pick-card" href="/reports/new/merchant">
+      <strong>A merchant</strong>
+      <span>A business that applied for or received funding: <%= canReportRepayment ? 'a default (funded merchants only) or document tampering' : 'document tampering' %></span>
     </a>
     <a class="pick-card" href="/reports/new/vendor">
       <strong>A vendor</strong>

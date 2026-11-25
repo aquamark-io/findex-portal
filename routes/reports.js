@@ -2,7 +2,7 @@
  * Member reporting (companies with full access).
  *
  *   GET  /reports                       your reports
- *   GET  /reports/new                   who are you reporting? (individual / vendor / funded business)
+ *   GET  /reports/new                   who are you reporting? (individual / vendor / merchant)
  *   GET  /reports/new/:who              report form
  *   POST /reports/new/:who              validate, store evidence in fx-evidence, create the report
  *   GET  /reports/:id                   one of your reports
@@ -92,6 +92,7 @@ function renderForm(res, { who, subjectType, values = {}, errors = [], status = 
 
 // Old /partner links (partners are now vendors).
 router.get('/reports/new/partner', (req, res) => res.redirect(301, '/reports/new/vendor'));
+router.get('/reports/new/funded-business', (req, res) => res.redirect(301, '/reports/new/merchant'));
 
 router.get('/reports/new/:who', (req, res) => {
   const subjectType = R.SUBJECT_SLUG[req.params.who];

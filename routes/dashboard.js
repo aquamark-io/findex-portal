@@ -41,7 +41,7 @@ router.get('/dashboard', requireAccount, async (req, res, next) => {
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
     COMPANY_TYPES,
-    // Funders and lenders with full access may report funded-business repayment issues.
+    // Funders and lenders with full access may report merchant defaults.
     canReportRepayment: a.account_type === 'company' && canReportRepayment(a) && Boolean(a.terms_version),
     msg: req.query.upgraded === '1' ? 'You now have full access.' : req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null,
   });

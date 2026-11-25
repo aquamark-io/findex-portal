@@ -3,7 +3,7 @@
  *
  *   GET  /request-access                      company (member) sign-up
  *   GET  /check-my-record                     "Who are you?" chooser
- *   GET  /check-my-record/:who                individual | company | funded-business form
+ *   GET  /check-my-record/:who                individual | company | merchant form
  *   POST /request-access                      validate, store (identity fields encrypted), email applicant + admin
  *   GET  /request-access/received    confirmation
  */
@@ -53,10 +53,13 @@ function renderForm(res, { type, mode = 'member', values = {}, errors = [], stat
 }
 
 // URL slug <-> account type for Check My Record.
-const WHO = { individual: 'individual', company: 'company', 'funded-business': 'merchant' };
-const SLUG = { individual: 'individual', company: 'company', merchant: 'funded-business' };
+const WHO = { individual: 'individual', company: 'company', merchant: 'merchant' };
+const SLUG = { individual: 'individual', company: 'company', merchant: 'merchant' };
 
 router.get('/check-my-record', (req, res) => res.render('check-my-record', { pageTitle: 'Check My Record' }));
+
+// Old link (funded businesses are now merchants).
+router.get('/check-my-record/funded-business', (req, res) => res.redirect(301, '/check-my-record/merchant'));
 
 router.get('/check-my-record/:who', (req, res) => {
   const type = WHO[req.params.who];
@@ -77,7 +80,7 @@ router.get('/request-access/received', (req, res) => res.render('received', { pa
 router.post('/request-access', attemptLimiter, submitLimiter, async (req, res, next) => {
   const body = req.body || {};
   const type = Object.prototype.hasOwnProperty.call(ACCOUNT_TYPES, body.account_type) ? body.account_type : 'company';
-  // Individuals and funded businesses always sign up through Check My Record.
+  // Individuals and merchants always sign up through Check My Record.
   const mode = type === 'company' && body.mode !== 'record' ? 'member' : 'record';
 
   try {

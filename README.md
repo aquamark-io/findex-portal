@@ -26,7 +26,7 @@ and are reachable only through the service role.
 |---|---|
 | `/request-access` | Company (member) sign-up only |
 | `/check-my-record` | "Who are you?" chooser |
-| `/check-my-record/individual`, `/company`, `/funded-business` | Sign-up form for that type, with "Signing up as … · Change" |
+| `/check-my-record/individual`, `/company`, `/merchant` | Sign-up form for that type, with "Signing up as … · Change" |
 | `/request-access/received` | Confirmation |
 
 Sign-up rules: server-side validation; emails lowercased; websites stored as their origin; company emails must be on
@@ -84,7 +84,7 @@ email (the sender isn't told). Spam: honeypot + 5 messages per hour per IP. Admi
 
 ## Reports (phase two, step 1)
 
-Companies with full access submit reports at `/reports/new` (individual, vendor, or funded business; vendors pick a vendor type, `fx_subjects.vendor_type`), with
+Companies with full access submit reports at `/reports/new` (individual, vendor, or merchant, a business that applied for or received funding; vendors pick a vendor type, `fx_subjects.vendor_type`), with
 evidence files stored in the private `fx-evidence` Supabase bucket (25 MB each, up to 10 per report). Categories
 are limited by subject type, and default is funders and lenders only; default reports require
 the default notice and must be filed within 90 days of the default date (other incidents: within 7 years). Reported parties (`fx_subjects`) are de-duplicated by EIN (businesses), website domain (vendors), or, for people,
@@ -113,14 +113,13 @@ certification and an uploaded signed authorization. Results show published repor
 and stay viewable for 7 days. Every search is logged in `fx_searches` without DOB, EIN, mobile or ZIP values; reported
 parties see "Who has viewed your record", and admin has a Search log. Limit: 60 searches per hour per company.
 
-## Funded Business API
+## Merchant API
 
-- `POST /api/v1/funded-business` with `Authorization: Bearer fdx_...` and JSON with what the lender has: `"ein"`,
+- `POST /api/v1/merchant` with `Authorization: Bearer fdx_...` and JSON with what the lender has: `"ein"`,
   `"name"` + `"state"`, or all three (matched on each; every report carries `matched_on`), plus optional
   `"checks": ["default", "document_tampering"]` (both when omitted). Portal business search works the same way. Each check returns `on_record` and, per published report, the incident date, publish date and reporting
   company. Descriptions and evidence stay in the portal: `results_url` opens the full results, showing only the
   checks requested. Also returns searches by other companies in the last 30 days (counts only).
-- `POST /api/v1/defaults` is the original endpoint: same response, `checks` defaults to `["default"]`.
 - "document_tampering" is the `fraud` report category internally.
 - Access: a company (approved, member terms accepted) requests it at `/api-access` (linked from the dashboard); the admin
   is emailed and approves or denies at `/admin/api`; the company is emailed the decision (`fx_api_access`).
