@@ -3,9 +3,9 @@
   <h1 class="title">Search</h1>
   <p class="lead">Who would you like to look up?</p>
   <div class="pick">
-    <a class="pick-card" href="/search/individual"><strong>Screen an individual</strong><span>Employees and contractors. Employment screening only.</span><em class="pick-tag fcra">Subject to FCRA</em></a>
-    <a class="pick-card" href="/search/vendor"><strong>Check a vendor</strong><span>Service providers, broker partners and lender partners.</span><em class="pick-tag">Not subject to FCRA</em></a>
-    <a class="pick-card" href="/search/merchant"><strong>Check a merchant</strong><span>Businesses that applied for or received funding.</span><em class="pick-tag">Not subject to FCRA</em></a>
+    <a class="pick-card tagged" href="/search/individual"><em class="pick-tag fcra">FCRA</em><strong>Screen an individual</strong><span>Employees and contractors. Employment screening only.</span></a>
+    <a class="pick-card tagged" href="/search/vendor"><em class="pick-tag">Non-FCRA</em><strong>Check a vendor</strong><span>Service providers, broker partners and lender partners.</span></a>
+    <a class="pick-card tagged" href="/search/merchant"><em class="pick-tag">Non-FCRA</em><strong>Check a merchant</strong><span>Businesses that applied for or received funding.</span></a>
   </div>
 </section>
 <% if (recent.length) { %>

@@ -196,6 +196,18 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #a86ae0; outline-
 .pick-card span { display: block; color: var(--muted); font-size: 0.92rem; }
 .pick-card .pick-tag { display: table; margin-top: 10px; font-style: normal; font-size: 0.78rem; font-weight: 600; color: var(--muted); background: #F3F1F7; border-radius: 999px; padding: 3px 10px; }
 .pick-card .pick-tag.fcra { color: var(--deep); background: #EFE6FA; }
+/* Search chooser: square FCRA / Non-FCRA label at the right of the card (above the title on phones). */
+.pick-card.tagged { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "title tag" "desc tag"; column-gap: 16px; align-items: start; }
+.pick-card.tagged strong { grid-area: title; }
+.pick-card.tagged span { grid-area: desc; }
+.pick-card.tagged .pick-tag { grid-area: tag; display: inline-block; margin: 2px 0 0; padding: 4px 8px; border-radius: 3px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; line-height: 1.3; white-space: nowrap;
+  color: #6b6280; background: #f1eef5; }
+.pick-card.tagged .pick-tag.fcra { color: #fff; background: #b8287a; }
+@media (max-width: 560px) {
+  .pick-card.tagged { grid-template-columns: 1fr; grid-template-areas: "tag" "title" "desc"; }
+  .pick-card.tagged .pick-tag { justify-self: start; margin: 0 0 8px; }
+}
 .pick-card:hover, .pick-card:focus-visible { border-color: var(--base); box-shadow: 0 0 0 2px rgba(90,26,154,0.18); transform: translateY(-1px); outline: none; }
 .btn:disabled { opacity: 0.7; cursor: default; }
 .mt { margin-top: 20px; }
