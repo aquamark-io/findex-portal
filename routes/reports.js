@@ -113,7 +113,7 @@ router.get('/activity', async (req, res, next) => {
     ];
     const keep = i => (show === 'all' || i.kind === show) && (type === 'all' || i.type === type);
     items = items.filter(keep); examples = examples.filter(keep);
-    res.render('activity', { pageTitle: 'Activity', show, type, SHOW, KIND, items, examples,
+    res.render('activity', { pageTitle: 'Activity', wide: true, show, type, SHOW, KIND, items, examples,
       msg: req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null });
   } catch (err) { next(err); }
 });

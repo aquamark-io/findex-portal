@@ -148,7 +148,7 @@ test('the dashboard has a colored header and the report example links above API 
   const d = await lender.req('/dashboard');
   assert.doesNotMatch(d.text, /Your activity/);
   assert.match(d.text, /<h1 class="dash-band">Dashboard<\/h1>/);
-  assert.ok(d.text.indexOf('Report examples') < d.text.indexOf('API access'), 'examples above API access');
+  assert.ok(!d.text.includes('Report examples'), 'examples live on Activity, not the dashboard');
   assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
 });
 
