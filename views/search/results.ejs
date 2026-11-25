@@ -3,11 +3,11 @@
    const ex = typeof example !== 'undefined' && example;
    const tick = (label, ok) => `<span class="match ${ok ? 'yes' : 'no'}">${label} ${ok ? '&#10003;' : '&mdash;'}</span>`;
    const fallback = { merchant: 'Merchant search', company: 'Vendor search', individual: 'Individual search' }[search.subject_type];
-   const title = c.name || c.domain || (reports[0] && reports[0].subject_name_reported) || fallback;
+   const title = c.name || (reports[0] && reports[0].subject_name_reported) || c.domain || fallback;
    const exampleWho = { individual: 'individual', company: 'vendor', merchant: 'merchant' }[search.subject_type]; %>
 <section class="card">
   <p class="signing-as"><a href="/search">&larr; New search</a></p>
-  <% if (ex) { %><div class="example-banner" role="note"><strong>Example</strong> &middot; Sample data to show what results look like. Not a real report.</div><% } %>
+  <% if (ex) { %><p class="flush"><span class="example-tag">Example report</span></p><% } %>
   <h1 class="title"><%= title %></h1>
   <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
 
@@ -15,7 +15,7 @@
     <div class="biz-summary" role="status">
       <div class="<%= defaults ? 'hit' : '' %>"><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %></span></div>
       <div class="<%= tamper ? 'hit' : '' %>"><span class="biz-num"><%= tamper %></span><span>Document tampering</span></div>
-      <div class="<%= activity.searches ? 'hit' : '' %>"><span class="biz-num"><%= activity.searches %></span><span>Searches by other companies (30 days)</span></div>
+      <div class="<%= activity.searches ? 'hit' : '' %>"><span class="biz-num"><%= activity.searches %></span><span>Searches last 30 days</span></div>
     </div>
   <% } %>
 
@@ -25,7 +25,7 @@
     <div class="result-empty"><strong>No published reports found.</strong>
       <% if (exampleWho) { %><span class="muted"> <a href="/search/example/<%= exampleWho %>">See an example report</a></span><% } %></div>
   <% } else { %>
-    <p class="result-count"><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p>
+    <% if (!activity) { %><p class="result-count"><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p><% } %>
     <% reports.forEach(r => { const m = matched[r.subject_id]; const vt = r.fx_subjects && r.fx_subjects.vendor_type; %>
       <article class="result-card">
         <div class="result-head">
@@ -33,7 +33,7 @@
           <span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %> &middot; Published <%= fmtDate(r.published_at) %></span>
         </div>
         <dl class="kv">
-          <dt>Name on file</dt><dd><%= r.subject_name_reported %></dd>
+          <% if (r.subject_name_reported !== title) { %><dt>Name on file</dt><dd><%= r.subject_name_reported %></dd><% } %>
           <% if (vt) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[vt] %></dd><% } %>
           <% if (search.subject_type === 'individual' && m) { %>
           <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
@@ -57,6 +57,6 @@
   <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
     <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
   <% } %>
-  <p class="muted fine-left">Only published, independently reviewed reports are shown. A clear result doesn&rsquo;t guarantee there were no incidents.<% if (!ex) { %> Results are available for <%= resultsDays %> days and may be used only for the purpose certified.<% } %></p>
+  <p class="muted fine-left">Only published reports are shown.<% if (!reports.length) { %> A clear result doesn&rsquo;t guarantee there were no incidents.<% } %><% if (!ex) { %> Results are available for <%= resultsDays %> days.<% } %></p>
 </section>
 <%- include('../partials/foot') %>

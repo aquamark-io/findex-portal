@@ -106,7 +106,7 @@ test('another member finds the published default by searching the business', asy
   const r = await other.req('/search/merchant', { name: 'Joe’s Cafe LLC', ein: '12-3456789', certify: 'on' });
   assert.equal(r.status, 303);
   const res = await other.req(r.location);
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
   assert.match(res.text, /Default/);
   const log = fake.tables.fx_searches.at(-1);
   assert.equal(log.criteria.ein, true);

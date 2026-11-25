@@ -318,7 +318,7 @@ input[type=file] { width: 100%; font: inherit; padding: 10px; border: 1px dashed
 .matches { display: flex; flex-wrap: wrap; gap: 6px; }
 .match { font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; background: #f1eff6; color: #6b6680; }
 .match.yes { background: #e6f4ea; color: #1e6b34; }
-@media (max-width: 640px) { .biz-summary { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .biz-summary { gap: 8px; } .biz-summary > div { padding: 10px 10px 12px; } .biz-summary span:not(.biz-num) { font-size: 0.78rem; } }
 
 /* "How reporting works": three numbered steps */
 .how-steps { list-style: none; counter-reset: how; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -415,3 +415,4 @@ a.file-chip:hover { border-color: var(--base); }
 .example-banner strong { color: #b8287a; }
 .example-links { font-size: 0.9rem; margin: 16px 0 0; }
 .result-count { margin: 0 0 10px; }
+.example-tag { display: inline-block; margin: 4px 0 2px; padding: 4px 8px; border-radius: 3px; background: #b8287a; color: #fff; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; line-height: 1.3; }

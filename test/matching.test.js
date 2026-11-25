@@ -60,13 +60,13 @@ test('reporting a business requires the state of registration', async () => {
 
 test('a business can be found by EIN alone', async () => {
   const res = await search(b2, 'merchant', { ein: '123456789' });
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
   assert.doesNotMatch(res.text, /Confirm the EIN/, 'an EIN match needs no extra confirmation');
 });
 
 test('or by legal name + state, ignoring case, punctuation and LLC / Inc', async () => {
   const res = await search(b3, 'merchant', { name: 'JOES CAFE LLC', state: 'TX' });
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
   assert.match(res.text, /Legal name and state/);
   assert.match(res.text, /Confirm the EIN/);
 });
@@ -84,22 +84,22 @@ test('the same name in another state, or a name without a state, finds nothing',
 test('results show how many other companies searched the business in the last 30 days', async () => {
   // So far: b2 (EIN) and b3 (name + state) searched Joe's Cafe. b3 also searched the CA name, which isn't this business.
   const res = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches by other companies \(30 days\)/);
+  assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches last 30 days/);
   assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
   // The searcher's own searches don't count, and searches over 30 days old drop off.
   const again = await search(b4, 'merchant', { name: 'Joe’s Cafe LLC', state: 'TX' });
-  assert.match(again.text, /<span class="biz-num">2<\/span><span>Searches by other/);
+  assert.match(again.text, /<span class="biz-num">2<\/span><span>Searches last 30 days/);
   const old = fake.tables.fx_searches.find(s => s.account_id === ctx.accountByEmail('a@two.com').id);
   old.created_at = new Date(Date.now() - 31 * 864e5).toISOString();
   const later = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches by other companies \(30 days\)/);
+  assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches last 30 days/);
 });
 
 test('the count works for a business with no reports, and the EIN is never stored', async () => {
   await search(b2, 'merchant', { ein: '55-5555555' });
   const res = await search(b3, 'merchant', { ein: '55-5555555' });
   assert.match(res.text, /No published reports found/);
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Searches by other companies/);
+  assert.match(res.text, /<span class="biz-num">1<\/span><span>Searches last 30 days/);
   assert.ok(!JSON.stringify(fake.tables.fx_searches).includes('555555555'));
 });
 
@@ -307,7 +307,7 @@ test('example results show sample reports for each type, clearly marked, with no
   for (const [who, text] of [['individual', /Jordan Rivera/], ['vendor', /Leaky CRM Inc/], ['merchant', /Joe’s Cafe LLC/]]) {
     const r = await lender.req(`/search/example/${who}`);
     assert.equal(r.status, 200);
-    assert.match(r.text, /Sample data to show what results look like\. Not a real report\./);
+    assert.match(r.text, /Example report/);
     assert.match(r.text, text);
     assert.doesNotMatch(r.text, /\/files\//, 'no evidence links');
   }
