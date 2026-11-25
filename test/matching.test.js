@@ -60,13 +60,13 @@ test('reporting a business requires the state of registration', async () => {
 
 test('a business can be found by EIN alone', async () => {
   const res = await search(b2, 'merchant', { ein: '123456789' });
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
+  assert.match(res.text, /<span>Defaults<\/span><b class="hit">1<\/b>/);
   assert.doesNotMatch(res.text, /Confirm the EIN/, 'an EIN match needs no extra confirmation');
 });
 
 test('or by legal name + state, ignoring case, punctuation and LLC / Inc', async () => {
   const res = await search(b3, 'merchant', { name: 'JOES CAFE LLC', state: 'TX' });
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
+  assert.match(res.text, /<span>Defaults<\/span><b class="hit">1<\/b>/);
   assert.match(res.text, /Legal name and state/);
   assert.match(res.text, /Confirm the EIN/);
 });
@@ -84,22 +84,22 @@ test('the same name in another state, or a name without a state, finds nothing',
 test('results show how many other companies searched the business in the last 30 days', async () => {
   // So far: b2 (EIN) and b3 (name + state) searched Joe's Cafe. b3 also searched the CA name, which isn't this business.
   const res = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches last 30 days/);
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
+  assert.match(res.text, /<span>Searches last 30 days<\/span><b class="(hit)?">2<\/b>/);
+  assert.match(res.text, /<span>Defaults<\/span><b class="hit">1<\/b>/);
   // The searcher's own searches don't count, and searches over 30 days old drop off.
   const again = await search(b4, 'merchant', { name: 'Joe’s Cafe LLC', state: 'TX' });
-  assert.match(again.text, /<span class="biz-num">2<\/span><span>Searches last 30 days/);
+  assert.match(again.text, /<span>Searches last 30 days<\/span><b class="(hit)?">2<\/b>/);
   const old = fake.tables.fx_searches.find(s => s.account_id === ctx.accountByEmail('a@two.com').id);
   old.created_at = new Date(Date.now() - 31 * 864e5).toISOString();
   const later = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches last 30 days/);
+  assert.match(later.text, /<span>Searches last 30 days<\/span><b class="(hit)?">1<\/b>/);
 });
 
 test('the count works for a business with no reports, and the EIN is never stored', async () => {
   await search(b2, 'merchant', { ein: '55-5555555' });
   const res = await search(b3, 'merchant', { ein: '55-5555555' });
   assert.match(res.text, /No published reports found/);
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Searches last 30 days/);
+  assert.match(res.text, /<span>Searches last 30 days<\/span><b class="(hit)?">1<\/b>/);
   assert.ok(!JSON.stringify(fake.tables.fx_searches).includes('555555555'));
 });
 
@@ -131,7 +131,7 @@ async function searchPerson(b, extra) {
 
 test('a person is found by DOB + last name + email, and the results show what matched', async () => {
   const res = await searchPerson(b2, { email: 'jordan@mail.com', zip: '94105' });
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span>Reports<\/span><b class=\"hit\">1<\/b>/);
   assert.match(res.text, /match yes">Date of birth/);
   assert.match(res.text, /match yes">Email/);
   assert.match(res.text, /match no">Mobile/);
@@ -140,13 +140,13 @@ test('a person is found by DOB + last name + email, and the results show what ma
 
 test('or by DOB + last name + mobile; the last name ignores case and punctuation', async () => {
   const res = await searchPerson(b2, { last_name: 'RIVERA', phone: '415-555-0199' });
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span>Reports<\/span><b class=\"hit\">1<\/b>/);
   assert.match(res.text, /match yes">Mobile/);
 });
 
 test('a different first name or ZIP still matches, but is flagged for the searcher to confirm', async () => {
   const res = await searchPerson(b2, { first_name: 'Jay', email: 'jordan@mail.com', zip: '10001' });
-  assert.match(res.text, /1 published report/);
+  assert.match(res.text, /<span>Reports<\/span><b class=\"hit\">1<\/b>/);
   assert.match(res.text, /first name differs/);
 });
 
@@ -271,7 +271,7 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   assert.equal(r.status, 303, r.text.slice(0, 300));
   const res = await b2.req(r.location);
   assert.match(res.text, /Vendor &middot; Searched/);
-  assert.match(res.text, /<dt>Vendor type<\/dt><dd>CRM or LOS<\/dd>/);
+  assert.match(res.text, /<span>Vendor type<\/span><span>CRM or LOS<\/span>/);
 });
 
 test('funded businesses are now merchants: old links redirect, and defaults are labelled for funded merchants only', async () => {

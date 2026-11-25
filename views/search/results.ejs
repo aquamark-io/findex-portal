@@ -2,61 +2,69 @@
 <% const c = search.criteria || {}; const matched = c.matched || {};
    const ex = typeof example !== 'undefined' && example;
    const tick = (label, ok) => `<span class="match ${ok ? 'yes' : 'no'}">${label} ${ok ? '&#10003;' : '&mdash;'}</span>`;
-   const fallback = { merchant: 'Merchant search', company: 'Vendor search', individual: 'Individual search' }[search.subject_type];
+   const type = search.subject_type;
+   const fallback = { merchant: 'Merchant search', company: 'Vendor search', individual: 'Individual search' }[type];
    const title = c.name || (reports[0] && reports[0].subject_name_reported) || c.domain || fallback;
-   const exampleWho = { individual: 'individual', company: 'vendor', merchant: 'merchant' }[search.subject_type]; %>
-<section class="card">
+   const exampleWho = { individual: 'individual', company: 'vendor', merchant: 'merchant' }[type];
+   const defaults = reports.filter(r => r.category === 'default').length;
+   // Merchant: what the search matched on, across the matched businesses.
+   const by = new Set(); Object.values(matched).forEach(m => [].concat(m && m.by || []).forEach(b => by.add(b)));
+   const matchedOn = [by.has('ein') && 'EIN', by.has('name_state') && 'Legal name and state'].filter(Boolean).join(', ');
+   const vendorTypes = [...new Set(reports.map(r => r.fx_subjects && r.fx_subjects.vendor_type).filter(Boolean))].map(v => R.VENDOR_TYPES[v]).join(', '); %>
+<section class="card results">
   <p class="signing-as"><a href="/search">&larr; New search</a></p>
   <% if (ex) { %><p class="flush"><span class="example-tag">Example report</span></p><% } %>
   <h1 class="title"><%= title %></h1>
-  <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
+  <p class="lead"><%= R.SUBJECT_TYPES[type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
 
-  <% if (activity) { const defaults = reports.filter(r => r.category === 'default').length; const tamper = reports.length - defaults; %>
-    <div class="biz-summary" role="status">
-      <div class="<%= defaults ? 'hit' : '' %>"><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %></span></div>
-      <div class="<%= tamper ? 'hit' : '' %>"><span class="biz-num"><%= tamper %></span><span>Document tampering</span></div>
-      <div class="<%= activity.searches ? 'hit' : '' %>"><span class="biz-num"><%= activity.searches %></span><span>Searches last 30 days</span></div>
+  <div class="results-grid">
+    <aside class="results-side" aria-label="Summary">
+      <p class="side-head">Summary</p>
+      <% if (type === 'merchant') { %>
+        <div class="side-row"><span>Defaults</span><b class="<%= defaults ? 'hit' : '' %>"><%= search.expired ? '–' : defaults %></b></div>
+        <div class="side-row"><span>Document tampering</span><b class="<%= reports.length - defaults ? 'hit' : '' %>"><%= search.expired ? '–' : reports.length - defaults %></b></div>
+        <div class="side-row"><span>Searches last 30 days</span><b class="<%= activity && activity.searches ? 'hit' : '' %>"><%= activity ? activity.searches : '–' %></b></div>
+        <% if (matchedOn) { %><div class="side-row"><span>Matched on</span><span><%= matchedOn %></span></div><% } %>
+        <% if (matchedOn && !by.has('ein')) { %><p class="side-note">Confirm the EIN with the business before relying on this result.</p><% } %>
+      <% } else { %>
+        <div class="side-row"><span>Reports</span><b class="<%= reports.length ? 'hit' : '' %>"><%= search.expired ? '–' : reports.length %></b></div>
+        <% if (vendorTypes) { %><div class="side-row"><span>Vendor type</span><span><%= vendorTypes %></span></div><% } %>
+        <% if (type === 'individual') { %><div class="side-row"><span>Purpose</span><span>Employment screening</span></div><% } %>
+      <% } %>
+    </aside>
+
+    <div class="results-main">
+      <% if (search.expired) { %>
+        <div class="alert error flush">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
+      <% } else if (!reports.length) { %>
+        <p class="results-empty"><strong>No published reports found.</strong><% if (exampleWho) { %> <a href="/search/example/<%= exampleWho %>">See an example report</a><% } %></p>
+      <% } else { %>
+        <% reports.forEach(r => { const m = matched[r.subject_id]; %>
+          <article class="results-item">
+            <div class="results-item-top">
+              <strong><%= R.CATEGORIES[r.category].label %></strong>
+              <span><%= fmtDate(r.incident_date) %></span>
+            </div>
+            <% if (r.subject_name_reported !== title) { %><p class="results-by">Name on file: <%= r.subject_name_reported %></p><% } %>
+            <% if (type === 'individual' && m) { %>
+              <p class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %></p>
+              <% if (!m.first_name || m.zip === 'differs') { %><p class="results-by"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</p><% } %>
+            <% } %>
+            <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
+            <p class="results-by">Reported by <%= r.reporter ? r.reporter.business_legal_name : '' %> &middot; Published <%= fmtDate(r.published_at) %></p>
+            <% if ((files[r.id] || []).length) { %>
+              <p class="results-files" aria-label="Evidence">
+                <% files[r.id].forEach(f => { %><% if (ex) { %><span class="file-link"><%= f.file_name %></span><% } else { %><a class="file-link" href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a><% } %><% }) %>
+              </p>
+            <% } %>
+          </article>
+        <% }) %>
+      <% } %>
+      <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
+        <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
+      <% } %>
+      <p class="results-fine">Only published reports are shown.<% if (!reports.length) { %> A clear result doesn&rsquo;t guarantee there were no incidents.<% } %><% if (!ex) { %> Results are available for <%= resultsDays %> days.<% } %></p>
     </div>
-  <% } %>
-
-  <% if (search.expired) { %>
-    <div class="alert error">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
-  <% } else if (!reports.length) { %>
-    <div class="result-empty"><strong>No published reports found.</strong>
-      <% if (exampleWho) { %><span class="muted"> <a href="/search/example/<%= exampleWho %>">See an example report</a></span><% } %></div>
-  <% } else { %>
-    <% if (!activity) { %><p class="result-count"><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p><% } %>
-    <% reports.forEach(r => { const m = matched[r.subject_id]; const vt = r.fx_subjects && r.fx_subjects.vendor_type; %>
-      <article class="result-card">
-        <div class="result-head">
-          <strong><%= R.CATEGORIES[r.category].label %></strong>
-          <span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %> &middot; Published <%= fmtDate(r.published_at) %></span>
-        </div>
-        <dl class="kv">
-          <% if (r.subject_name_reported !== title) { %><dt>Name on file</dt><dd><%= r.subject_name_reported %></dd><% } %>
-          <% if (vt) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[vt] %></dd><% } %>
-          <% if (search.subject_type === 'individual' && m) { %>
-          <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
-            <% if (!m.first_name || m.zip === 'differs') { %><div class="muted"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</div><% } %></dd>
-          <% } else if (search.subject_type === 'merchant' && m) { const by = [].concat(m.by); %>
-          <dt>Matched on</dt><dd><%= [by.includes('ein') && 'EIN', by.includes('name_state') && 'Legal name and state'].filter(Boolean).join(', ') %>
-            <% if (!by.includes('ein')) { %><div class="muted">Confirm the EIN with the business before relying on this result.</div><% } %></dd>
-          <% } %>
-          <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
-        </dl>
-        <% if (r.description) { %><p class="prewrap result-desc"><%= r.description %></p><% } %>
-        <% if ((files[r.id] || []).length) { %>
-          <div class="file-chips" aria-label="Evidence">
-            <% files[r.id].forEach(f => { %><% if (ex) { %><span class="file-chip"><%= f.file_name %> <small><%= R.fmtSize(f.size_bytes) %></small></span><% } else { %><a class="file-chip" href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %> <small><%= R.fmtSize(f.size_bytes) %></small></a><% } %><% }) %>
-          </div>
-        <% } %>
-      </article>
-    <% }) %>
-  <% } %>
-
-  <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
-    <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
-  <% } %>
-  <p class="muted fine-left">Only published reports are shown.<% if (!reports.length) { %> A clear result doesn&rsquo;t guarantee there were no incidents.<% } %><% if (!ex) { %> Results are available for <%= resultsDays %> days.<% } %></p>
+  </div>
 </section>
 <%- include('../partials/foot') %>
