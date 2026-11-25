@@ -375,7 +375,7 @@ test('signing out is recorded and ends the session', async () => {
   assert.equal((await owner.req('/admin')).location, '/admin/login');
 });
 
-test('emails use the current style: white header with the FinDex wordmark, solid plum and magenta, no gradients', () => {
+test('emails use the current style: dark navy header with a white FinDex wordmark, navy buttons, square corners', () => {
   const { templates, apiEmails } = require('../lib/email');
   const samples = [
     templates.signInCode({ first_name: 'Pat' }, '123456'),
@@ -385,9 +385,10 @@ test('emails use the current style: white header with the FinDex wordmark, solid
   ];
   for (const t of samples) {
     assert.doesNotMatch(t.html, /gradient/i);
-    assert.match(t.html, /background:#ffffff;padding:22px 32px;border-bottom:1px solid #e4deec/);
-    assert.match(t.html, /color:#45138c;">Fin<span style="color:#d63d8f;">Dex<\/span>/);
-    assert.doesNotMatch(t.html, /border-radius:1\dpx/, 'square corners');
+    assert.match(t.html, /background:#0b1f44;padding:20px 32px;/);
+    assert.match(t.html, /color:#ffffff;">FinDex<\/span>/);
+    assert.doesNotMatch(t.html, /border-radius/, 'square corners');
+    assert.doesNotMatch(t.html, /#45138c|#b8287a|#d63d8f/, 'no plum, pink, or magenta');
   }
-  assert.match(samples[3].html, /background:#b8287a/, 'magenta button');
+  assert.match(samples[3].html, /background:#1f4796/, 'navy button');
 });
