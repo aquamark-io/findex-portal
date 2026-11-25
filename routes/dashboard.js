@@ -115,7 +115,7 @@ router.post('/my-record/reports/:id/dispute', requireAccount, (req, res, next) =
       if (reason.length > 5000) return fail('Please keep your explanation under 5,000 characters.');
       const out = await D.openDispute({ account: req.account, reportId: r.id, reason, files: req.files || [], ip: req.ip });
       if (out.error) return fail(out.error);
-      res.redirect(303, recordOnReportsTab(req.account) ? '/reports?disputed=1' : '/dashboard?disputed=1');
+      res.redirect(303, recordOnReportsTab(req.account) ? '/activity?tab=about&disputed=1' : '/dashboard?disputed=1');
     } catch (err) { next(err); }
   });
 });

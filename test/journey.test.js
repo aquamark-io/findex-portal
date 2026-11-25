@@ -152,12 +152,38 @@ test('the dashboard has a colored header and the report example links above API 
   assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
 });
 
-test('a member with no reports sees example rows on the Reports page; they go away once they report', async () => {
+test('Activity: three tabs with clickable examples until the member has their own; old Reports links redirect', async () => {
   const b = await ctx.member(admin, { email: 'new@freshfunding.com', domain: 'freshfunding.com', company: 'Fresh Funding LLC' });
-  const r = await b.req('/reports');
-  assert.match(r.text, /Here’s how they’ll appear|Here&rsquo;s how they&rsquo;ll appear/);
-  assert.equal((r.text.match(/class="example-row"/g) || []).length, 3);
-  assert.doesNotMatch(r.text, /href="\/reports\/[0-9a-f-]{36}"/, 'example rows are not links');
-  const mine = await lender.req('/reports');
-  assert.doesNotMatch(mine.text, /example-row/, 'members with reports see only their own');
+  assert.equal((await b.req('/reports')).location, '/activity');
+  assert.equal((await b.req('/reports/about')).location, '/activity?tab=about');
+  const nav = await b.req('/dashboard');
+  assert.match(nav.text, /href="\/activity">Activity<\/a>/);
+  assert.doesNotMatch(nav.text, />Reports<\/a>/);
+
+  const sub = await b.req('/activity');
+  assert.match(sub.text, /<h1>Activity<\/h1>/);
+  assert.match(sub.text, /href="\/reports\/new">Submit a report<\/a>/);
+  assert.equal((sub.text.match(/class="is-example"/g) || []).length, 3);
+  assert.match(sub.text, /href="\/activity\/example\/1"/);
+  const exPage = await b.req('/activity/example/3');
+  assert.equal(exPage.status, 200);
+  assert.match(exPage.text, /Example report/);
+  assert.match(exPage.text, /Joe’s Cafe LLC/);
+  assert.doesNotMatch(exPage.text, /action="\/reports\/[^"]*\/remove"/, 'no remove form on an example');
+
+  const about = await b.req('/activity?tab=about');
+  assert.match(about.text, /There are no reports about your company/);
+  assert.match(about.text, /href="\/activity\/example\/4"/);
+  assert.match((await b.req('/activity/example/4')).text, /Dispute this report/);
+
+  const se = await b.req('/activity?tab=searches');
+  assert.match(se.text, /href="\/search\/example\/merchant"/);
+  assert.equal((await b.req('/activity/example/99')).location, '/activity');
+
+  // A member with their own reports sees only those, linked to the real report page.
+  const mine = await lender.req('/activity');
+  assert.doesNotMatch(mine.text, /is-example/);
+  assert.match(mine.text, /href="\/reports\/[0-9a-f-]{36}"/);
+  // The search page no longer lists recent searches; they live under Activity.
+  assert.doesNotMatch((await lender.req('/search')).text, /Your recent searches/);
 });

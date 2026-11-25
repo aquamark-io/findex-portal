@@ -73,6 +73,13 @@ recorded before they happen, changes right after. `fx_events` still records admi
 Postmark accepting the token (plus a "Send a test email" button), the daily job
 having run today, no test or old-format records, and a final (non-draft) member terms version.
 
+## Activity
+
+`/activity` (nav: Activity; replaces the old Reports list, and `/reports` and `/reports/about` redirect here) has three tabs:
+reports you submitted, reports about your company (with disputes), and your searches. Until a member has their own,
+each tab shows clickable example rows (fictional sample data in `lib/report-examples.js`) that open sample pages at
+`/activity/example/:n` or `/search/example/:who`. Submitting a report starts from the button in the Activity header.
+
 ## Contact form
 
 `/contact` (linked from the website nav and footer and the portal footer): name, email, topic, message. Each message

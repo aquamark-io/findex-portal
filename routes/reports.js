@@ -62,25 +62,47 @@ router.use('/reports', requireAccount, requireReporter, (req, res, next) => {
 
 // ---------- list ----------
 
-// Reports about this company (and its disputes), on their own page so they don't get lost below a long list.
-router.get('/reports/about', async (req, res, next) => {
+// The list lives on the Activity page now (/activity); old links redirect there.
+router.get('/reports/about', (req, res) => res.redirect('/activity?tab=about'));
+router.get('/reports', (req, res) => {
+  const q = new URLSearchParams();
+  if (req.query.disputed === '1') { q.set('tab', 'about'); q.set('disputed', '1'); }
+  res.redirect(`/activity${q.toString() ? '?' + q : ''}`);
+});
+
+// ---------- Activity: reports you submitted, reports about you, your searches ----------
+
+const EX = require('../lib/report-examples');
+const TABS = ['submitted', 'about', 'searches'];
+
+router.use('/activity', requireAccount, requireReporter, (req, res, next) => {
+  Object.assign(res.locals, { R, STATUS_LABELS, fmtDate, STATES });
+  next();
+});
+
+router.get('/activity', async (req, res, next) => {
   try {
-    const record = await loadMyRecord(req.account.id);
-    res.render('reports/about', { ...record, pageTitle: 'Reports about you' });
+    const tab = TABS.includes(req.query.tab) ? req.query.tab : 'submitted';
+    const [{ data: reports, error }, { data: searches }, record] = await Promise.all([
+      supabase.from('fx_reports').select('id, category, incident_date, status, created_at, subject_name_reported, fx_subjects(subject_type)')
+        .eq('reporter_account_id', req.account.id).order('created_at', { ascending: false }).limit(500),
+      supabase.from('fx_searches').select('id, subject_type, criteria, result_report_ids, created_at')
+        .eq('account_id', req.account.id).order('created_at', { ascending: false }).limit(50),
+      loadMyRecord(req.account.id),
+    ]);
+    if (error) throw new Error(`List reports: ${error.message}`);
+    res.render('activity', { ...record, pageTitle: 'Activity', tab, reports: reports || [], searches: searches || [], EX,
+      msg: req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null });
   } catch (err) { next(err); }
 });
 
-router.get('/reports', async (req, res, next) => {
-  try {
-    const { data, error } = await supabase.from('fx_reports')
-      .select('id, category, incident_date, status, created_at, subject_name_reported, fx_subjects(subject_type)')
-      .eq('reporter_account_id', req.account.id).order('created_at', { ascending: false }).limit(500);
-    if (error) throw new Error(`List reports: ${error.message}`);
-    // Reports about this company (and its disputes) live here rather than on the dashboard.
-    const record = await loadMyRecord(req.account.id);
-    res.render('reports/list', { ...record, pageTitle: 'Reports', reports: data || [],
-      msg: req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null });
-  } catch (err) { next(err); }
+// Sample report pages (fictional data) linked from the examples on Activity.
+router.get('/activity/example/:n', (req, res) => {
+  const ex = EX.find(Number(req.params.n));
+  if (!ex) return res.redirect('/activity');
+  const about = ex === EX.ABOUT;
+  res.render('reports/view', { pageTitle: 'Example report', example: true, about, report: ex, files: ex.files, removable: false, dispute: null, dFiles: [],
+    notices: [], fmtDay: N.fmtDay, submitted: false, msg: null, err: null });
 });
 
 // ---------- new ----------
@@ -220,7 +242,7 @@ async function findOrCreateSubject(s, noticeEmail) {
 
 router.get('/reports/:id', async (req, res, next) => {
   try {
-    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.redirect('/reports');
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.redirect('/activity');
     const { data: report, error } = await supabase.from('fx_reports').select('*, fx_subjects(*)')
       .eq('id', req.params.id).eq('reporter_account_id', req.account.id).maybeSingle();
     if (error) throw new Error(`Load report: ${error.message}`);

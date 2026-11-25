@@ -1,6 +1,7 @@
 <% const a = account; %>
-<section class="card">
-  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Reports about you' : 'Reports about ' + (a.business_legal_name || 'your business') %></h2>
+<% const bare = typeof aboutBare !== 'undefined' && aboutBare; %>
+<section class="<%= bare ? 'about-bare' : 'card' %>">
+  <% if (!bare) { %><h2 class="flush-top"><% } else { %><h2 class="sr-only"><% } %><%= a.account_type === 'individual' ? 'Reports about you' : 'Reports about ' + (a.business_legal_name || 'your business') %></h2>
   <% if (!aboutMe.length) { %>
     <p class="muted flush">There are no reports about <%= a.account_type === 'individual' ? 'you' : 'your ' + (a.account_type === 'company' ? 'company' : 'business') %> on FinDex.</p>
   <% } else { %>

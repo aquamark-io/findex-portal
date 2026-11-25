@@ -545,3 +545,59 @@ a.file-chip:hover { border-color: var(--base); }
   .stack-table td.stack-title::before { content: none; }
   .stack-table td.stack-title .muted { margin-top: 2px; }
 }
+
+/* Activity page: tabs, rows, examples. */
+.activity-top { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.act-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.act-tabs a { padding: 8px 14px; border: 1px solid #d9d1e6; border-radius: 4px; text-decoration: none; color: var(--deep); font-weight: 600; font-size: 0.9rem; background: #fff; }
+.act-tabs a.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+.act-count { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 10px; background: var(--lav); color: var(--deep); font-size: 0.78rem; text-align: center; }
+.act-tabs a.on .act-count { background: rgba(255,255,255,0.2); color: #fff; }
+.act-count.hit { background: #fdf0f7; color: #b8287a; }
+.act-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lav-border); border-radius: 6px; }
+.act-list li + li { border-top: 1px solid var(--lav-border); }
+.act-list a { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 14px 16px; text-decoration: none; color: inherit; }
+.act-list a:hover { background: var(--lav); }
+.act-main strong { color: var(--deep); }
+.act-main .example-tag { margin: 0 8px 0 0; vertical-align: middle; }
+.act-sub { display: block; color: var(--muted); font-size: 0.86rem; margin-top: 2px; }
+.act-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.act-date { color: var(--muted); font-size: 0.82rem; }
+.act-reports { font-size: 0.88rem; color: var(--muted); }
+.act-reports.hit { color: #b8287a; font-weight: 600; }
+.is-example strong { color: var(--body); }
+.about-bare { margin: 0; }
+@media (max-width: 600px) {
+  .activity-top { flex-direction: column; align-items: stretch; }
+  .activity-top .btn { width: 100%; }
+  .act-tabs { display: grid; grid-template-columns: 1fr; }
+  .act-list a { flex-direction: column; align-items: flex-start; }
+  .act-side { flex-direction: row; align-items: center; gap: 10px; }
+}
+/* Report page */
+.card-inset.tinted { background: var(--lav); }
+.status-line { margin: 0 0 16px; padding: 10px 14px; background: #fdf0f7; border-radius: 4px; font-size: 0.92rem; }
+.report-desc { margin: 4px 0 18px; }
+.results-main .side-head { margin-top: 0; }
+.file-link.plain { color: var(--ink); }
+.file-link small { color: var(--muted); }
+.break { overflow-wrap: anywhere; }
+.side-row .pill { margin: 2px 0; }
+.link-btn.danger-link { color: var(--error); font-weight: 600; }
+.is-disabled { opacity: 0.6; cursor: default; }
+/* Status tags on member pages: soft purples and pinks (admin keeps its traffic-light colors). */
+body:not(.admin) .pill { border: 0; padding: 3px 10px; font-weight: 600; border-radius: 4px; }
+body:not(.admin) .pill::before { display: none; }
+body:not(.admin) .pill.submitted, body:not(.admin) .pill.open { background: #fdf0f7; color: #b8287a; }
+body:not(.admin) .pill.notice_sent, body:not(.admin) .pill.disputed, body:not(.admin) .pill.amended { background: #efe6fa; color: #45138c; }
+body:not(.admin) .pill.notice_undeliverable { background: #f8d9ea; color: #8e1d5e; }
+body:not(.admin) .pill.published, body:not(.admin) .pill.upheld { background: #45138c; color: #fff; }
+body:not(.admin) .pill.rejected, body:not(.admin) .pill.removed, body:not(.admin) .pill.expired { background: #f1eef5; color: #6b6280; }
+.band-flex { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.band-flex h1 { margin: 0; font-size: inherit; font-weight: inherit; color: inherit; }
+.band-btn { background: #fff !important; color: var(--deep) !important; border-color: #fff !important; padding: 9px 16px; font-size: 0.9rem; }
+.band-btn:hover { background: #f3edfb !important; }
+.side-row > span:last-child:not(.break) { white-space: nowrap; }
+.results-grid { grid-template-columns: 240px minmax(0, 1fr); }
+@media (max-width: 700px) { .results-grid { grid-template-columns: 1fr; } }
+@media (max-width: 420px) { .band-btn { padding: 8px 12px; font-size: 0.85rem; } }

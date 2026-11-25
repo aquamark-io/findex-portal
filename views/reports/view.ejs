@@ -1,67 +1,77 @@
 <%- include('../partials/head') %>
-<% const s = report.fx_subjects || {}; %>
-<section class="card">
+<% const s = report.fx_subjects || {}; const ex = typeof example !== 'undefined' && example; const aboutYou = typeof about !== 'undefined' && about;
+   const dateLabel = (R.REPAYMENT_FIELDS[report.category] || {}).dateLabel || 'Incident date'; %>
+<section class="card results">
   <% if (submitted) { %><div class="alert ok" role="status">Report submitted. We&rsquo;ll email you once it has been reviewed.</div><% } %>
-  <p class="signing-as"><a href="/reports">&larr; Your reports</a></p>
-  <h1 class="title"><%= report.subject_name_reported %></h1>
-  <p class="lead"><span class="pill <%= report.status %>"><%= STATUS_LABELS[report.status] %></span></p>
+  <p class="signing-as"><a href="/activity<%= aboutYou ? '?tab=about' : '' %>">&larr; Activity</a></p>
+  <% if (ex) { %><p class="example-tag-row"><span class="example-tag">Example report</span></p><% } %>
+  <h1 class="title"><%= aboutYou ? R.CATEGORIES[report.category].label : report.subject_name_reported %></h1>
+  <p class="lead"><%= aboutYou ? 'Reported by ' + report.reporter.business_legal_name : R.SUBJECT_TYPES[s.subject_type] + ' · ' + R.CATEGORIES[report.category].label %></p>
   <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <% if (err) { %><div class="alert error" role="alert"><%= err %></div><% } %>
-  <% if (report.status === 'notice_sent' && report.publish_at) { %><div class="alert ok">The reported party has been notified. Publishes <strong><%= fmtDay(report.publish_at) %></strong> unless disputed.</div><% } %>
-  <% if (report.status === 'removed') { %><div class="alert ok">Removed <%= fmtDay(report.removed_at) %>. It is no longer part of FinDex.</div><% } %>
-  <% if (report.status === 'published') { %><div class="alert ok">Published <%= fmtDay(report.published_at) %>.</div><% } %>
-  <% if (report.status === 'notice_undeliverable') { %>
-    <div class="alert error"><strong>Action needed:</strong> we couldn&rsquo;t deliver the notice to <%= report.notice_email %>. The report is paused until the reported party can be notified.</div>
-    <form method="post" action="/reports/<%= report.id %>/contact" class="card-inset">
-      <div class="field"><label for="c_email">Another email address for the reported party</label><input type="email" id="c_email" name="email" maxlength="254" required></div>
-      <p class="muted">The report can&rsquo;t be published until a notice is delivered.</p>
-      <button class="btn" type="submit">Send notice</button>
-    </form>
-  <% } %>
-  <% if (report.status === 'rejected' && report.rejection_reason) { %>
-    <div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div>
-  <% } %>
-  <% if (dispute) { %>
-    <div class="card-inset">
-      <p class="flush"><strong><%= dispute.status === 'open' ? 'Disputed: please respond' : 'Dispute ' + dispute.status %></strong>
-        <span class="muted">&middot; <%= dispute.status === 'open' ? 'decision by ' + fmtDay(dispute.due_at) : fmtDay(dispute.resolved_at) %></span></p>
-      <p class="prewrap"><%= dispute.reason %></p>
-      <% const theirs = dFiles.filter(f => f.party === 'subject'); if (theirs.length) { %>
-        <ul class="checklist"><% theirs.forEach(f => { %><li><a href="/reports/<%= report.id %>/dispute-files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a></li><% }) %></ul>
+
+  <div class="results-grid">
+    <aside class="results-side" aria-label="Summary">
+      <p class="side-head">Status</p>
+      <div class="side-row"><span class="pill <%= report.status %>"><%= STATUS_LABELS[report.status] %></span></div>
+      <div class="side-row"><span><%= dateLabel %></span><span><%= fmtDate(report.incident_date) %></span></div>
+      <div class="side-row"><span>Submitted</span><span><%= fmtDate(report.created_at) %></span></div>
+      <% if (report.status === 'notice_sent' && report.publish_at) { %><div class="side-row"><span>Publishes</span><span><%= fmtDay(report.publish_at) %></span></div><% } %>
+      <% if (report.published_at && report.status === 'published') { %><div class="side-row"><span>Published</span><span><%= fmtDay(report.published_at) %></span></div><% } %>
+      <% if (report.status === 'removed' && report.removed_at) { %><div class="side-row"><span>Removed</span><span><%= fmtDay(report.removed_at) %></span></div><% } %>
+      <% if (!aboutYou) { %>
+        <% if (s.vendor_type) { %><div class="side-row"><span>Vendor type</span><span><%= R.VENDOR_TYPES[s.vendor_type] %></span></div><% } %>
+        <% if (s.contact_name) { %><div class="side-row"><span>Contact</span><span><%= s.contact_name %></span></div><% } %>
+        <% if (report.notice_email) { %><div class="side-row"><span>Notice sent to</span><span class="break"><%= report.notice_email %></span></div><% } %>
       <% } %>
-      <% if (dispute.reporter_response) { %><p class="muted flush">Your response:</p><p class="prewrap"><%= dispute.reporter_response %></p><% } %>
-      <% if (dispute.resolution_note) { %><p><strong>Outcome:</strong> <%= dispute.resolution_note %></p><% } %>
-      <% if (dispute.status === 'open') { %>
-        <form method="post" action="/reports/<%= report.id %>/respond" enctype="multipart/form-data" class="mt">
-          <div class="field"><label for="response">Your response</label><textarea id="response" name="response" rows="4" maxlength="5000" placeholder="Address the dispute and point to the supporting evidence."></textarea></div>
-          <div class="field"><label for="rfiles">Additional evidence <span class="hint">(optional, up to 5 files)</span></label><input type="file" id="rfiles" name="files" multiple></div>
-          <button class="btn" type="submit">Send response</button>
+    </aside>
+
+    <div class="results-main">
+      <% if (report.status === 'notice_sent' && report.publish_at) { %><p class="status-line">The reported party has been notified. It publishes <strong><%= fmtDay(report.publish_at) %></strong> unless disputed.</p><% } %>
+      <% if (report.status === 'notice_undeliverable') { %>
+        <div class="alert error"><strong>Action needed:</strong> we couldn&rsquo;t deliver the notice to <%= report.notice_email %>. The report is paused until the reported party can be notified.</div>
+        <form method="post" action="/reports/<%= report.id %>/contact" class="card-inset tinted">
+          <div class="field"><label for="c_email">Another email address for the reported party</label><input type="email" id="c_email" name="email" maxlength="254" required></div>
+          <button class="btn" type="submit">Send notice</button>
+        </form>
+      <% } %>
+      <% if (report.status === 'rejected' && report.rejection_reason) { %><div class="alert error"><strong>Not accepted:</strong> <%= report.rejection_reason %></div><% } %>
+      <% if (dispute) { %>
+        <div class="card-inset tinted">
+          <p class="flush"><strong><%= dispute.status === 'open' ? 'Disputed: please respond' : 'Dispute ' + dispute.status %></strong>
+            <span class="muted">&middot; <%= dispute.status === 'open' ? 'decision by ' + fmtDay(dispute.due_at) : fmtDay(dispute.resolved_at) %></span></p>
+          <p class="prewrap"><%= dispute.reason %></p>
+          <% const theirs = dFiles.filter(f => f.party === 'subject'); if (theirs.length) { %>
+            <p class="results-files"><% theirs.forEach(f => { %><a class="file-link" href="/reports/<%= report.id %>/dispute-files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a><% }) %></p>
+          <% } %>
+          <% if (dispute.reporter_response) { %><p class="muted flush">Your response:</p><p class="prewrap"><%= dispute.reporter_response %></p><% } %>
+          <% if (dispute.resolution_note) { %><p><strong>Outcome:</strong> <%= dispute.resolution_note %></p><% } %>
+          <% if (dispute.status === 'open') { %>
+            <form method="post" action="/reports/<%= report.id %>/respond" enctype="multipart/form-data" class="mt">
+              <div class="field"><label for="response">Your response</label><textarea id="response" name="response" rows="4" maxlength="5000" placeholder="Address the dispute and point to the supporting evidence."></textarea></div>
+              <div class="field"><label for="rfiles">Additional evidence <span class="hint">(optional, up to 5 files)</span></label><input type="file" id="rfiles" name="files" multiple></div>
+              <button class="btn" type="submit">Send response</button>
+            </form>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (report.description) { %><p class="side-head">Description</p><p class="prewrap report-desc"><%= report.description %></p><% } %>
+      <p class="side-head">Evidence</p>
+      <p class="results-files">
+        <% files.forEach(f => { %><span class="file-link plain"><%= f.file_name %> <small>(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</small></span><% }) %>
+      </p>
+
+      <% if (aboutYou) { %>
+        <div class="remove-report"><span class="btn secondary is-disabled" aria-disabled="true">Dispute this report</span><p class="muted">On a real report about you, this button lets you dispute it for free.</p></div>
+      <% } else if (removable) { %>
+        <form method="post" action="/reports/<%= report.id %>/remove" class="remove-report">
+          <button class="link-btn danger-link" type="submit" data-confirm="Remove this report? It will no longer be part of FinDex<%= report.status === 'submitted' ? '' : ', and the reported party will be emailed that it was removed' %>. This can’t be undone.">Remove this report</button>
+          <p class="muted">You can remove your report at any time.</p>
         </form>
       <% } %>
     </div>
-  <% } %>
-  <dl class="kv">
-    <dt>Reported party</dt><dd><%= R.SUBJECT_TYPES[s.subject_type] %></dd>
-    <% if (s.vendor_type) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[s.vendor_type] %></dd><% } %>
-    <% if (s.website) { %><dt>Website</dt><dd><%= s.website %></dd><% } %>
-    <% if (s.contact_name) { %><dt>Contact</dt><dd><%= s.contact_name %></dd><% } %>
-    <dt>Notice email</dt><dd><%= report.notice_email %></dd>
-    <dt>Category</dt><dd><%= R.CATEGORIES[report.category].label %></dd>
-    <dt><%= (R.REPAYMENT_FIELDS[report.category] || {}).dateLabel || 'Incident date' %></dt><dd><%= fmtDate(report.incident_date) %></dd>
-    <dt>Submitted</dt><dd><%= fmtDate(report.created_at) %></dd>
-  </dl>
-  <% if (report.description) { %><h2>Description</h2>
-  <p class="prewrap"><%= report.description %></p><% } %>
-  <h2>Evidence</h2>
-  <ul class="checklist">
-    <% files.forEach(f => { %><li><%= f.file_name %> <span class="muted">(<%= R.fmtSize(f.size_bytes) %><%= f.kind === 'default_notice' ? ', default notice' : '' %>)</span></li><% }) %>
-  </ul>
-  <% if (removable) { %>
-    <form method="post" action="/reports/<%= report.id %>/remove" class="remove-report">
-      <button class="btn secondary" type="submit" data-confirm="Remove this report? It will no longer be part of FinDex<%= report.status === 'submitted' ? '' : ', and the reported party will be emailed that it was removed' %>. This can’t be undone.">Remove report</button>
-      <p class="muted">You can remove your report at any time.</p>
-    </form>
-  <% } %>
+  </div>
 </section>
 <script src="/js/admin.js?v=<%= assetV %>" defer></script>
 <%- include('../partials/foot') %>

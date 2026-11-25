@@ -38,7 +38,7 @@
         <% } %>
       <% } else if (typeof account !== 'undefined' && account) { %>
         <a <%- here('/dashboard') %> href="/dashboard">Dashboard</a>
-        <% if (account.account_type === 'company' && account.terms_version) { %><a <%- here('/search') %> href="/search">Search</a><a <%- here('/reports') %> href="/reports">Reports</a><% } %>
+        <% if (account.account_type === 'company' && account.terms_version) { %><a <%- here('/search') %> href="/search">Search</a><a <%- (currentPath.startsWith('/activity') || (currentPath.startsWith('/reports') && currentPath !== '/reports/new')) ? 'class="nav-link active" aria-current="page"' : 'class="nav-link"' %> href="/activity">Activity</a><% } %>
         <a <%- here('/contact') %> href="/contact">Contact</a>
         <form method="post" action="/logout"><button class="nav-link link-reset" type="submit">Sign Out</button></form>
       <% } else { %>
