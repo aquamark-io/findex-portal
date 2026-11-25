@@ -193,8 +193,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #a86ae0; outline-
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .pick-card strong { display: block; color: var(--deep); font-size: 1.08rem; }
-.pick-card span { color: var(--muted); font-size: 0.92rem; }
-.pick-card .pick-tag { display: inline-block; margin-top: 10px; font-style: normal; font-size: 0.78rem; font-weight: 600; color: var(--muted); background: #F3F1F7; border-radius: 999px; padding: 3px 10px; }
+.pick-card span { display: block; color: var(--muted); font-size: 0.92rem; }
+.pick-card .pick-tag { display: table; margin-top: 10px; font-style: normal; font-size: 0.78rem; font-weight: 600; color: var(--muted); background: #F3F1F7; border-radius: 999px; padding: 3px 10px; }
 .pick-card .pick-tag.fcra { color: var(--deep); background: #EFE6FA; }
 .pick-card:hover, .pick-card:focus-visible { border-color: var(--base); box-shadow: 0 0 0 2px rgba(90,26,154,0.18); transform: translateY(-1px); outline: none; }
 .btn:disabled { opacity: 0.7; cursor: default; }

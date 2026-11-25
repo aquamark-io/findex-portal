@@ -1,12 +1,7 @@
-// Search form: show the employment certification + authorization upload only for employment screening,
-// and format ZIP / EIN.
+// Search form: format ZIP / EIN, and show "Searching…" on submit.
 (function () {
   var form = document.getElementById('search-form');
   if (!form) return;
-  var purpose = document.getElementById('purpose');
-  var emp = document.getElementById('employment-fields');
-  function sync() { if (!emp || !purpose) return; var on = purpose.value === 'employment'; emp.hidden = !on; emp.disabled = !on; }
-  if (purpose) purpose.addEventListener('change', sync);
   form.addEventListener('input', function (e) {
     var t = e.target;
     if (t.name === 'zip') t.value = t.value.replace(/\D/g, '').slice(0, 5);
@@ -16,5 +11,4 @@
     var btn = form.querySelector('button[type="submit"]');
     setTimeout(function () { if (btn) { btn.disabled = true; btn.textContent = 'Searching…'; } }, 0);
   });
-  sync();
 })();

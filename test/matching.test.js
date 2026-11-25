@@ -287,3 +287,18 @@ test('funded businesses are now merchants: old links redirect, and defaults are 
   assert.match(record.text, /A merchant/);
   assert.doesNotMatch(record.text + choose.text, /funded business/i);
 });
+
+test('search pages: individual, vendor, merchant order; individual form has one certification and no purpose dropdown', async () => {
+  const choose = await lender.req('/search');
+  const order = ['Screen an individual', 'Check a vendor', 'Check a merchant'].map(t => choose.text.indexOf(t));
+  assert.ok(order.every(i => i > 0) && order[0] < order[1] && order[1] < order[2], 'individual, vendor, merchant');
+  const form = await lender.req('/search/individual');
+  assert.doesNotMatch(form.text, /name="purpose"/);
+  assert.equal((form.text.match(/type="checkbox"/g) || []).length, 1);
+  assert.doesNotMatch(form.text, /Exact matches only\.<\/p>/);
+  // Without the certification the search is refused.
+  const r = await lender.req('/search/individual', { first_name: 'Jordan', last_name: 'Rivera', dob: '1990-04-12', email: 'jordan@mail.com' },
+    { files: { authorization: [{ name: 'auth.pdf' }] } });
+  assert.equal(r.status, 422);
+  assert.match(r.text, /employment screening certification/);
+});

@@ -1,12 +1,10 @@
 <%- include('../partials/head') %>
-<% const v = k => (values && typeof values[k] === 'string') ? values[k] : ''; const purposes = S.PURPOSES_FOR[subjectType]; %>
+<% const v = k => (values && typeof values[k] === 'string') ? values[k] : ''; %>
 <section class="card">
   <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
-  <% const TITLES = { merchant: ['Check a merchant', 'See reported defaults and document tampering, and how many lenders searched this business in the last 30 days.'],
-       company: ['Check a vendor', 'See reports about a service provider, broker partner or lender partner before you work with them.'],
-       individual: ['Screen an individual', 'See reports about an employee or contractor, for employment screening.'] }; %>
-  <h1 class="title"><%= TITLES[subjectType][0] %></h1>
-  <p class="lead"><%= TITLES[subjectType][1] %> Only published reports are shown, and every search is logged.</p>
+  <% const TITLES = { merchant: 'Check a merchant', company: 'Check a vendor', individual: 'Screen an individual' }; %>
+  <h1 class="title"><%= TITLES[subjectType] %></h1>
+  <p class="lead">Only published reports are shown, and every search is logged.</p>
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong><ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
   <% } %>
@@ -39,34 +37,14 @@
     <% } %>
 
     <% if (subjectType === 'individual') { %>
-    <h2>Permissible purpose</h2>
-    <p class="muted">Searches of individuals are subject to the Fair Credit Reporting Act (FCRA) and are offered for employment screening only, including independent contractors such as ISO reps.</p>
-    <div class="field">
-      <label for="purpose">Purpose of this search</label>
-      <select id="purpose" name="purpose" required>
-        <% if (purposes.length > 1) { %><option value="">Select…</option><% } %>
-        <% purposes.forEach(p => { %><option value="<%= p %>" <%= v('purpose') === p ? 'selected' : '' %>><%= S.PURPOSES[p] %></option><% }) %>
-      </select>
-    </div>
-    <% } else { %>
-    <p class="muted mt">Not subject to the FCRA. Exact matches only.</p>
-    <% } %>
-
-    <% if (subjectType === 'individual') { %>
-    <fieldset id="employment-fields" hidden disabled>
-      <div class="card-inset">
-        <p class="flush"><strong>Employment screening</strong></p>
-        <label class="check mt"><input type="checkbox" name="employment_certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that we gave this individual a clear and conspicuous standalone written disclosure that a report may be obtained for employment purposes, obtained their written authorization (attached), will send pre-adverse and adverse action notices with a copy of the report and the CFPB Summary of Rights before taking any adverse action, and will not use this information in violation of any equal employment opportunity law.</span></label>
-        <div class="field"><label for="authorization">Signed disclosure &amp; authorization</label>
-          <input type="file" id="authorization" name="authorization" accept=".pdf,.png,.jpg,.jpeg,.heic,.webp" required>
-          <p class="field-hint">PDF or image, up to 25 MB.</p>
-        </div>
+    <div class="card-inset mt">
+      <p class="flush"><strong>Employment screening</strong> <span class="muted">&middot; Subject to the FCRA</span></p>
+      <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that this search is for employment screening and the results will be used only for that purpose; that we gave this individual a clear and conspicuous standalone written disclosure that a report may be obtained for employment purposes and obtained their written authorization (attached); that we will send pre-adverse and adverse action notices with a copy of the report and the CFPB Summary of Rights before taking any adverse action; and that we will not use this information in violation of any equal employment opportunity law.</span></label>
+      <div class="field flush"><label for="authorization">Signed disclosure &amp; authorization</label>
+        <input type="file" id="authorization" name="authorization" accept=".pdf,.png,.jpg,.jpeg,.heic,.webp" required>
+        <p class="field-hint">PDF or image, up to 25 MB.</p>
       </div>
-    </fieldset>
-    <% } %>
-
-    <% if (subjectType === 'individual') { %>
-    <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I certify that this search is for the purpose selected above and the results will be used only for that purpose.</span></label>
+    </div>
     <% } else { %>
     <label class="check mt"><input type="checkbox" name="certify" required><span>On behalf of <%= account.business_legal_name %>, I confirm the results will be used only to evaluate this <%= subjectType === 'company' ? 'vendor' : 'business' %>, not for marketing or solicitation.</span></label>
     <% } %>
