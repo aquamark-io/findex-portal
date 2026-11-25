@@ -38,13 +38,25 @@
     <p class="lead flush">View and dispute any report about <%= a.account_type === 'individual' ? 'you' : 'your business' %> at no cost.</p>
   <% } %>
 
-  <h2><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
-  <dl class="profile">
-    <% rows.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
-  </dl>
-  <p class="muted profile-note">Need to change something? <a href="/contact?topic=account_access">Contact us</a>.</p>
+  <details class="profile-toggle">
+    <summary><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></summary>
+    <dl class="profile">
+      <% rows.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
+    </dl>
+  </details>
 </section>
 
+<% if (fullAccess) { %>
+<section class="side-panel">
+  <h2 class="flush-top">Report examples</h2>
+  <p>See what search results look like, using sample data.</p>
+  <div class="example-grid">
+    <a href="/search/example/individual"><strong>Individual</strong><span>Jordan Rivera</span></a>
+    <a href="/search/example/vendor"><strong>Vendor</strong><span>Leaky CRM Inc</span></a>
+    <a href="/search/example/merchant"><strong>Merchant</strong><span>Joe&rsquo;s Cafe LLC</span></a>
+  </div>
+</section>
+<% } %>
 <% if (canUseApi) { %>
 <section class="side-panel">
   <h2 class="flush-top">API access</h2>
@@ -56,17 +68,6 @@
   <% } else { %>
     <div class="action-grid"><a class="btn" href="/api-access">Manage API keys</a></div>
   <% } %>
-</section>
-<% } %>
-<% if (fullAccess) { %>
-<section class="side-panel">
-  <h2 class="flush-top">Report examples</h2>
-  <p>See what search results look like, using sample data.</p>
-  <div class="example-grid">
-    <a href="/search/example/individual"><strong>Individual</strong><span>Jordan Rivera</span></a>
-    <a href="/search/example/vendor"><strong>Vendor</strong><span>Leaky CRM Inc</span></a>
-    <a href="/search/example/merchant"><strong>Merchant</strong><span>Joe&rsquo;s Cafe LLC</span></a>
-  </div>
 </section>
 <% } %>
 <% if (!fullAccess) { %>
