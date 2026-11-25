@@ -1,31 +1,57 @@
 <%- include('partials/head') %>
-<% const a = account; %>
+<% const a = account, pr = profile;
+   const day = d => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }) : '';
+   const phone = p => { const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(p || ''); return m ? `(${m[1]}) ${m[2]}-${m[3]}` : p; };
+   const name = `${pr.first_name || ''} ${pr.last_name || ''}`.trim();
+   const fullAccess = a.account_type === 'company' && a.terms_version;
+   let rows;
+   if (a.account_type === 'company') {
+     rows = [
+       ['Company', pr.business_legal_name], ['DBA', pr.business_dba], ['Role', COMPANY_TYPES[pr.company_type]],
+       ['Website', pr.website ? pr.website.replace(/^https?:\/\//, '') : null], ['State of registration', STATES[pr.state_of_registration]],
+       ['Contact', name + (pr.job_title ? `, ${pr.job_title}` : '')], ['Email', pr.email], ['Phone', phone(pr.phone)],
+       ['Member since', day(pr.created_at)], ['Member terms', a.terms_version ? `Accepted ${day(pr.terms_accepted_at)}` : 'Not accepted'],
+     ];
+   } else if (a.account_type === 'individual') {
+     rows = [
+       ['Name', name], ['Email', pr.email], ['Mobile', phone(pr.phone)], ['Company', pr.current_company],
+       ['Role', WORKER_TYPES[pr.worker_type]], ['Member since', day(pr.created_at)],
+     ];
+   } else {
+     rows = [
+       ['Business', pr.business_legal_name], ['DBA', pr.business_dba], ['State of registration', STATES[pr.state_of_registration]],
+       ['Contact', name], ['Email', pr.email], ['Phone', phone(pr.phone)], ['Member since', day(pr.created_at)],
+     ];
+   }
+   rows = rows.filter(([, v]) => v); %>
 <section class="card">
   <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <h1 class="title">Welcome<%= a.first_name ? `, ${a.first_name}` : '' %></h1>
   <% if (a.account_type === 'company') { %>
-    <p class="lead"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
-    <% if (!a.terms_version) { %>
-    <p>View and dispute any report about your company at no cost, below.</p>
-    <p class="muted">Searching and reporting require full access.</p>
-    <p><a class="btn" href="/dashboard/full-access">Get full access</a></p>
+    <p class="lead flush"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
+    <% if (fullAccess) { %>
+      <div class="action-grid">
+        <a class="btn" href="/search">Search</a>
+        <a class="btn secondary" href="/reports/new">Submit a report</a>
+        <a class="btn secondary" href="/reports">Your reports</a>
+      </div>
     <% } else { %>
-    <h2>Your Access</h2>
-    <ul class="checklist">
-      <li>Check funded businesses before funding, and vendors before working with them</li>
-      <li>Screen employees and contractors (FCRA, employment screening only)</li>
-      <li>Report <% if (canReportRepayment) { %>defaults and <% } %>incidents, with evidence, for independent review</li>
-      <li>View or dispute any report about your own company</li>
-    </ul>
-    <p class="mt"><a class="btn" href="/search">Search</a> <a class="btn secondary" href="/reports/new">Submit a report</a> <a class="btn secondary" href="/reports">Your reports</a></p>
+      <div class="upgrade mt">
+        <p class="flush">You can view and dispute reports about your company below. Searching and reporting require full access.</p>
+        <div class="action-grid"><a class="btn" href="/dashboard/full-access">Get full access</a></div>
+      </div>
     <% } %>
-  <% } else if (a.account_type === 'individual') { %>
-    <p class="lead">Your FinDex record</p>
-    <p>View and dispute any report about you at no cost, below.</p>
   <% } else { %>
-    <p class="lead"><%= a.business_legal_name %></p>
-    <p>View and dispute any report about your business at no cost, below.</p>
+    <p class="lead flush">View and dispute any report about <%= a.account_type === 'individual' ? 'you' : 'your business' %> at no cost.</p>
   <% } %>
+</section>
+
+<section class="card">
+  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
+  <dl class="profile">
+    <% rows.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
+  </dl>
+  <p class="muted profile-note">Need to change something? <a href="/contact?topic=account_access">Contact us</a>.</p>
 </section>
 
 <% if (canUseApi) { %>
@@ -33,15 +59,15 @@
   <h2 class="flush-top">API access</h2>
   <p>Check funded businesses for defaults and document tampering from your own systems.</p>
   <% if (!apiAccess || ['denied', 'revoked'].includes(apiAccess.status)) { %>
-    <p><a class="btn" href="/api-access">Request API access</a></p>
+    <div class="action-grid"><a class="btn" href="/api-access">Request API access</a></div>
   <% } else if (apiAccess.status === 'requested') { %>
-    <p class="muted">Requested. We&rsquo;ll email you once it has been reviewed.</p>
+    <p class="muted flush">Requested. We&rsquo;ll email you once it has been reviewed.</p>
   <% } else { %>
-    <p><a class="btn" href="/api-access">Manage API keys</a></p>
+    <div class="action-grid"><a class="btn" href="/api-access">Manage API keys</a></div>
   <% } %>
 </section>
 <% } %>
-<% if (!(a.account_type === 'company' && a.terms_version)) { %>
+<% if (!fullAccess) { %>
 <%- include('partials/about-me') %>
 <% } %>
 <%- include('partials/foot') %>

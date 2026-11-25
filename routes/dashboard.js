@@ -3,7 +3,7 @@
 const express = require('express');
 const supabase = require('../lib/supabase');
 const { requireAccount } = require('../middleware/auth');
-const { COMPANY_TYPES } = require('../lib/validate');
+const { COMPANY_TYPES, WORKER_TYPES, STATES } = require('../lib/validate');
 const { canReportRepayment, CATEGORIES, fmtSize } = require('../lib/reports');
 const N = require('../lib/notices');
 const D = require('../lib/disputes');
@@ -20,15 +20,23 @@ const router = express.Router();
 
 const canUpgrade = a => a.account_type === 'company' && !a.terms_version;
 
+// Profile fields shown on the dashboard. Never DOB or EIN.
+const PROFILE_FIELDS = 'first_name, last_name, email, phone, job_title, business_legal_name, business_dba, company_type, website, '
+  + 'state_of_registration, current_company, worker_type, created_at, terms_accepted_at';
+
 router.get('/dashboard', requireAccount, async (req, res, next) => {
   const a = req.account;
-  let record, apiAccess = null;
+  let record, profile, apiAccess = null;
   try {
     if (K.canUseApi(a)) apiAccess = await K.getAccess(a.id);
     record = await loadMyRecord(a.id);
+    const { data, error } = await supabase.from('fx_accounts').select(PROFILE_FIELDS).eq('id', a.id).maybeSingle();
+    if (error) throw new Error(`Profile: ${error.message}`);
+    profile = data || {};
   } catch (err) { return next(err); }
   res.render('dashboard', {
     ...record,
+    profile, WORKER_TYPES, STATES,
     apiAccess, canUseApi: K.canUseApi(a),
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',

@@ -355,11 +355,25 @@ body.light .btn.secondary { background: #fff; color: #45138c; border-color: #cfc
 .table .inline-form input { min-width: 140px; }
 details summary { cursor: pointer; }
 form.row-inline + .muted { margin-top: 18px; }
-.checklist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lav-border); border-radius: 6px; background: #fff; }
-.checklist li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; }
-.checklist li + li { border-top: 1px solid var(--lav-border); }
-.checklist .pill { flex: none; min-width: 64px; justify-content: center; margin-top: 1px; }
-.checklist p { overflow-wrap: anywhere; margin-top: 4px; }
+.launch-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lav-border); border-radius: 6px; background: #fff; }
+.launch-list li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; }
+.launch-list li + li { border-top: 1px solid var(--lav-border); }
+.launch-list .pill { flex: none; min-width: 64px; justify-content: center; margin-top: 1px; }
+.launch-list p { overflow-wrap: anywhere; margin-top: 4px; }
 .message-body { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--lav); border: 1px solid var(--lav-border); border-radius: 6px; padding: 14px 16px; line-height: 1.6; }
 .table th[scope=row] { text-transform: none; letter-spacing: 0; font-size: 0.9rem; background: none; width: 140px; border-top: 1px solid var(--lav-border); }
 .foot a { margin-left: 4px; }
+
+/* Dashboard: equal-size action buttons (stack on phones) and a profile grid. */
+.action-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.action-grid .btn { width: 100%; margin: 0; padding-left: 12px; padding-right: 12px; text-align: center; }
+.upgrade .action-grid, .card p + .action-grid { margin-top: 16px; }
+.profile { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 0; }
+.profile > div { padding: 12px 0; border-bottom: 1px solid var(--lav-border); min-width: 0; }
+.profile dt { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.profile dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .action-grid { grid-template-columns: 1fr; }
+  .profile { grid-template-columns: 1fr; }
+}
+.profile-note { margin: 16px 0 0; }
