@@ -13,45 +13,29 @@
       </nav>
     </div>
 
-    <% if (tab === 'submitted') { const ex = !reports.length; const rows = ex ? EX.SUBMITTED : reports; %>
-      <% if (ex) { %><p class="muted">You haven&rsquo;t submitted any reports yet. Here&rsquo;s how they&rsquo;ll appear (click one to see an example):</p><% } %>
+    <% if (tab === 'submitted') { %>
       <ul class="act-list">
-        <% rows.forEach(r => { const href = ex ? `/activity/example/${r.n}` : `/reports/${r.id}`; %>
-          <li class="<%= ex ? 'is-example' : '' %>">
-            <a href="<%= href %>">
-              <span class="act-main"><% if (ex) { %><%- exRow %><% } %><strong><%= r.subject_name_reported %></strong>
-                <span class="act-sub"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] %> &middot; <%= R.CATEGORIES[r.category].label %></span></span>
-              <span class="act-side"><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span><span class="act-date">Submitted <%= fmtDate(r.created_at) %></span></span>
-            </a>
-          </li>
+        <% reports.forEach(r => { %>
+          <li><a href="/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] %> &middot; <%= R.CATEGORIES[r.category].label %></span></a></li>
+        <% }) %>
+        <% EX.SUBMITTED.forEach(r => { %>
+          <li class="is-example"><a href="/activity/example/<%= r.n %>"><%- exRow %><strong><%= r.subject_name_reported %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[r.fx_subjects.subject_type] %> &middot; <%= R.CATEGORIES[r.category].label %></span></a></li>
         <% }) %>
       </ul>
-    <% } else if (tab === 'about') { %>
-      <% if (!aboutMe.length) { const r = EX.ABOUT; %>
-        <p class="muted">There are no reports about <%= isCo ? 'your company' : 'you' %>. If one is filed, you&rsquo;ll be emailed and it will appear here, where you can review the evidence and dispute it for free:</p>
-        <ul class="act-list">
-          <li class="is-example"><a href="/activity/example/<%= r.n %>">
-            <span class="act-main"><%- exRow %><strong><%= R.CATEGORIES[r.category].label %></strong><span class="act-sub">Reported by <%= r.reporter.business_legal_name %></span></span>
-            <span class="act-side"><span class="pill <%= r.status %>"><%= STATUS_LABELS[r.status] %></span><span class="act-date">Publishes <%= fmtDay(r.publish_at) %></span></span>
-          </a></li>
-        </ul>
-      <% } else { %>
-        <%- include('partials/about-me', { aboutBare: true }) %>
-      <% } %>
-    <% } else { const ex = !searches.length; %>
-      <% if (ex) { %><p class="muted">You haven&rsquo;t searched yet. Here&rsquo;s how your searches will appear (click one to see example results):</p><% } %>
+    <% } else if (tab === 'about') { const r = EX.ABOUT; %>
+      <% if (aboutMe.length) { %><%- include('partials/about-me', { aboutBare: true }) %><% } %>
       <ul class="act-list">
-        <% (ex ? EX.SEARCHES : searches).forEach(s => {
-             const c = s.criteria || {}; const n = ex ? s.reports : s.result_report_ids.length;
-             const name = ex ? s.name : (c.name || c.domain || (c.ein ? 'Merchant by EIN' : R.SUBJECT_TYPES[s.subject_type] + ' search'));
-             const type = ex ? s.type : s.subject_type; %>
-          <li class="<%= ex ? 'is-example' : '' %>"><a href="<%= ex ? '/search/example/' + s.who : '/search/results/' + s.id %>">
-            <span class="act-main"><% if (ex) { %><%- exRow %><% } %><strong><%= name %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[type] %></span></span>
-            <span class="act-side"><span class="act-reports <%= n ? 'hit' : '' %>"><%= n %> report<%= n === 1 ? '' : 's' %></span><span class="act-date">Searched <%= fmtDate(s.created_at) %></span></span>
-          </a></li>
+        <li class="is-example"><a href="/activity/example/<%= r.n %>"><%- exRow %><strong><%= R.CATEGORIES[r.category].label %></strong><span class="act-sub">Reported by <%= r.reporter.business_legal_name %></span></a></li>
+      </ul>
+    <% } else { %>
+      <ul class="act-list">
+        <% searches.forEach(s => { const c = s.criteria || {}; %>
+          <li><a href="/search/results/<%= s.id %>"><strong><%= c.name || c.domain || (c.ein ? 'Merchant by EIN' : R.SUBJECT_TYPES[s.subject_type] + ' search') %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[s.subject_type] %></span></a></li>
+        <% }) %>
+        <% EX.SEARCHES.forEach(s => { %>
+          <li class="is-example"><a href="/search/example/<%= s.who %>"><%- exRow %><strong><%= s.name %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[s.type] %></span></a></li>
         <% }) %>
       </ul>
-      <% if (!ex) { %><p class="muted fine">Search results can be viewed for 7 days.</p><% } %>
     <% } %>
   </div>
 </section>

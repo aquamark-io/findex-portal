@@ -152,7 +152,7 @@ test('the dashboard has a colored header and the report example links above API 
   assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
 });
 
-test('Activity: three tabs with clickable examples until the member has their own; old Reports links redirect', async () => {
+test('Activity: three tabs with clickable examples below the member\'s own; old Reports links redirect', async () => {
   const b = await ctx.member(admin, { email: 'new@freshfunding.com', domain: 'freshfunding.com', company: 'Fresh Funding LLC' });
   assert.equal((await b.req('/reports')).location, '/activity');
   assert.equal((await b.req('/reports/about')).location, '/activity?tab=about');
@@ -172,7 +172,6 @@ test('Activity: three tabs with clickable examples until the member has their ow
   assert.doesNotMatch(exPage.text, /action="\/reports\/[^"]*\/remove"/, 'no remove form on an example');
 
   const about = await b.req('/activity?tab=about');
-  assert.match(about.text, /There are no reports about your company/);
   assert.match(about.text, /href="\/activity\/example\/4"/);
   assert.match((await b.req('/activity/example/4')).text, /Dispute this report/);
 
@@ -180,10 +179,12 @@ test('Activity: three tabs with clickable examples until the member has their ow
   assert.match(se.text, /href="\/search\/example\/merchant"/);
   assert.equal((await b.req('/activity/example/99')).location, '/activity');
 
-  // A member with their own reports sees only those, linked to the real report page.
+  // Real reports are listed above the examples, which stay at the bottom; rows show no status or date.
   const mine = await lender.req('/activity');
-  assert.doesNotMatch(mine.text, /is-example/);
-  assert.match(mine.text, /href="\/reports\/[0-9a-f-]{36}"/);
+  const real = mine.text.search(/href="\/reports\/[0-9a-f-]{36}"/), firstEx = mine.text.indexOf('class="is-example"');
+  assert.ok(real > 0 && firstEx > real, 'own reports first, examples below');
+  assert.doesNotMatch(mine.text, /class="pill /);
+  assert.doesNotMatch(sub.text, /Here’s how they’ll appear|Here&rsquo;s how/);
   // The search page no longer lists recent searches; they live under Activity.
   assert.doesNotMatch((await lender.req('/search')).text, /Your recent searches/);
 });

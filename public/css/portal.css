@@ -601,3 +601,21 @@ body:not(.admin) .pill.rejected, body:not(.admin) .pill.removed, body:not(.admin
 .results-grid { grid-template-columns: 240px minmax(0, 1fr); }
 @media (max-width: 700px) { .results-grid { grid-template-columns: 1fr; } }
 @media (max-width: 420px) { .band-btn { padding: 8px 12px; font-size: 0.85rem; } }
+/* Activity v2: equal-width segmented tabs, simple one-line rows (name, then type · category). */
+.activity-top { display: block; margin-bottom: 16px; }
+.act-tabs { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid #d9d1e6; border-radius: 4px; overflow: hidden; }
+.act-tabs a { border: 0 !important; border-radius: 0 !important; text-align: center; padding: 10px 8px; background: #fff; }
+.act-tabs a + a { border-left: 1px solid #d9d1e6 !important; }
+.act-list { margin-top: 0; }
+.act-list a { display: block !important; padding: 13px 16px; }
+.act-list a strong { color: var(--deep); font-weight: 600; }
+.act-list .act-sub { display: inline; margin: 0 0 0 10px; }
+.act-list .is-example a strong { color: var(--body); }
+.act-list .is-example { background: #fcfbfe; }
+.about-bare + .act-list { margin-top: 16px; }
+@media (max-width: 600px) {
+  .act-tabs { grid-template-columns: 1fr; }
+  .act-tabs a + a { border-left: 0 !important; border-top: 1px solid #d9d1e6 !important; }
+  .act-list .act-sub { display: block; margin: 3px 0 0; }
+}
+.act-list .example-tag { margin: 0 10px 0 0; vertical-align: 1px; }
