@@ -226,23 +226,29 @@ test('no part of an SSN is stored anywhere', () => {
   assert.ok(emails.length > 0);
 });
 
-test('categories: individuals and vendors get five, merchants get Document Tampering and Default', async () => {
+test('categories: the final list, alphabetical; merchants get Defaulted on Financing and Document Tampering', async () => {
   const R = require('../lib/reports');
   const funder = { account_type: 'company', company_type: 'funder' };
   const labels = t => R.categoriesFor(t, funder).map(c => c.label);
-  const five = ['Data Mishandling', 'Theft', 'False Statements', 'Document Tampering', 'Unauthorized Activity'];
-  assert.deepEqual(labels('individual'), five);
-  assert.deepEqual(labels('company'), five);
-  assert.deepEqual(labels('merchant'), ['Document Tampering', 'Default']);
-  for (const c of R.categoriesFor('individual', funder)) assert.match(R.GUIDANCE[c.key], /^Accepted evidence: /, `${c.label}: evidence we accept`);
+  const ten = ['Accidental Data Exposure', 'Data Theft (Backdooring)', 'Document Tampering', 'False or Misleading Statements', 'Impersonation',
+    'Operating without State License', 'Operating without State Registration', 'Unauthorized Fees', 'Violation of FCRA, ECOA, UDAP, or TCPA'];
+  assert.deepEqual(labels('individual'), ten);
+  assert.deepEqual(labels('company'), ten);
+  assert.deepEqual(labels('merchant'), ['Defaulted on Financing', 'Document Tampering']);
+  assert.deepEqual(R.categoriesFor('merchant', { account_type: 'company', company_type: 'broker' }).map(c => c.label), ['Document Tampering'], 'only funders and lenders report defaults');
+  for (const c of R.categoriesFor('individual', funder)) {
+    assert.match(R.GUIDANCE[c.key], /^Accepted evidence: /, `${c.label}: evidence we accept`);
+    assert.ok(R.REQUIREMENTS[c.key].length >= 2, `${c.label}: what the evidence must show`);
+  }
   const form = await lender.req('/reports/new/individual');
-  assert.match(form.text, /Unauthorized Activity/);
-  assert.doesNotMatch(form.text, /Impersonation|Misleading Statements/);
+  assert.match(form.text, /Unauthorized Fees/);
+  assert.match(form.text, /Something else\? <a href="\/contact">Contact us<\/a>/);
+  assert.doesNotMatch(form.text, /Data Mishandling|Unauthorized Activity|>Theft</);
   const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Imp Test LLC', subject_ein: '33-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@imptest.com',
-    category: 'impersonation', incident_date: '2026-08-01', description: 'x', certify: 'on',
+    category: 'unauthorized_fees', incident_date: '2026-08-01', description: 'x', certify: 'on',
   }, { files: { evidence: [{ name: 'a.pdf' }] } });
-  assert.equal(r.status, 422, 'merchants cannot be reported for Unauthorized Activity');
+  assert.equal(r.status, 422, 'merchants: defaults and document tampering only');
 });
 
 test('vendors: old partner links redirect, the report form requires a vendor type, and the type shows in results', async () => {
@@ -258,7 +264,7 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   assert.match(form.text, /<option value="other"\s*>Other Service Providers<\/option>/);
 
   const base = { subject_name: 'Leaky CRM Inc', subject_website: 'https://leakycrm.com', subject_contact: 'Sam Vendor', subject_email: 'sam@leakycrm.com',
-    category: 'data_mishandling', incident_date: '2026-08-01', description: 'Our merchant files were exposed.', certify: 'on' };
+    category: 'accidental_data_exposure', incident_date: '2026-08-01', description: 'Our merchant files were exposed.', certify: 'on' };
   const files = { files: { evidence: [{ name: 'e.pdf' }] } };
   const missing = await lender.req('/reports/new/vendor', base, files);
   assert.equal(missing.status, 422);
@@ -285,7 +291,7 @@ test('funded businesses are now merchants: old links redirect, and defaults are 
   assert.match(choose.text, /A merchant/);
   assert.match(choose.text, /applied for or received funding/);
   const form = await lender.req('/reports/new/merchant');
-  assert.match(form.text, /Default \(funded merchants only\)/);
+  assert.match(form.text, /Defaulted on Financing \(funded merchants only\)/);
   const record = await ctx.browser().req('/check-my-record');
   assert.match(record.text, /A merchant/);
   assert.doesNotMatch(record.text + choose.text, /funded business/i);
