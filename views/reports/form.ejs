@@ -71,7 +71,7 @@
     </div>
 
     <h2>Evidence</h2>
-    <div id="evidence-req" class="card-inset" hidden><p class="flush"><strong>What we need to see</strong></p><div class="muted" id="evidence-guide"></div><p class="flush req-intro">Your evidence must clearly establish:</p><ul class="checklist" id="evidence-req-list"></ul></div>
+    <div id="evidence-req" class="card-inset tinted" hidden><p class="flush"><strong>What we need to see</strong></p><div class="muted" id="evidence-guide"></div><p class="flush req-intro">Your evidence must clearly establish:</p><ul class="checklist" id="evidence-req-list"></ul></div>
     <p class="muted" id="evidence-hint">Choose a category to see what the evidence needs to show.</p>
     <div class="field"><label for="evidence">Evidence files</label>
       <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
@@ -91,7 +91,6 @@
 
     <button class="btn block" type="submit">Submit report</button>
   </form>
-  <% if (subjectType === 'merchant') { %><p class="muted mt">Reporting many defaults? API access is available on request.<% if (contactEmail) { %> <a href="mailto:<%= contactEmail %>?subject=FinDex%20API%20access">Contact us</a>.<% } %></p><% } %>
 </section>
 <script src="/js/report-form.js?v=<%= assetV %>" defer></script>
 <%- include('../partials/foot') %>

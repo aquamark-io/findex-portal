@@ -1,24 +1,25 @@
 <%- include('../partials/head') %>
-<section class="card">
-  <h1 class="title">Submit a report</h1>
+<section class="card dash-card">
+  <h1 class="dash-band">Submit a report</h1>
+  <div class="dash-body">
   <p class="lead">Who are you reporting?</p>
   <div class="pick">
-    <a class="pick-card" href="/reports/new/merchant">
-      <strong>A merchant</strong>
-      <span>A business that applied for or received funding: <%= canReportRepayment ? 'a default (funded merchants only) or document tampering' : 'document tampering' %></span>
+    <a class="pick-card" href="/reports/new/individual">
+      <strong>An individual</strong>
+      <span>Employees and contractors.</span>
     </a>
     <a class="pick-card" href="/reports/new/vendor">
       <strong>A vendor</strong>
-      <span>A service provider, broker partner or lender partner: backdooring, impersonation, misleading statements or data mishandling</span>
+      <span>Service providers, broker partners and lender partners.</span>
     </a>
-    <a class="pick-card" href="/reports/new/individual">
-      <strong>An individual</strong>
-      <span>An employee or contractor: backdooring, document tampering, impersonation or misleading statements</span>
+    <a class="pick-card" href="/reports/new/merchant">
+      <strong>A merchant</strong>
+      <span>Businesses that applied for or received funding.</span>
     </a>
   </div>
-  <p class="muted mt"><a href="/reports">Your reports</a></p>
+  </div>
 </section>
-<section class="card">
+<section class="side-panel">
   <%- include('../partials/how-reporting-works') %>
 </section>
 <%- include('../partials/foot') %>

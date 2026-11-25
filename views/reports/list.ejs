@@ -1,4 +1,4 @@
-<%- include('../partials/head', { wide: true }) %>
+<%- include('../partials/head') %>
 <% const day = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
    // Shown until the member submits a report, so they can see how reports and statuses appear.
    const examples = [
@@ -8,10 +8,14 @@
    ];
    const ex = !reports.length;
    const rows = ex ? examples : reports; %>
-<h1 class="title">Reports</h1>
-<% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
-<h2>Reports you submitted</h2>
-<p><a class="btn" href="/reports/new">Submit a report</a></p>
+<section class="card dash-card">
+  <h1 class="dash-band">Reports</h1>
+  <div class="dash-body">
+  <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+  <div class="report-actions">
+    <a class="btn" href="/reports/new">Submit a report</a>
+    <a class="btn secondary" href="/reports/about">Reports about <%= account.account_type === 'company' ? 'your company' : 'you' %><% if (aboutMe.length) { %> (<%= aboutMe.length %>)<% } %></a>
+  </div>
 <% if (ex) { %><p class="muted">You haven&rsquo;t submitted any reports yet. Here&rsquo;s how they&rsquo;ll appear:</p><% } %>
 <div class="table-wrap stack-wrap"><table class="table stack-table">
   <thead><tr><th>Submitted</th><th>About</th><th>Category</th><th>Incident date</th><th>Status</th></tr></thead>
@@ -29,6 +33,6 @@
     <% }) %>
   </tbody>
 </table></div>
-<div class="mt"></div>
-<%- include('../partials/about-me') %>
+  </div>
+</section>
 <%- include('../partials/foot') %>

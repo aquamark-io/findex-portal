@@ -62,6 +62,14 @@ router.use('/reports', requireAccount, requireReporter, (req, res, next) => {
 
 // ---------- list ----------
 
+// Reports about this company (and its disputes), on their own page so they don't get lost below a long list.
+router.get('/reports/about', async (req, res, next) => {
+  try {
+    const record = await loadMyRecord(req.account.id);
+    res.render('reports/about', { ...record, pageTitle: 'Reports about you' });
+  } catch (err) { next(err); }
+});
+
 router.get('/reports', async (req, res, next) => {
   try {
     const { data, error } = await supabase.from('fx_reports')
