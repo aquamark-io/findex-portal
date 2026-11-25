@@ -598,7 +598,10 @@ body:not(.admin) .pill.rejected, body:not(.admin) .pill.removed, body:not(.admin
 .band-btn { background: #fff !important; color: var(--deep) !important; border-color: #fff !important; padding: 9px 16px; font-size: 0.9rem; }
 .band-btn:hover { background: #f3edfb !important; }
 .side-row > span:last-child:not(.break) { white-space: nowrap; }
-.results-grid { grid-template-columns: 240px minmax(0, 1fr); }
+.card.results { max-width: 1000px; margin: 0 auto; }
+.results-grid { grid-template-columns: 340px minmax(0, 1fr); gap: 36px; }
+.side-row > span:first-child { white-space: nowrap; }
+.side-row > span:last-child:not(:first-child) { overflow-wrap: anywhere; }
 @media (max-width: 700px) { .results-grid { grid-template-columns: 1fr; } }
 @media (max-width: 420px) { .band-btn { padding: 8px 12px; font-size: 0.85rem; } }
 /* Activity v2: equal-width segmented tabs, simple one-line rows (name, then type · category). */

@@ -123,7 +123,7 @@ router.get('/activity/example/:n', (req, res) => {
   const ex = EX.find(Number(req.params.n));
   if (!ex) return res.redirect('/activity');
   const about = ex === EX.ABOUT;
-  res.render('reports/view', { pageTitle: 'Example report', example: true, about, report: ex, files: ex.files, removable: false, dispute: null, dFiles: [],
+  res.render('reports/view', { wide: true, pageTitle: 'Example report', example: true, about, report: ex, files: ex.files, removable: false, dispute: null, dFiles: [],
     notices: [], fmtDay: N.fmtDay, submitted: false, msg: null, err: null });
 });
 
@@ -274,7 +274,7 @@ router.get('/reports/:id', async (req, res, next) => {
     const { data: dispute } = await supabase.from('fx_disputes').select('*').eq('report_id', report.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
     let dFiles = [];
     if (dispute) { const { data } = await supabase.from('fx_dispute_files').select('id, party, file_name, size_bytes').eq('dispute_id', dispute.id).order('created_at'); dFiles = data || []; }
-    res.render('reports/view', {
+    res.render('reports/view', { wide: true,
       pageTitle: 'Report', report, removable: D.REMOVABLE.includes(report.status), files: files || [], notices: notices || [], fmtDay: N.fmtDay, dispute, dFiles,
       submitted: req.query.submitted === '1', msg: typeof req.query.msg === 'string' ? req.query.msg : null, err: typeof req.query.err === 'string' ? req.query.err : null,
     });

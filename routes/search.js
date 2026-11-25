@@ -131,7 +131,7 @@ async function loadOwnSearch(req) {
 const EX = require('../lib/search-examples');
 router.get('/search/example/:who', (req, res) => {
   if (!EX.WHO.includes(req.params.who)) return res.redirect('/search');
-  res.render('search/results', { pageTitle: 'Example results', example: true, resultsDays: RESULTS_DAYS, ...EX.example(req.params.who) });
+  res.render('search/results', { wide: true, pageTitle: 'Example results', example: true, resultsDays: RESULTS_DAYS, ...EX.example(req.params.who) });
 });
 
 router.get('/search/results/:id', async (req, res, next) => {
@@ -152,7 +152,7 @@ router.get('/search/results/:id', async (req, res, next) => {
     }
     // Businesses: how many other companies searched this business recently (counts only, never who).
     const activity = search.subject_type === 'merchant' && !search.expired ? await S.recentActivity(search.subject_keys, req.account.id) : null;
-    res.render('search/results', { pageTitle: 'Search results', search, reports, files, activity, resultsDays: RESULTS_DAYS });
+    res.render('search/results', { wide: true, pageTitle: 'Search results', search, reports, files, activity, resultsDays: RESULTS_DAYS });
   } catch (err) { next(err); }
 });
 
