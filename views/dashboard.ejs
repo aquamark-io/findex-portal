@@ -18,9 +18,10 @@
      more = [['DBA', pr.business_dba], ['State of registration', STATES[pr.state_of_registration]], ['Phone', phone(pr.phone)]];
    }
    main = main.filter(([, v]) => v); more = more.filter(([, v]) => v); %>
-<section class="card">
+<section class="card dash-card">
+  <h1 class="dash-band">Dashboard</h1>
+  <div class="dash-body">
   <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
-  <h1 class="title">Dashboard</h1>
   <% if (a.account_type === 'company') { %>
     <% if (!fullAccess) { %>
       <div class="upgrade mt">
@@ -32,7 +33,7 @@
     <p class="lead flush">View and dispute any report about <%= a.account_type === 'individual' ? 'you' : 'your business' %> at no cost.</p>
   <% } %>
 
-  <h2><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
+  <h2 class="flush-top"><%= a.account_type === 'individual' ? 'Your profile' : a.account_type === 'company' ? 'Company profile' : 'Business profile' %></h2>
   <dl class="profile">
     <% main.forEach(([k, v]) => { %><div><dt><%= k %></dt><dd><%= v %></dd></div><% }) %>
   </dl>
@@ -44,17 +45,10 @@
     </dl>
   </details>
   <% } %>
-</section>
-
-<% if (activity) { %>
-<section class="activity" aria-label="Your activity">
-  <h2 class="flush-top">Your activity</h2>
-  <div class="activity-grid">
-    <a href="/search"><b><%= activity.searches %></b><span>Search<%= activity.searches === 1 ? '' : 'es' %> in the last 30 days</span></a>
-    <a href="/reports"><b><%= activity.submitted %></b><span>Report<%= activity.submitted === 1 ? '' : 's' %> submitted</span></a>
-    <a href="/reports"><b class="<%= activity.aboutUs ? 'hit' : '' %>"><%= activity.aboutUs %></b><span>Report<%= activity.aboutUs === 1 ? '' : 's' %> about your company</span></a>
   </div>
 </section>
+
+<% if (fullAccess) { %>
 <section class="examples-bar">
   <div><strong>Report examples</strong><span>See what search results look like.</span></div>
   <nav aria-label="Report examples">

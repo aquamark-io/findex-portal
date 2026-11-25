@@ -26,26 +26,17 @@ const PROFILE_FIELDS = 'first_name, last_name, email, phone, job_title, business
 
 router.get('/dashboard', requireAccount, async (req, res, next) => {
   const a = req.account;
-  let record, profile, activity = null, apiAccess = null;
+  let record, profile, apiAccess = null;
   try {
     if (K.canUseApi(a)) apiAccess = await K.getAccess(a.id);
     record = await loadMyRecord(a.id);
     const { data, error } = await supabase.from('fx_accounts').select(PROFILE_FIELDS).eq('id', a.id).maybeSingle();
     if (error) throw new Error(`Profile: ${error.message}`);
     profile = data || {};
-    // "Your activity" (companies with full access): searches in the last 30 days, reports submitted, reports about them.
-    if (a.account_type === 'company' && a.terms_version) {
-      const since = new Date(Date.now() - 30 * 864e5).toISOString();
-      const [{ count: searches }, { count: submitted }] = await Promise.all([
-        supabase.from('fx_searches').select('id', { count: 'exact', head: true }).eq('account_id', a.id).gte('created_at', since),
-        supabase.from('fx_reports').select('id', { count: 'exact', head: true }).eq('reporter_account_id', a.id),
-      ]);
-      activity = { searches: searches || 0, submitted: submitted || 0, aboutUs: (record.aboutMe || []).length };
-    }
   } catch (err) { return next(err); }
   res.render('dashboard', {
     ...record,
-    profile, activity, WORKER_TYPES, STATES,
+    profile, WORKER_TYPES, STATES,
     apiAccess, canUseApi: K.canUseApi(a),
     disputeEmail: process.env.ONBOARDING_NOTIFY_EMAIL || '',
     pageTitle: 'Dashboard',
