@@ -4,7 +4,11 @@
   <p class="signing-as">Searching: <strong><%= R.SUBJECT_TYPES[subjectType] %></strong> &middot; <a href="/search">Change</a></p>
   <% const TITLES = { merchant: 'Check a merchant', company: 'Check a vendor', individual: 'Screen an individual' }; %>
   <h1 class="title"><%= TITLES[subjectType] %></h1>
+  <% if (subjectType === 'merchant') { %>
+  <p class="lead">Checks FinDex for reported financing defaults and document tampering, plus how many other companies searched this merchant in the last 30 days. Only published reports are shown, and every search is logged.</p>
+  <% } else { %>
   <p class="lead">Only published reports are shown, and every search is logged.</p>
+  <% } %>
   <% if (errors && errors.length) { %>
     <div class="alert error" role="alert"><strong>Please fix the following:</strong><ul class="errors"><% errors.forEach(e => { %><li><%= e %></li><% }) %></ul></div>
   <% } %>
