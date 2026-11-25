@@ -389,3 +389,11 @@ form.row-inline + .muted { margin-top: 18px; }
   .profile { grid-template-columns: 1fr; }
 }
 .profile-note { margin: 16px 0 0; }
+
+/* Merchant search: what the search returns, at a glance. */
+.you-get { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; }
+.you-get > div { border: 1px solid var(--lav-border); border-top: 3px solid #b8287a; border-radius: 4px; padding: 12px 14px; background: #fff; }
+.you-get strong { display: block; color: var(--deep); font-size: 0.95rem; }
+.you-get span { display: block; color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+.fine { font-size: 0.82rem; margin: 12px 0 0; }
+@media (max-width: 560px) { .you-get { grid-template-columns: 1fr; } }
