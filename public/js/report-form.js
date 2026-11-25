@@ -1,14 +1,13 @@
 // Report form:
 //  - evidence files add up across picks (the browser normally replaces the selection), shown as a list
 //    with remove buttons; max 10 files, 25 MB each
-//  - evidence examples for the chosen category; default-notice upload only for default reports
+//  - default-notice upload only for default reports (accepted evidence is listed in the website FAQ)
 //  - EIN and ZIP formatting; button disabled while uploading
 (function () {
   var form = document.getElementById('report-form');
   if (!form) return;
   var MAX = 10, MAX_BYTES = 25 * 1024 * 1024;
   var cat = document.getElementById('category');
-  var hint = document.getElementById('evidence-hint');
   var dnField = document.getElementById('default-notice-field');
   var dnInput = document.getElementById('default_notice');
   var input = document.getElementById('evidence');
@@ -17,20 +16,6 @@
 
   function sync() {
     var opt = cat.options[cat.selectedIndex];
-    var req = opt && opt.getAttribute('data-req');
-    var box = document.getElementById('evidence-req'), list = document.getElementById('evidence-req-list');
-    hint.hidden = !!req; box.hidden = !req; list.innerHTML = '';
-    var items = []; try { items = req ? JSON.parse(req) : []; } catch (e) { items = []; }
-    items.forEach(function (t) {
-      var li = document.createElement('li');
-      if (Array.isArray(t)) { var b = document.createElement('strong'); b.textContent = t[0] + ':'; li.appendChild(b); li.appendChild(document.createTextNode(' ' + t[1])); }
-      else li.textContent = t;
-      list.appendChild(li);
-    });
-    var guide = document.getElementById('evidence-guide'), g = (opt && opt.getAttribute('data-guide')) || '';
-    guide.innerHTML = '';
-    g.split(/\n\s*\n/).forEach(function (para) { if (!para.trim()) return; var el = document.createElement('p'); el.textContent = para.trim(); guide.appendChild(el); });
-    guide.hidden = !g;
     var repay = !!(opt && opt.getAttribute('data-repay'));
     document.getElementById('description').required = !repay;
     document.getElementById('description_opt').hidden = !repay;

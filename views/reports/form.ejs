@@ -61,7 +61,7 @@
       <div class="field"><label for="category">Category</label>
         <select id="category" name="category" required>
           <option value="">Select…</option>
-          <% categories.forEach(c => { %><option value="<%= c.key %>" data-req="<%= JSON.stringify(R.requirementsFor(c.key, subjectType)) %>" data-guide="<%= R.guidanceFor(c.key, subjectType) %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-repay="1" data-date-label="<%= rp.dateLabel %>" <% if (rp.maxAgeDays) { %>data-max-age="<%= rp.maxAgeDays %>" <% } %><% } %><%= sel('category', c.key) %>><%= c.label %><%= c.needsDefaultNotice ? ' (funded merchants only)' : '' %></option><% }) %>
+          <% categories.forEach(c => { %><option value="<%= c.key %>" data-default="<%= c.needsDefaultNotice ? '1' : '' %>" <% const rp = R.REPAYMENT_FIELDS[c.key]; if (rp) { %>data-repay="1" data-date-label="<%= rp.dateLabel %>" <% if (rp.maxAgeDays) { %>data-max-age="<%= rp.maxAgeDays %>" <% } %><% } %><%= sel('category', c.key) %>><%= c.label %><%= c.needsDefaultNotice ? ' (funded merchants only)' : '' %></option><% }) %>
         </select>
         <p class="field-hint">Something else? <a href="/contact">Contact us</a>.</p>
       </div>
@@ -72,8 +72,7 @@
     </div>
 
     <h2>Evidence</h2>
-    <div id="evidence-req" class="card-inset tinted" hidden><p class="flush"><strong>What we need to see</strong></p><div class="muted" id="evidence-guide"></div><p class="flush req-intro">Your evidence must clearly establish:</p><ul class="checklist" id="evidence-req-list"></ul></div>
-    <p class="muted" id="evidence-hint">Choose a category to see what the evidence needs to show.</p>
+    <p class="muted" id="evidence-faq">See the <a href="https://joinfindex.com/faq/" target="_blank" rel="noopener">FAQ</a> for accepted evidence.</p>
     <div class="field"><label for="evidence">Evidence files</label>
       <input type="file" id="evidence" name="evidence" multiple required accept="<%= R.ACCEPT_ATTR %>" aria-describedby="files_hint">
       <ul class="file-list" id="evidence-list" hidden></ul>

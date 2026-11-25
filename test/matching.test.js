@@ -244,6 +244,8 @@ test('categories: the final list, alphabetical; merchants get Defaulted on Finan
   assert.match(form.text, /Unauthorized Fees/);
   assert.match(form.text, /Something else\? <a href="\/contact">Contact us<\/a>/);
   assert.doesNotMatch(form.text, /Data Mishandling|Unauthorized Activity|>Theft</);
+  assert.match(form.text, /See the <a href="https:\/\/joinfindex.com\/faq\/"[^>]*>FAQ<\/a> for accepted evidence\./);
+  assert.doesNotMatch(form.text, /What we need to see|data-req=/, 'no per-category evidence box on the form');
   const r = await lender.req('/reports/new/merchant', {
     subject_name: 'Imp Test LLC', subject_ein: '33-1234567', subject_state: 'TX', subject_contact: 'X', subject_email: 'x@imptest.com',
     category: 'unauthorized_fees', incident_date: '2026-08-01', description: 'x', certify: 'on',
