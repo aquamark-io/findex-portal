@@ -529,3 +529,19 @@ a.file-chip:hover { border-color: var(--base); }
 .dash-band { margin: 0; padding: 20px 28px 18px; background: var(--deep); color: #fff; border-bottom: 4px solid #d63d8f; font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; }
 .dash-body { padding: 24px 28px 26px; }
 @media (max-width: 560px) { .dash-band { padding: 16px 18px 14px; font-size: 1.3rem; } .dash-body { padding: 20px 18px 22px; } }
+
+/* Reports list: example rows until the first report; on phones each row becomes a stacked card. */
+.example-row td { color: var(--muted); }
+.example-row .example-tag { margin: 0 6px 4px 0; vertical-align: middle; }
+@media (max-width: 700px) {
+  .stack-wrap { border: 0; background: none; overflow: visible; }
+  .stack-table thead { display: none; }
+  .stack-table, .stack-table tbody, .stack-table tr, .stack-table td { display: block; width: 100%; }
+  .stack-table tr { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--lav-border); border-radius: 6px; padding: 14px 16px; margin-bottom: 12px; }
+  .stack-table td.stack-title { order: -1; }
+  .stack-table td { border: 0; padding: 4px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; white-space: normal; }
+  .stack-table td::before { content: attr(data-label); color: var(--muted); font-size: 0.82rem; flex: none; }
+  .stack-table td.stack-title { display: block; padding: 0 0 8px; margin-bottom: 4px; border-bottom: 1px solid var(--lav-border); }
+  .stack-table td.stack-title::before { content: none; }
+  .stack-table td.stack-title .muted { margin-top: 2px; }
+}

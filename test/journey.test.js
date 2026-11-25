@@ -151,3 +151,13 @@ test('the dashboard has a colored header and the report example links above API 
   assert.ok(d.text.indexOf('Report examples') < d.text.indexOf('API access'), 'examples above API access');
   assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
 });
+
+test('a member with no reports sees example rows on the Reports page; they go away once they report', async () => {
+  const b = await ctx.member(admin, { email: 'new@freshfunding.com', domain: 'freshfunding.com', company: 'Fresh Funding LLC' });
+  const r = await b.req('/reports');
+  assert.match(r.text, /Here’s how they’ll appear|Here&rsquo;s how they&rsquo;ll appear/);
+  assert.equal((r.text.match(/class="example-row"/g) || []).length, 3);
+  assert.doesNotMatch(r.text, /href="\/reports\/[0-9a-f-]{36}"/, 'example rows are not links');
+  const mine = await lender.req('/reports');
+  assert.doesNotMatch(mine.text, /example-row/, 'members with reports see only their own');
+});
