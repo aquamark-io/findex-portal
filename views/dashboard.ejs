@@ -28,7 +28,7 @@
   <% if (typeof msg !== 'undefined' && msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
   <h1 class="title">Welcome<%= a.first_name ? `, ${a.first_name}` : '' %></h1>
   <% if (a.account_type === 'company') { %>
-    <p class="lead flush"><%= a.business_legal_name %><% if (a.company_type) { %> &middot; <%= COMPANY_TYPES[a.company_type] %><% } %></p>
+    <p class="lead flush"><%= a.business_legal_name %></p>
     <% if (fullAccess) { %>
       <div class="action-grid">
         <a class="btn" href="/search">Search</a>
