@@ -9,7 +9,7 @@
      rows = [
        ['Company', pr.business_legal_name], ['DBA', pr.business_dba], ['Role', COMPANY_TYPES[pr.company_type]],
        ['Website', pr.website ? pr.website.replace(/^https?:\/\//, '') : null], ['State of registration', STATES[pr.state_of_registration]],
-       ['Contact', name + (pr.job_title ? `, ${pr.job_title}` : '')], ['Email', pr.email], ['Phone', phone(pr.phone)],
+       ['Contact', name], ['Email', pr.email], ['Phone', phone(pr.phone)],
        ['Member since', day(pr.created_at)], ['Member terms', a.terms_version ? `Accepted ${day(pr.terms_accepted_at)}` : 'Not accepted'],
      ];
    } else if (a.account_type === 'individual') {
