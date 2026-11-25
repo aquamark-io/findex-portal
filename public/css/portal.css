@@ -475,3 +475,20 @@ a.file-chip:hover { border-color: var(--base); }
 .profile-toggle summary::after { content: "+"; font-size: 1.3rem; font-weight: 400; line-height: 1; color: var(--deep); }
 .profile-toggle[open] summary::after { content: "\2212"; }
 .profile-toggle .profile { margin-top: 8px; }
+
+/* Individual results: what matched, as a stacked checklist; evidence files stacked. */
+.matched-on { margin: 12px 0 14px; }
+.matched-head { margin: 0 0 6px !important; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted) !important; }
+.match-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.match-list li { display: flex; align-items: center; gap: 10px; font-size: 0.92rem; color: var(--ink); }
+.match-list li.no { color: var(--muted); }
+.match-list .box { flex: none; width: 16px; height: 16px; border: 2px solid #cfc5de; border-radius: 3px; background: #fff; position: relative; }
+.match-list li.yes .box { background: #b8287a; border-color: #b8287a; }
+.match-list li.yes .box::after { content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.results-files { flex-direction: column; align-items: flex-start; gap: 8px !important; }
+.results-item .prewrap { margin: 12px 0 16px; }
+.results-details { margin: 0 0 14px; }
+.results-details p { margin: 3px 0; }
+.results-item { padding-bottom: 28px; margin-bottom: 28px; }
+/* Individual search form: room between the certification and the upload. */
+.auth-upload { margin: 22px 0 0; }

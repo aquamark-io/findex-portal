@@ -47,7 +47,14 @@
             </div>
             <% if (r.subject_name_reported !== title) { %><p class="results-by">Name on file: <%= r.subject_name_reported %></p><% } %>
             <% if (type === 'individual' && m) { %>
-              <p class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %></p>
+              <div class="matched-on">
+                <p class="matched-head">Matched on</p>
+                <ul class="match-list">
+                  <% [['Date of birth', m.dob], ['Last name', m.last_name], ['Email', m.email], ['Mobile', m.phone]].concat(m.zip ? [['ZIP code', m.zip === 'match']] : []).forEach(([label, ok]) => { %>
+                    <li class="<%= ok ? 'yes' : 'no' %>"><span class="box" aria-hidden="true"></span><%= label %><span class="sr-only"><%= ok ? ': matched' : ': not matched' %></span></li>
+                  <% }) %>
+                </ul>
+              </div>
               <% if (!m.first_name || m.zip === 'differs') { %><p class="results-by"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</p><% } %>
             <% } %>
             <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>

@@ -132,16 +132,16 @@ async function searchPerson(b, extra) {
 test('a person is found by DOB + last name + email, and the results show what matched', async () => {
   const res = await searchPerson(b2, { email: 'jordan@mail.com', zip: '94105' });
   assert.match(res.text, /<span>Reports<\/span><b class=\"hit\">1<\/b>/);
-  assert.match(res.text, /match yes">Date of birth/);
-  assert.match(res.text, /match yes">Email/);
-  assert.match(res.text, /match no">Mobile/);
-  assert.match(res.text, /match yes">ZIP/);
+  assert.match(res.text, /<li class="yes"><span class="box" aria-hidden="true"><\/span>Date of birth/);
+  assert.match(res.text, /<li class="yes"><span class="box" aria-hidden="true"><\/span>Email/);
+  assert.match(res.text, /<li class="no"><span class="box" aria-hidden="true"><\/span>Mobile/);
+  assert.match(res.text, /<li class="yes"><span class="box" aria-hidden="true"><\/span>ZIP code/);
 });
 
 test('or by DOB + last name + mobile; the last name ignores case and punctuation', async () => {
   const res = await searchPerson(b2, { last_name: 'RIVERA', phone: '415-555-0199' });
   assert.match(res.text, /<span>Reports<\/span><b class=\"hit\">1<\/b>/);
-  assert.match(res.text, /match yes">Mobile/);
+  assert.match(res.text, /<li class="yes"><span class="box" aria-hidden="true"><\/span>Mobile/);
 });
 
 test('a different first name or ZIP still matches, but is flagged for the searcher to confirm', async () => {
