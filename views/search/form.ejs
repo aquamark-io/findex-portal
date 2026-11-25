@@ -5,12 +5,11 @@
   <% const TITLES = { merchant: 'Check a merchant', company: 'Check a vendor', individual: 'Screen an individual' }; %>
   <h1 class="title"><%= TITLES[subjectType] %></h1>
   <% if (subjectType === 'merchant') { %>
-  <p class="lead">See what&rsquo;s on record before you fund.</p>
-  <div class="you-get" aria-label="What this search shows">
-    <div><strong>Defaults</strong><span>Reported by lenders</span></div>
-    <div><strong>Document tampering</strong><span>Altered or falsified files</span></div>
-    <div><strong>Recent searches</strong><span>By other companies, 30 days</span></div>
-  </div>
+  <ul class="you-get" aria-label="What this search checks">
+    <li>Reported <strong>defaults</strong></li>
+    <li>Reported <strong>document tampering</strong></li>
+    <li>How many other companies <strong>searched this merchant</strong> in the past 30 days</li>
+  </ul>
   <% } else { %>
   <p class="lead">Only published reports are shown, and every search is logged.</p>
   <% } %>
