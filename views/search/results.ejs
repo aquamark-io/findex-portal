@@ -13,7 +13,7 @@
    const vendorTypes = [...new Set(reports.map(r => r.fx_subjects && r.fx_subjects.vendor_type).filter(Boolean))].map(v => R.VENDOR_TYPES[v]).join(', '); %>
 <section class="card results">
   <p class="signing-as"><a href="/search">&larr; New search</a></p>
-  <% if (ex) { %><p class="flush"><span class="example-tag">Example report</span></p><% } %>
+  <% if (ex) { %><p class="example-tag-row"><span class="example-tag">Example report</span></p><% } %>
   <h1 class="title"><%= title %></h1>
   <p class="lead"><%= R.SUBJECT_TYPES[type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
 
@@ -51,7 +51,10 @@
               <% if (!m.first_name || m.zip === 'differs') { %><p class="results-by"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</p><% } %>
             <% } %>
             <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
-            <p class="results-by">Reported by <%= r.reporter ? r.reporter.business_legal_name : '' %> &middot; Published <%= fmtDate(r.published_at) %></p>
+            <div class="results-details">
+              <p class="results-by">Reported by <%= r.reporter ? r.reporter.business_legal_name : '' %></p>
+              <p class="results-by">Published <%= fmtDate(r.published_at) %></p>
+            </div>
             <% if ((files[r.id] || []).length) { %>
               <p class="results-files" aria-label="Evidence">
                 <% files[r.id].forEach(f => { %><% if (ex) { %><span class="file-link"><%= f.file_name %></span><% } else { %><a class="file-link" href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a><% } %><% }) %>
@@ -61,7 +64,7 @@
         <% }) %>
       <% } %>
       <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
-        <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
+        <div class="note mt">Before taking adverse action, send a pre-adverse action notice with this report and the <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">CFPB Summary of Rights</a>.</div>
       <% } %>
       <p class="results-fine">Only published reports are shown.<% if (!reports.length) { %> A clear result doesn&rsquo;t guarantee there were no incidents.<% } %><% if (!ex) { %> Results are available for <%= resultsDays %> days.<% } %></p>
     </div>

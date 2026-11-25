@@ -440,3 +440,9 @@ a.file-chip:hover { border-color: var(--base); }
 .results-fine { font-size: 0.8rem; color: var(--muted); margin: 12px 0 0; }
 .results-empty + .results-fine { margin-top: 6px; }
 @media (max-width: 700px) { .results-grid { grid-template-columns: 1fr; gap: 20px; } }
+.example-tag-row { margin: 0 0 12px; }
+.results-item .prewrap { margin: 10px 0 14px; }
+.results-details { margin: 0 0 12px; }
+.results-details p { margin: 2px 0; }
+.results-files { margin: 0 !important; gap: 6px 18px; }
+.results-item { padding-bottom: 24px; margin-bottom: 24px; }
