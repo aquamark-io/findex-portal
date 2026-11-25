@@ -259,7 +259,7 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   assert.equal((await lender.req('/search/partner')).location, '/search/vendor');
   assert.equal((await lender.req('/reports/new/partner')).location, '/reports/new/vendor');
   const choose = await lender.req('/reports/new');
-  assert.match(choose.text, /A vendor/);
+  assert.match(choose.text, /Report a vendor/);
   assert.doesNotMatch(choose.text, /partner<\/strong>|A partner/);
   const form = await lender.req('/reports/new/vendor');
   assert.match(form.text, /Vendor type/);
@@ -292,7 +292,7 @@ test('funded businesses are now merchants: old links redirect, and the default c
   assert.equal((await lender.req('/reports/new/funded-business')).location, '/reports/new/merchant');
   assert.equal((await ctx.browser().req('/check-my-record/funded-business')).location, '/check-my-record/merchant');
   const choose = await lender.req('/reports/new');
-  assert.match(choose.text, /A merchant/);
+  assert.match(choose.text, /Report a merchant/);
   assert.match(choose.text, /applied for or received funding/);
   const form = await lender.req('/reports/new/merchant');
   assert.match(form.text, />Defaulted on Financing</);
