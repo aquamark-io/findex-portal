@@ -84,15 +84,15 @@ test('the same name in another state, or a name without a state, finds nothing',
 test('results show how many other companies searched the business in the last 30 days', async () => {
   // So far: b2 (EIN) and b3 (name + state) searched Joe's Cafe. b3 also searched the CA name, which isn't this business.
   const res = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches by other companies in the last 30 days \(2 companies\)/);
-  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default reported/);
+  assert.match(res.text, /<span class="biz-num">2<\/span><span>Searches by other companies \(30 days\)/);
+  assert.match(res.text, /<span class="biz-num">1<\/span><span>Default<\/span>/);
   // The searcher's own searches don't count, and searches over 30 days old drop off.
   const again = await search(b4, 'merchant', { name: 'Joe’s Cafe LLC', state: 'TX' });
   assert.match(again.text, /<span class="biz-num">2<\/span><span>Searches by other/);
   const old = fake.tables.fx_searches.find(s => s.account_id === ctx.accountByEmail('a@two.com').id);
   old.created_at = new Date(Date.now() - 31 * 864e5).toISOString();
   const later = await search(b4, 'merchant', { ein: '12-3456789' });
-  assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches by other companies in the last 30 days \(1 company\)/);
+  assert.match(later.text, /<span class="biz-num">1<\/span><span>Searches by other companies \(30 days\)/);
 });
 
 test('the count works for a business with no reports, and the EIN is never stored', async () => {
@@ -270,7 +270,7 @@ test('vendors: old partner links redirect, the report form requires a vendor typ
   const r = await b2.req('/search/vendor', { website: 'leakycrm.com', certify: 'on' });
   assert.equal(r.status, 303, r.text.slice(0, 300));
   const res = await b2.req(r.location);
-  assert.match(res.text, /Vendor &middot; Vendor diligence/);
+  assert.match(res.text, /Vendor &middot; Searched/);
   assert.match(res.text, /<dt>Vendor type<\/dt><dd>CRM or LOS<\/dd>/);
 });
 
@@ -301,4 +301,20 @@ test('search pages: individual, vendor, merchant order; individual form has one 
     { files: { authorization: [{ name: 'auth.pdf' }] } });
   assert.equal(r.status, 422);
   assert.match(r.text, /employment screening certification/);
+});
+
+test('example results show sample reports for each type, clearly marked, with no real file links', async () => {
+  for (const [who, text] of [['individual', /Jordan Rivera/], ['vendor', /Leaky CRM Inc/], ['merchant', /Joe’s Cafe LLC/]]) {
+    const r = await lender.req(`/search/example/${who}`);
+    assert.equal(r.status, 200);
+    assert.match(r.text, /Sample data to show what results look like\. Not a real report\./);
+    assert.match(r.text, text);
+    assert.doesNotMatch(r.text, /\/files\//, 'no evidence links');
+  }
+  assert.equal((await lender.req('/search/example/nope')).location, '/search');
+  assert.match((await lender.req('/search')).text, /href="\/search\/example\/merchant"/);
+  const none = await lender.req((await lender.req('/search/merchant', { ein: '77-7777777', certify: 'on' })).location);
+  assert.match(none.text, /No published reports found\./);
+  assert.match(none.text, /href="\/search\/example\/merchant">See an example report/);
+  assert.match(none.text, /<h1 class="title">Merchant search<\/h1>/, 'a title even when searched by EIN only');
 });

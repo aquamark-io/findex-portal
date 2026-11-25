@@ -127,6 +127,13 @@ async function loadOwnSearch(req) {
   return data;
 }
 
+// Example results with fictional sample data, so members can see what a report looks like.
+const EX = require('../lib/search-examples');
+router.get('/search/example/:who', (req, res) => {
+  if (!EX.WHO.includes(req.params.who)) return res.redirect('/search');
+  res.render('search/results', { pageTitle: 'Example results', example: true, resultsDays: RESULTS_DAYS, ...EX.example(req.params.who) });
+});
+
 router.get('/search/results/:id', async (req, res, next) => {
   try {
     const search = await loadOwnSearch(req);

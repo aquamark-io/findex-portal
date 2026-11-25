@@ -1,31 +1,41 @@
 <%- include('../partials/head') %>
 <% const c = search.criteria || {}; const matched = c.matched || {};
-   const tick = (label, ok) => `<span class="match ${ok ? 'yes' : 'no'}">${label} ${ok ? '&#10003;' : '&mdash;'}</span>`; %>
+   const ex = typeof example !== 'undefined' && example;
+   const tick = (label, ok) => `<span class="match ${ok ? 'yes' : 'no'}">${label} ${ok ? '&#10003;' : '&mdash;'}</span>`;
+   const fallback = { merchant: 'Merchant search', company: 'Vendor search', individual: 'Individual search' }[search.subject_type];
+   const title = c.name || c.domain || (reports[0] && reports[0].subject_name_reported) || fallback;
+   const exampleWho = { individual: 'individual', company: 'vendor', merchant: 'merchant' }[search.subject_type]; %>
 <section class="card">
   <p class="signing-as"><a href="/search">&larr; New search</a></p>
-  <h1 class="title"><%= c.name || c.domain %></h1>
-  <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; <%= S.PURPOSES[search.purpose] %> &middot; <%= fmtDate(search.created_at) %></p>
-  <% if (activity) { const defaults = reports.filter(r => r.category === 'default').length; %>
+  <% if (ex) { %><div class="example-banner" role="note"><strong>Example</strong> &middot; Sample data to show what results look like. Not a real report.</div><% } %>
+  <h1 class="title"><%= title %></h1>
+  <p class="lead"><%= R.SUBJECT_TYPES[search.subject_type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
+
+  <% if (activity) { const defaults = reports.filter(r => r.category === 'default').length; const tamper = reports.length - defaults; %>
     <div class="biz-summary" role="status">
-      <div><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %> reported</span></div>
-      <div><span class="biz-num"><%= reports.length - defaults %></span><span>Document tampering report<%= reports.length - defaults === 1 ? '' : 's' %></span></div>
-      <div><span class="biz-num"><%= activity.searches %></span><span>Searches by other companies in the last 30 days<%= activity.searches ? ` (${activity.companies} compan${activity.companies === 1 ? 'y' : 'ies'})` : '' %></span></div>
+      <div class="<%= defaults ? 'hit' : '' %>"><span class="biz-num"><%= defaults %></span><span>Default<%= defaults === 1 ? '' : 's' %></span></div>
+      <div class="<%= tamper ? 'hit' : '' %>"><span class="biz-num"><%= tamper %></span><span>Document tampering</span></div>
+      <div class="<%= activity.searches ? 'hit' : '' %>"><span class="biz-num"><%= activity.searches %></span><span>Searches by other companies (30 days)</span></div>
     </div>
   <% } %>
+
   <% if (search.expired) { %>
     <div class="alert error">These results are no longer available. Results can be viewed for <%= resultsDays %> days; please search again.</div>
   <% } else if (!reports.length) { %>
-    <div class="result-empty"><strong>No published reports found<%= search.matched_subject_ids.length ? '' : ' for these details' %>.</strong></div>
-    <p class="muted">FinDex only shows reports that were independently reviewed and published. A clear result doesn&rsquo;t guarantee there were no incidents.</p>
+    <div class="result-empty"><strong>No published reports found.</strong>
+      <% if (exampleWho) { %><span class="muted"> <a href="/search/example/<%= exampleWho %>">See an example report</a></span><% } %></div>
   <% } else { %>
-    <p><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p>
-    <% reports.forEach(r => { %>
-      <article class="record-item">
-        <div class="record-head"><strong><%= R.CATEGORIES[r.category].label %></strong><span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %></span></div>
+    <p class="result-count"><strong><%= reports.length %> published report<%= reports.length === 1 ? '' : 's' %></strong></p>
+    <% reports.forEach(r => { const m = matched[r.subject_id]; const vt = r.fx_subjects && r.fx_subjects.vendor_type; %>
+      <article class="result-card">
+        <div class="result-head">
+          <strong><%= R.CATEGORIES[r.category].label %></strong>
+          <span class="muted"><%= (R.REPAYMENT_FIELDS[r.category] || {}).dateLabel || 'Incident' %> <%= fmtDate(r.incident_date) %> &middot; Published <%= fmtDate(r.published_at) %></span>
+        </div>
         <dl class="kv">
           <dt>Name on file</dt><dd><%= r.subject_name_reported %></dd>
-          <% if (r.fx_subjects && r.fx_subjects.vendor_type) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[r.fx_subjects.vendor_type] %></dd><% } %>
-          <% const m = matched[r.subject_id]; if (search.subject_type === 'individual' && m) { %>
+          <% if (vt) { %><dt>Vendor type</dt><dd><%= R.VENDOR_TYPES[vt] %></dd><% } %>
+          <% if (search.subject_type === 'individual' && m) { %>
           <dt>Matched on</dt><dd class="matches"><%- tick('Date of birth', m.dob) %> <%- tick('Last name', m.last_name) %> <%- tick('Email', m.email) %> <%- tick('Mobile', m.phone) %><% if (m.zip) { %> <%- tick('ZIP', m.zip === 'match') %><% } %>
             <% if (!m.first_name || m.zip === 'differs') { %><div class="muted"><%= !m.first_name ? 'The first name differs from the one you entered.' : 'The ZIP code on file differs.' %> Confirm this is the same person.</div><% } %></dd>
           <% } else if (search.subject_type === 'merchant' && m) { const by = [].concat(m.by); %>
@@ -33,19 +43,20 @@
             <% if (!by.includes('ein')) { %><div class="muted">Confirm the EIN with the business before relying on this result.</div><% } %></dd>
           <% } %>
           <dt>Reported by</dt><dd><%= r.reporter ? r.reporter.business_legal_name : '' %></dd>
-          <dt>Published</dt><dd><%= fmtDate(r.published_at) %></dd>
         </dl>
-        <% if (r.description) { %><p class="prewrap"><%= r.description %></p><% } %>
+        <% if (r.description) { %><p class="prewrap result-desc"><%= r.description %></p><% } %>
         <% if ((files[r.id] || []).length) { %>
-          <p class="muted flush">Evidence:</p>
-          <ul class="checklist"><% files[r.id].forEach(f => { %><li><a href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %></a> <span class="muted">(<%= R.fmtSize(f.size_bytes) %>)</span></li><% }) %></ul>
+          <div class="file-chips" aria-label="Evidence">
+            <% files[r.id].forEach(f => { %><% if (ex) { %><span class="file-chip"><%= f.file_name %> <small><%= R.fmtSize(f.size_bytes) %></small></span><% } else { %><a class="file-chip" href="/search/results/<%= search.id %>/files/<%= f.id %>" target="_blank" rel="noopener"><%= f.file_name %> <small><%= R.fmtSize(f.size_bytes) %></small></a><% } %><% }) %>
+          </div>
         <% } %>
       </article>
     <% }) %>
   <% } %>
+
   <% if (search.purpose === 'employment' && reports.length && !search.expired) { %>
     <div class="note mt">Before taking any adverse action based on this report, send the individual a pre-adverse action notice with a copy of the report and <a href="<%= CFPB_SUMMARY_URL %>" target="_blank" rel="noopener">A Summary of Your Rights Under the Fair Credit Reporting Act</a>.</div>
   <% } %>
-  <p class="muted mt">Results are available for <%= resultsDays %> days and may be used only for the purpose certified.</p>
+  <p class="muted fine-left">Only published, independently reviewed reports are shown. A clear result doesn&rsquo;t guarantee there were no incidents.<% if (!ex) { %> Results are available for <%= resultsDays %> days and may be used only for the purpose certified.<% } %></p>
 </section>
 <%- include('../partials/foot') %>
