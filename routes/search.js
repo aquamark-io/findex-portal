@@ -81,7 +81,7 @@ router.post('/search/:who', searchLimiter, (req, res, next) => {
       let authFile = null;
       if (q.purpose === 'employment') {
         if (subjectType !== 'individual') errors.push('Employment screening applies to individuals only.');
-        else if (!req.file) errors.push('Upload the signed disclosure and authorization form.');
+        else if (!req.file) errors.push('Attach the signed background check authorization.');
         else {
           const type = R.fileType(req.file);
           if (!type || !['application/pdf', 'image/png', 'image/jpeg', 'image/heic', 'image/webp'].includes(type)) errors.push('The authorization must be a PDF or an image.');
