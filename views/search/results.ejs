@@ -12,7 +12,7 @@
    const matchedOn = [by.has('ein') && 'EIN', by.has('name_state') && 'Legal name and state'].filter(Boolean).join(', ');
    const vendorTypes = [...new Set(reports.map(r => r.fx_subjects && r.fx_subjects.vendor_type).filter(Boolean))].map(v => R.VENDOR_TYPES[v]).join(', '); %>
 <section class="card results">
-  <p class="signing-as"><a href="/search">&larr; New search</a></p>
+  <p class="signing-as"><% if (ex) { %><a href="/dashboard">&larr; Dashboard</a><% } else { %><a href="/search">&larr; New search</a><% } %></p>
   <% if (ex) { %><p class="example-tag-row"><span class="example-tag">Example report</span></p><% } %>
   <h1 class="title"><%= title %></h1>
   <p class="lead"><%= R.SUBJECT_TYPES[type] %> &middot; Searched <%= fmtDate(search.created_at) %></p>
