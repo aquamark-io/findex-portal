@@ -1,42 +1,31 @@
 <%- include('partials/head') %>
-<% const isCo = account.account_type === 'company';
-   const aboutLabel = isCo ? 'Reports about your company' : 'Reports about you';
-   const tabs = [['submitted', 'Reports you submitted', reports.length], ['about', aboutLabel, aboutMe.length], ['searches', 'Searches', searches.length]];
-   const exRow = '<span class="example-tag">Example</span>'; %>
-<section class="card dash-card">
-  <div class="dash-band band-flex"><h1>Activity</h1><a class="btn band-btn" href="/reports/new">Submit a report</a></div>
-  <div class="dash-body">
-    <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
-    <div class="activity-top">
-      <nav class="act-tabs" aria-label="Activity">
-        <% tabs.forEach(([key, label, n]) => { %><a href="/activity<%= key === 'submitted' ? '' : '?tab=' + key %>" class="<%= tab === key ? 'on' : '' %>" <%- tab === key ? 'aria-current="page"' : '' %>><%= label %><% if (n) { %> <span class="act-count <%= key === 'about' ? 'hit' : '' %>"><%= n %></span><% } %></a><% }) %>
-      </nav>
-    </div>
-
-    <% if (tab === 'submitted') { %>
-      <ul class="act-list">
-        <% reports.forEach(r => { %>
-          <li><a href="/reports/<%= r.id %>"><strong><%= r.subject_name_reported %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[r.fx_subjects && r.fx_subjects.subject_type] %> &middot; <%= R.CATEGORIES[r.category].label %></span></a></li>
-        <% }) %>
-        <% EX.SUBMITTED.forEach(r => { %>
-          <li class="is-example"><a href="/activity/example/<%= r.n %>"><%- exRow %><strong><%= r.subject_name_reported %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[r.fx_subjects.subject_type] %> &middot; <%= R.CATEGORIES[r.category].label %></span></a></li>
-        <% }) %>
-      </ul>
-    <% } else if (tab === 'about') { const r = EX.ABOUT; %>
-      <% if (aboutMe.length) { %><%- include('partials/about-me', { aboutBare: true }) %><% } %>
-      <ul class="act-list">
-        <li class="is-example"><a href="/activity/example/<%= r.n %>"><%- exRow %><strong><%= R.CATEGORIES[r.category].label %></strong><span class="act-sub">Reported by <%= r.reporter.business_legal_name %></span></a></li>
-      </ul>
-    <% } else { %>
-      <ul class="act-list">
-        <% searches.forEach(s => { const c = s.criteria || {}; %>
-          <li><a href="/search/results/<%= s.id %>"><strong><%= c.name || c.domain || (c.ein ? 'Merchant by EIN' : R.SUBJECT_TYPES[s.subject_type] + ' search') %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[s.subject_type] %></span></a></li>
-        <% }) %>
-        <% EX.SEARCHES.forEach(s => { %>
-          <li class="is-example"><a href="/search/example/<%= s.who %>"><%- exRow %><strong><%= s.name %></strong><span class="act-sub"><%= R.SUBJECT_TYPES[s.type] %></span></a></li>
-        <% }) %>
-      </ul>
-    <% } %>
+<section class="card raw">
+  <div class="raw-top">
+    <h1 class="title flush">Activity</h1>
+    <a href="/reports/new">+ Submit a report</a>
   </div>
+  <% if (msg) { %><div class="alert ok" role="status"><%= msg %></div><% } %>
+  <form method="get" action="/activity" class="raw-filters">
+    <label>Show <select name="show"><% Object.entries(SHOW).forEach(([k, l]) => { %><option value="<%= k %>" <%= show === k ? 'selected' : '' %>><%= l %></option><% }) %></select></label>
+    <label>About <select name="type"><option value="all">Anyone</option><% Object.entries(R.SUBJECT_TYPES).forEach(([k, l]) => { %><option value="<%= k %>" <%= type === k ? 'selected' : '' %>><%= l %>s</option><% }) %></select></label>
+    <button type="submit" class="link-btn">Apply</button>
+    <% if (show !== 'all' || type !== 'all') { %><a href="/activity">Clear</a><% } %>
+  </form>
+  <table class="raw-table">
+    <thead><tr><th>Date</th><th>Activity</th><th>Name</th><th>Details</th></tr></thead>
+    <tbody>
+      <% items.forEach(i => { %>
+        <tr><td class="nowrap"><%= fmtDate(i.date) %></td><td><%= KIND[i.kind] %></td>
+          <td><% if (i.href) { %><a href="<%= i.href %>"><%= i.name %></a><% } else { %><%= i.name %><% } %></td>
+          <td class="muted"><%= [R.SUBJECT_TYPES[i.type], i.detail].filter(Boolean).join(' · ') %></td></tr>
+      <% }) %>
+      <% if (!items.length && !examples.length) { %><tr><td colspan="4" class="muted">Nothing matches these filters.</td></tr><% } %>
+      <% examples.forEach(i => { %>
+        <tr class="raw-ex"><td class="nowrap">Example</td><td><%= KIND[i.kind] %></td>
+          <td><a href="<%= i.href %>"><%= i.name %></a></td>
+          <td class="muted"><%= [R.SUBJECT_TYPES[i.type], i.detail].filter(Boolean).join(' · ') %></td></tr>
+      <% }) %>
+    </tbody>
+  </table>
 </section>
 <%- include('partials/foot') %>

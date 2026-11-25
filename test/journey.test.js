@@ -152,39 +152,38 @@ test('the dashboard has a colored header and the report example links above API 
   assert.match(d.text, /href="\/contact">Contact<\/a>/, 'Contact in the nav when signed in');
 });
 
-test('Activity: three tabs with clickable examples below the member\'s own; old Reports links redirect', async () => {
+test('Activity: one plain list with filters, examples at the end; old Reports links redirect', async () => {
   const b = await ctx.member(admin, { email: 'new@freshfunding.com', domain: 'freshfunding.com', company: 'Fresh Funding LLC' });
   assert.equal((await b.req('/reports')).location, '/activity');
   assert.equal((await b.req('/reports/about')).location, '/activity?tab=about');
   const nav = await b.req('/dashboard');
   assert.match(nav.text, /href="\/activity">Activity<\/a>/);
-  assert.doesNotMatch(nav.text, />Reports<\/a>/);
 
-  const sub = await b.req('/activity');
-  assert.match(sub.text, /<h1>Activity<\/h1>/);
-  assert.match(sub.text, /href="\/reports\/new">Submit a report<\/a>/);
-  assert.equal((sub.text.match(/class="is-example"/g) || []).length, 3);
-  assert.match(sub.text, /href="\/activity\/example\/1"/);
+  const all = await b.req('/activity');
+  assert.match(all.text, /href="\/reports\/new">\+ Submit a report<\/a>/);
+  assert.match(all.text, /<select name="show">/);
+  assert.equal((all.text.match(/class="raw-ex"/g) || []).length, 7, '3 example reports, 1 about you, 3 searches');
+  assert.match(all.text, /href="\/activity\/example\/1"/);
+  assert.match(all.text, /href="\/search\/example\/merchant"/);
   const exPage = await b.req('/activity/example/3');
-  assert.equal(exPage.status, 200);
   assert.match(exPage.text, /Example report/);
-  assert.match(exPage.text, /Joe’s Cafe LLC/);
   assert.doesNotMatch(exPage.text, /action="\/reports\/[^"]*\/remove"/, 'no remove form on an example');
-
-  const about = await b.req('/activity?tab=about');
-  assert.match(about.text, /href="\/activity\/example\/4"/);
   assert.match((await b.req('/activity/example/4')).text, /Dispute this report/);
-
-  const se = await b.req('/activity?tab=searches');
-  assert.match(se.text, /href="\/search\/example\/merchant"/);
   assert.equal((await b.req('/activity/example/99')).location, '/activity');
 
-  // Real reports are listed above the examples, which stay at the bottom; rows show no status or date.
+  // Filters: what it is, and who it's about. Old ?tab= links map onto the filter.
+  const onlySearches = await b.req('/activity?show=searches');
+  assert.equal((onlySearches.text.match(/class="raw-ex"/g) || []).length, 3);
+  assert.doesNotMatch(onlySearches.text, /activity\/example\/1/);
+  const vendors = await b.req('/activity?type=company');
+  assert.match(vendors.text, /Leaky CRM Inc/);
+  assert.doesNotMatch(vendors.text, /Jordan Rivera/);
+  assert.equal((await b.req('/activity?tab=about')).text.match(/class="raw-ex"/g).length, 1);
+
+  // A member's own items come before the examples.
   const mine = await lender.req('/activity');
-  const real = mine.text.search(/href="\/reports\/[0-9a-f-]{36}"/), firstEx = mine.text.indexOf('class="is-example"');
-  assert.ok(real > 0 && firstEx > real, 'own reports first, examples below');
-  assert.doesNotMatch(mine.text, /class="pill /);
-  assert.doesNotMatch(sub.text, /Here’s how they’ll appear|Here&rsquo;s how/);
-  // The search page no longer lists recent searches; they live under Activity.
+  const real = mine.text.search(/href="\/reports\/[0-9a-f-]{36}"/), firstEx = mine.text.indexOf('class="raw-ex"');
+  assert.ok(real > 0 && firstEx > real, 'own items first, examples at the end');
   assert.doesNotMatch((await lender.req('/search')).text, /Your recent searches/);
 });
+

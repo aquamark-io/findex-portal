@@ -73,25 +73,47 @@ router.get('/reports', (req, res) => {
 // ---------- Activity: reports you submitted, reports about you, your searches ----------
 
 const EX = require('../lib/report-examples');
-const TABS = ['submitted', 'about', 'searches'];
 
 router.use('/activity', requireAccount, requireReporter, (req, res, next) => {
   Object.assign(res.locals, { R, STATUS_LABELS, fmtDate, STATES });
   next();
 });
 
+const SHOW = { all: 'Everything', submitted: 'Reports you submitted', about: 'Reports about you', searches: 'Searches' };
+const KIND = { submitted: 'Report submitted', about: 'Report about you', searches: 'Search' };
+
+// One plain list of everything, newest first, filterable by what it is and who it's about. Examples always at the end.
 router.get('/activity', async (req, res, next) => {
   try {
-    const tab = TABS.includes(req.query.tab) ? req.query.tab : 'submitted';
+    // Old ?tab= links still work.
+    const show = Object.hasOwn(SHOW, req.query.show) ? req.query.show : (Object.hasOwn(SHOW, req.query.tab) ? req.query.tab : 'all');
+    const type = Object.hasOwn(R.SUBJECT_TYPES, req.query.type) ? req.query.type : 'all';
     const [{ data: reports, error }, { data: searches }, record] = await Promise.all([
       supabase.from('fx_reports').select('id, category, incident_date, status, created_at, subject_name_reported, fx_subjects(subject_type)')
         .eq('reporter_account_id', req.account.id).order('created_at', { ascending: false }).limit(500),
-      supabase.from('fx_searches').select('id, subject_type, criteria, result_report_ids, created_at')
-        .eq('account_id', req.account.id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('fx_searches').select('id, subject_type, criteria, created_at')
+        .eq('account_id', req.account.id).order('created_at', { ascending: false }).limit(200),
       loadMyRecord(req.account.id),
     ]);
     if (error) throw new Error(`List reports: ${error.message}`);
-    res.render('activity', { ...record, pageTitle: 'Activity', tab, reports: reports || [], searches: searches || [], EX,
+    const st = r => (r.fx_subjects && r.fx_subjects.subject_type) || null;
+    let items = [
+      ...(reports || []).map(r => ({ kind: 'submitted', date: r.created_at, name: r.subject_name_reported, type: st(r),
+        detail: R.CATEGORIES[r.category].label, href: `/reports/${r.id}` })),
+      ...(record.aboutMe || []).map(r => ({ kind: 'about', date: r.published_at || r.publish_at || r.incident_date, name: R.CATEGORIES[r.category].label,
+        type: req.account.account_type === 'company' ? 'company' : req.account.account_type, detail: r.reporter ? `Reported by ${r.reporter.business_legal_name}` : '',
+        href: record.DISPUTABLE.includes(r.status) && !record.disputes[r.id] ? `/my-record/reports/${r.id}/dispute` : null })),
+      ...(searches || []).map(x => { const c = x.criteria || {}; return { kind: 'searches', date: x.created_at, type: x.subject_type,
+        name: c.name || c.domain || (c.ein ? 'Merchant by EIN' : 'Search'), detail: '', href: `/search/results/${x.id}` }; }),
+    ].sort((p, q) => String(q.date).localeCompare(String(p.date)));
+    let examples = [
+      ...EX.SUBMITTED.map(r => ({ kind: 'submitted', date: r.created_at, name: r.subject_name_reported, type: r.fx_subjects.subject_type, detail: R.CATEGORIES[r.category].label, href: `/activity/example/${r.n}` })),
+      { kind: 'about', date: EX.ABOUT.created_at, name: R.CATEGORIES[EX.ABOUT.category].label, type: 'company', detail: `Reported by ${EX.ABOUT.reporter.business_legal_name}`, href: `/activity/example/${EX.ABOUT.n}` },
+      ...EX.SEARCHES.map(x => ({ kind: 'searches', date: x.created_at, name: x.name, type: x.type, detail: '', href: `/search/example/${x.who}` })),
+    ];
+    const keep = i => (show === 'all' || i.kind === show) && (type === 'all' || i.type === type);
+    items = items.filter(keep); examples = examples.filter(keep);
+    res.render('activity', { pageTitle: 'Activity', show, type, SHOW, KIND, items, examples,
       msg: req.query.disputed === '1' ? 'Dispute submitted. The report is withheld while we review it, and we\u2019ll email you the outcome.' : null });
   } catch (err) { next(err); }
 });
